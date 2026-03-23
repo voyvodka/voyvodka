@@ -181,6 +181,8 @@ func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo s
 		RepoURL:       repository.HTMLURL,
 		LiveURL:       s.resolveLiveURLDetailed(ctx, repository),
 		IsFork:        repository.Fork,
+		ParentRepo:    repository.Parent.FullName,
+		ParentRepoURL: repository.Parent.HTMLURL,
 		Category:      categoryForRepository(repository),
 		Readme:        normalizeReadme(readme),
 		Changelog:     normalizeReadme(changelog),

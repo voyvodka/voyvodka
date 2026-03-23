@@ -68,6 +68,8 @@ type ProjectDetail struct {
 	RepoURL       string    `json:"repoUrl"`
 	LiveURL       string    `json:"liveUrl"`
 	IsFork        bool      `json:"isFork"`
+	ParentRepo    string    `json:"parentRepo"`
+	ParentRepoURL string    `json:"parentRepoUrl"`
 	Category      string    `json:"category"`
 	Readme        string    `json:"readme"`
 	Changelog     string    `json:"changelog"`

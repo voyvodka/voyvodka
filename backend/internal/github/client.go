@@ -32,26 +32,32 @@ type User struct {
 }
 
 type Repository struct {
-	Name            string `json:"name"`
-	Owner           Owner  `json:"owner"`
-	Description     string `json:"description"`
-	Language        string `json:"language"`
+	Name            string   `json:"name"`
+	Owner           Owner    `json:"owner"`
+	Description     string   `json:"description"`
+	Language        string   `json:"language"`
 	Topics          []string `json:"topics"`
-	StargazersCount int    `json:"stargazers_count"`
-	ForksCount      int    `json:"forks_count"`
-	WatchersCount   int    `json:"watchers_count"`
-	OpenIssuesCount int    `json:"open_issues_count"`
-	UpdatedAt       string `json:"updated_at"`
-	PushedAt        string `json:"pushed_at"`
-	DefaultBranch   string `json:"default_branch"`
-	HTMLURL         string `json:"html_url"`
-	Homepage        string `json:"homepage"`
-	Fork            bool   `json:"fork"`
-	License         License `json:"license"`
+	StargazersCount int      `json:"stargazers_count"`
+	ForksCount      int      `json:"forks_count"`
+	WatchersCount   int      `json:"watchers_count"`
+	OpenIssuesCount int      `json:"open_issues_count"`
+	UpdatedAt       string   `json:"updated_at"`
+	PushedAt        string   `json:"pushed_at"`
+	DefaultBranch   string   `json:"default_branch"`
+	HTMLURL         string   `json:"html_url"`
+	Homepage        string   `json:"homepage"`
+	Fork            bool     `json:"fork"`
+	License         License  `json:"license"`
+	Parent          Parent   `json:"parent"`
 }
 
 type Owner struct {
 	Login string `json:"login"`
+}
+
+type Parent struct {
+	FullName string `json:"full_name"`
+	HTMLURL  string `json:"html_url"`
 }
 
 type License struct {

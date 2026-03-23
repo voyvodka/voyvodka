@@ -139,6 +139,7 @@ h2 {
   display: flex;
   gap: 10px;
   margin-top: 12px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
@@ -546,8 +547,47 @@ h2 {
   color: var(--blue);
 }
 
+.project-page .project-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-page .project-title-row h2 {
+  margin-bottom: 0;
+}
+
+.project-page .fork-badge {
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  padding: 3px 7px;
+  background: rgba(117, 168, 255, 0.08);
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.project-page .fork-origin {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
+.project-page .fork-origin a {
+  color: var(--blue);
+  text-decoration: none;
+}
+
+.project-page .fork-origin a:hover {
+  text-decoration: underline;
+}
+
 .project-page .project-description {
-  margin-top: 8px;
+  margin-top: 10px;
   color: #c1cfda;
 }
 

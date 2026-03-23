@@ -63,6 +63,9 @@ export function ProjectPage() {
   const releaseChangelog = buildReleaseChangelog(data.releases);
   const hasDistinctLiveURL = Boolean(data.liveUrl) && data.liveUrl !== data.repoUrl;
 
+  const parentRepoUrl = data.parentRepoUrl || "";
+  const parentRepo = data.parentRepo || "";
+
   return (
     <main className="console project-page">
       <div className="panel">
@@ -74,9 +77,26 @@ export function ProjectPage() {
             All Repositories
           </Link>
         </div>
-        <h2>
-          {data.owner}/{data.repository}
-        </h2>
+        <div className="project-title-row">
+          <h2>
+            {data.owner}/{data.repository}
+          </h2>
+          {data.isFork ? (
+            <span className="fork-badge">FORK</span>
+          ) : null}
+        </div>
+        {data.isFork && parentRepo ? (
+          <p className="fork-origin mono">
+            forked from{" "}
+            {parentRepoUrl ? (
+              <a href={parentRepoUrl} target="_blank" rel="noreferrer">
+                {parentRepo} ↗
+              </a>
+            ) : (
+              parentRepo
+            )}
+          </p>
+        ) : null}
         <p className="project-description">{data.description || "No description"}</p>
         <div className="project-kpis">
           <div className="kpi"><b>{stars}</b><span className="mono">stars</span></div>

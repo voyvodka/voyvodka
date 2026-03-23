@@ -62,6 +62,8 @@ export type ProjectDetail = {
   repoUrl: string;
   liveUrl: string;
   isFork: boolean;
+  parentRepo: string;
+  parentRepoUrl: string;
   category: "core" | "contrib" | "explore";
   readme: string;
   changelog: string;
