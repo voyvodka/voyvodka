@@ -1,0 +1,457 @@
+package service
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"net/url"
+	"sort"
+	"strings"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"portfolio/backend/internal/domain"
+	"portfolio/backend/internal/github"
+	"portfolio/backend/internal/storage"
+)
+
+const cacheKey = "portfolio_data"
+const projectDetailCachePrefix = "project_detail:"
+
+type PortfolioService struct {
+	store          storage.Store
+	githubClient   *github.Client
+	username       string
+	cacheTTL       time.Duration
+	refreshLockTTL time.Duration
+
+	refreshing atomic.Bool
+	mu         sync.Mutex
+	detailLocks sync.Map
+}
+
+func NewPortfolioService(store storage.Store, gh *github.Client, username string, cacheTTLSeconds, lockSeconds int) *PortfolioService {
+	return &PortfolioService{
+		store:          store,
+		githubClient:   gh,
+		username:       username,
+		cacheTTL:       time.Duration(cacheTTLSeconds) * time.Second,
+		refreshLockTTL: time.Duration(lockSeconds) * time.Second,
+	}
+}
+
+func (s *PortfolioService) GetPortfolioData(ctx context.Context) (domain.PortfolioData, error) {
+	entry, err := s.store.GetCache(ctx, cacheKey)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return domain.PortfolioData{}, err
+	}
+
+	hasCached := err == nil
+	if hasCached && time.Since(entry.UpdatedAt) <= s.cacheTTL {
+		var cached domain.PortfolioData
+		if uErr := json.Unmarshal(entry.Payload, &cached); uErr == nil {
+			cached.IsStale = false
+			return cached, nil
+		}
+	}
+
+	if s.refreshing.CompareAndSwap(false, true) {
+		defer s.refreshing.Store(false)
+		fresh, syncErr := s.refresh(ctx)
+		if syncErr == nil {
+			return fresh, nil
+		}
+	}
+
+	if hasCached {
+		var stale domain.PortfolioData
+		if uErr := json.Unmarshal(entry.Payload, &stale); uErr == nil {
+			stale.IsStale = true
+			return stale, nil
+		}
+	}
+
+	return s.refresh(ctx)
+}
+
+func (s *PortfolioService) ForceRefresh(ctx context.Context) (domain.PortfolioData, error) {
+	return s.refresh(ctx)
+}
+
+func (s *PortfolioService) GetProjectDetail(ctx context.Context, owner, repo string) (domain.ProjectDetail, error) {
+	key := detailCacheKey(owner, repo)
+
+	entry, cacheErr := s.store.GetCache(ctx, key)
+	hasCached := cacheErr == nil
+	if cacheErr != nil && !errors.Is(cacheErr, sql.ErrNoRows) {
+		return domain.ProjectDetail{}, cacheErr
+	}
+
+	if hasCached && time.Since(entry.UpdatedAt) <= s.cacheTTL {
+		var cached domain.ProjectDetail
+		if uErr := json.Unmarshal(entry.Payload, &cached); uErr == nil {
+			return cached, nil
+		}
+	}
+
+	lock := s.detailLock(key)
+	lock.Lock()
+	defer lock.Unlock()
+
+	entry, cacheErr = s.store.GetCache(ctx, key)
+	hasCached = cacheErr == nil
+	if cacheErr != nil && !errors.Is(cacheErr, sql.ErrNoRows) {
+		return domain.ProjectDetail{}, cacheErr
+	}
+
+	if hasCached && time.Since(entry.UpdatedAt) <= s.cacheTTL {
+		var cached domain.ProjectDetail
+		if uErr := json.Unmarshal(entry.Payload, &cached); uErr == nil {
+			return cached, nil
+		}
+	}
+
+	detail, err := s.fetchProjectDetail(ctx, owner, repo)
+	if err != nil {
+		if hasCached {
+			var stale domain.ProjectDetail
+			if uErr := json.Unmarshal(entry.Payload, &stale); uErr == nil {
+				return stale, nil
+			}
+		}
+		return domain.ProjectDetail{}, err
+	}
+
+	raw, mErr := json.Marshal(detail)
+	if mErr == nil {
+		_ = s.store.UpsertCache(ctx, key, raw, time.Now().UTC())
+	}
+
+	return detail, nil
+}
+
+func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo string) (domain.ProjectDetail, error) {
+	repository, err := s.githubClient.GetRepository(ctx, owner, repo)
+	if err != nil {
+		return domain.ProjectDetail{}, err
+	}
+
+	readme, err := s.githubClient.GetReadme(ctx, owner, repo)
+	if err != nil {
+		readme = ""
+	}
+
+	changelog := s.getChangelog(ctx, owner, repo)
+
+	releases, err := s.githubClient.GetReleases(ctx, owner, repo)
+	if err != nil {
+		releases = []github.Release{}
+	}
+
+	if len(releases) == 0 {
+		tags, tagErr := s.githubClient.GetTags(ctx, owner, repo)
+		if tagErr == nil {
+			for _, tag := range tags {
+				releases = append(releases, github.Release{
+					TagName: tag.Name,
+					Name:    tag.Name,
+					Body:    "Tag snapshot (no GitHub release notes).",
+					HTMLURL: tag.ZipURL,
+				})
+			}
+		}
+	}
+
+	detail := domain.ProjectDetail{
+		Owner:         owner,
+		Repository:    repository.Name,
+		Description:   strings.TrimSpace(repository.Description),
+		Language:      repository.Language,
+		Topics:        repository.Topics,
+		Stars:         repository.StargazersCount,
+		Forks:         repository.ForksCount,
+		Watchers:      repository.WatchersCount,
+		OpenIssues:    repository.OpenIssuesCount,
+		DefaultBranch: repository.DefaultBranch,
+		PushedAt:      repository.PushedAt,
+		UpdatedAt:     repository.UpdatedAt,
+		License:       strings.TrimSpace(repository.License.Name),
+		RepoURL:       repository.HTMLURL,
+		LiveURL:       s.resolveLiveURLDetailed(ctx, repository),
+		IsFork:        repository.Fork,
+		Category:      categoryForRepository(repository),
+		Readme:        normalizeReadme(readme),
+		Changelog:     normalizeReadme(changelog),
+		Releases:      make([]domain.Release, 0, len(releases)),
+	}
+
+	for _, rel := range releases {
+		detail.Releases = append(detail.Releases, domain.Release{
+			TagName:     rel.TagName,
+			Name:        rel.Name,
+			PublishedAt: rel.PublishedAt,
+			Body:        rel.Body,
+			URL:         rel.HTMLURL,
+		})
+	}
+
+	return detail, nil
+}
+
+func normalizeReadme(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return ""
+	}
+
+	if len(trimmed) > 12000 {
+		return trimmed[:12000]
+	}
+
+	return trimmed
+}
+
+func (s *PortfolioService) detailLock(key string) *sync.Mutex {
+	if lock, ok := s.detailLocks.Load(key); ok {
+		return lock.(*sync.Mutex)
+	}
+
+	newLock := &sync.Mutex{}
+	actual, _ := s.detailLocks.LoadOrStore(key, newLock)
+	return actual.(*sync.Mutex)
+}
+
+func detailCacheKey(owner, repo string) string {
+	return projectDetailCachePrefix + strings.ToLower(strings.TrimSpace(owner)) + "/" + strings.ToLower(strings.TrimSpace(repo))
+}
+
+func (s *PortfolioService) getChangelog(ctx context.Context, owner, repo string) string {
+	candidates := []string{
+		"CHANGELOG.md",
+		"Changelog.md",
+		"changelog.md",
+		"docs/CHANGELOG.md",
+		"docs/changelog.md",
+	}
+
+	for _, filePath := range candidates {
+		content, err := s.githubClient.GetFileContent(ctx, owner, repo, filePath)
+		if err != nil {
+			continue
+		}
+		if strings.TrimSpace(content) != "" {
+			return content
+		}
+	}
+
+	return ""
+}
+
+func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	ctx, cancel := context.WithTimeout(ctx, s.refreshLockTTL)
+	defer cancel()
+
+	user, err := s.githubClient.GetUser(ctx, s.username)
+	if err != nil {
+		return domain.PortfolioData{}, err
+	}
+
+	repos, err := s.githubClient.GetRepositories(ctx, s.username)
+	if err != nil {
+		return domain.PortfolioData{}, err
+	}
+
+	events, err := s.githubClient.GetEvents(ctx, s.username)
+	if err != nil {
+		events = []github.Event{}
+	}
+
+	mergedPRs, prErr := s.githubClient.SearchMergedPRs(ctx, s.username)
+	if prErr != nil {
+		mergedPRs = []github.PullRequestItem{}
+	}
+
+	projects := make([]domain.Project, 0, len(repos))
+	ownedCount := 0
+	totalStars := 0
+
+	for _, repo := range repos {
+		if !repo.Fork {
+			ownedCount++
+		}
+		totalStars += repo.StargazersCount
+
+		projects = append(projects, domain.Project{
+			Owner:       repo.Owner.Login,
+			Repository:  repo.Name,
+			Description: strings.TrimSpace(repo.Description),
+			Language:    repo.Language,
+			Stars:       repo.StargazersCount,
+			UpdatedAt:   repo.UpdatedAt,
+			RepoURL:     repo.HTMLURL,
+			LiveURL:     s.resolveLiveURLFast(repo),
+			IsFork:      repo.Fork,
+			Category:    categoryForRepository(repo),
+		})
+	}
+
+	contributions := make([]domain.Contribution, 0, len(mergedPRs))
+	for _, pr := range mergedPRs {
+		owner, repo := parsePROwnerRepo(pr.HTMLURL)
+		if owner == "" || repo == "" {
+			continue
+		}
+		contributions = append(contributions, domain.Contribution{
+			Owner:      owner,
+			Repository: repo,
+			RepoURL:    "https://github.com/" + owner + "/" + repo,
+			Title:      pr.Title,
+			MergedAt:   pr.PullRequest.MergedAt,
+			PRURL:      pr.HTMLURL,
+		})
+	}
+
+	sort.Slice(projects, func(i, j int) bool {
+		return projects[i].UpdatedAt > projects[j].UpdatedAt
+	})
+
+	mappedEvents := make([]domain.Event, 0, min(8, len(events)))
+	for idx, event := range events {
+		if idx >= 8 {
+			break
+		}
+		mappedEvents = append(mappedEvents, domain.Event{
+			Repository: strings.TrimPrefix(event.Repo.Name, s.username+"/"),
+			Type:       event.Type,
+			CreatedAt:  event.CreatedAt,
+		})
+	}
+
+	payload := domain.PortfolioData{
+		UpdatedAt: time.Now().UTC().Format(time.RFC3339),
+		Profile: domain.ProfileSummary{
+			Username:  user.Login,
+			Name:      user.Name,
+			Bio:       user.Bio,
+			Followers: user.Followers,
+		},
+		KPI: domain.KPI{
+			OwnedRepositories: ownedCount,
+			MergedPRs:         len(contributions),
+			TotalStars:        totalStars,
+		},
+		Projects:      projects,
+		Contributions: contributions,
+		Events:        mappedEvents,
+		IsStale:       false,
+	}
+
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return domain.PortfolioData{}, err
+	}
+
+	if err := s.store.UpsertCache(ctx, cacheKey, raw, time.Now().UTC()); err != nil {
+		return domain.PortfolioData{}, err
+	}
+
+	return payload, nil
+}
+
+func (s *PortfolioService) resolveLiveURLFast(repo github.Repository) string {
+	if repo.Fork {
+		return repo.HTMLURL
+	}
+
+	homepage := strings.TrimSpace(repo.Homepage)
+	if candidate := normalizeURLCandidate(homepage); candidate != "" {
+		return candidate
+	}
+
+	return ""
+}
+
+func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo github.Repository) string {
+	if repo.Fork {
+		return repo.HTMLURL
+	}
+
+	owner := strings.TrimSpace(repo.Owner.Login)
+	repository := strings.TrimSpace(repo.Name)
+
+	if owner != "" && repository != "" {
+		cnameCandidates := []string{"CNAME", "docs/CNAME", "frontend/public/CNAME", "frontend/CNAME"}
+		for _, path := range cnameCandidates {
+			content, err := s.githubClient.GetFileContent(ctx, owner, repository, path)
+			if err != nil {
+				continue
+			}
+			if candidate := normalizeURLCandidate(content); candidate != "" {
+				return candidate
+			}
+		}
+
+		homepage := strings.TrimSpace(repo.Homepage)
+		if candidate := normalizeURLCandidate(homepage); candidate != "" {
+			return candidate
+		}
+	}
+
+	return ""
+}
+
+func normalizeURLCandidate(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	trimmed = strings.Trim(trimmed, "\"'`\n\r\t ")
+	if trimmed == "" {
+		return ""
+	}
+
+	lower := strings.ToLower(trimmed)
+	if strings.HasPrefix(lower, "localhost") || strings.HasPrefix(lower, "127.0.0.1") {
+		return ""
+	}
+
+	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
+		trimmed = "https://" + trimmed
+	}
+
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.Host == "" {
+		return ""
+	}
+
+	host := strings.ToLower(parsed.Host)
+	if host == "localhost" || strings.HasPrefix(host, "127.0.0.1") {
+		return ""
+	}
+
+	parsed.Fragment = ""
+	return parsed.String()
+}
+
+func parsePROwnerRepo(htmlURL string) (owner, repo string) {
+	parts := strings.Split(htmlURL, "/")
+	if len(parts) >= 5 {
+		return parts[3], parts[4]
+	}
+	return "", ""
+}
+
+func categoryForRepository(repo github.Repository) string {
+	if repo.Fork {
+		return "contrib"
+	}
+
+	name := strings.ToLower(repo.Name)
+	if strings.Contains(name, "experiment") || strings.Contains(name, "demo") {
+		return "explore"
+	}
+
+	return "core"
+}
