@@ -15,7 +15,8 @@ function portfolioSeedPlugin(): import("vite").Plugin {
         return [
           {
             tag: "script",
-            injectTo: "head-prepend",
+            attrs: { type: "text/javascript" },
+            injectTo: "head",
             children: `window.__PORTFOLIO_SEED__=${JSON.stringify(data)};`,
           },
         ];

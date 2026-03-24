@@ -1,10 +1,13 @@
+import { lazy, Suspense } from "react";
 import { Link, useParams } from "react-router-dom";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 
 import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { findProjectBySlug } from "@/lib/projectRoutes";
+
+const MarkdownRenderer = lazy(() =>
+  import("@/components/MarkdownRenderer").then((m) => ({ default: m.MarkdownRenderer }))
+);
 
 function fmtDate(iso: string) {
   if (!iso) return "-";
@@ -137,7 +140,9 @@ export function ProjectPage() {
         </div>
         {readme ? (
           <div className="readme-block markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{readme}</ReactMarkdown>
+            <Suspense fallback={null}>
+              <MarkdownRenderer>{readme}</MarkdownRenderer>
+            </Suspense>
           </div>
         ) : (
           <p className="mono">No README content found for this repository.</p>
@@ -150,11 +155,15 @@ export function ProjectPage() {
         </div>
         {changelog ? (
           <div className="readme-block markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{changelog}</ReactMarkdown>
+            <Suspense fallback={null}>
+              <MarkdownRenderer>{changelog}</MarkdownRenderer>
+            </Suspense>
           </div>
         ) : releaseChangelog ? (
           <div className="readme-block markdown-body">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{releaseChangelog}</ReactMarkdown>
+            <Suspense fallback={null}>
+              <MarkdownRenderer>{releaseChangelog}</MarkdownRenderer>
+            </Suspense>
           </div>
         ) : (
           <p className="mono">No CHANGELOG file or release notes found for this repository.</p>

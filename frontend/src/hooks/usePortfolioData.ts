@@ -18,15 +18,16 @@ type State = {
 };
 
 function readCache(): PortfolioData | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (raw) return JSON.parse(raw) as PortfolioData;
+  } catch {
+    // ignore
+  }
   if (typeof window !== "undefined" && window.__PORTFOLIO_SEED__) {
     return window.__PORTFOLIO_SEED__;
   }
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? (JSON.parse(raw) as PortfolioData) : null;
-  } catch {
-    return null;
-  }
+  return null;
 }
 
 function writeCache(data: PortfolioData) {

@@ -73,6 +73,18 @@ export function HomePage() {
 
   const displayName = data.profile.name || data.profile.username;
 
+  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+  const activeThisQuarter = data.projects.filter(
+    (p) => new Date(p.updatedAt).getTime() > ninetyDaysAgo
+  ).length;
+  const totalProjects = data.projects.length;
+  const ownedCount = data.projects.filter((p) => !p.isFork).length;
+  const forkCount = totalProjects - ownedCount;
+  const languageCount = new Set(data.projects.map((p) => p.language).filter(Boolean)).size;
+  const coreCount = data.projects.filter((p) => p.category === "core").length;
+  const activePct = totalProjects > 0 ? Math.round((activeThisQuarter / totalProjects) * 100) : 0;
+  const ownedPct = totalProjects > 0 ? Math.round((ownedCount / totalProjects) * 100) : 0;
+
   return (
     <main className="console">
       <header className="header">
@@ -111,16 +123,38 @@ export function HomePage() {
 
         <aside className="panel">
           <div className="section-head">
-            <h2>Live Gauges</h2>
-            <span className="mono">Self-assessed signals</span>
+            <h2>Activity Signals</h2>
+            <span className="mono">Computed from GitHub data</span>
           </div>
           <div className="gauges">
-            <div className="gauge">Backend depth<div className="bar"><div className="fill" style={{ width: "91%" }} /></div></div>
-            <div className="gauge">Shipping velocity<div className="bar"><div className="fill" style={{ width: "78%" }} /></div></div>
-            <div className="gauge">Stack range<div className="bar"><div className="fill" style={{ width: "72%" }} /></div></div>
-            <div className="gauge">Architecture clarity<div className="bar"><div className="fill" style={{ width: "88%" }} /></div></div>
-            <div className="gauge">AI-assisted output<div className="bar"><div className="fill" style={{ width: "85%" }} /></div></div>
-            <div className="gauge">Release consistency<div className="bar"><div className="fill" style={{ width: "80%" }} /></div></div>
+            <div className="gauge">
+              <div className="gauge-label">Active this quarter</div>
+              <div className="gauge-val">{activeThisQuarter}<span>/{totalProjects}</span></div>
+              <div className="bar"><div className="fill" style={{ width: `${activePct}%` }} /></div>
+            </div>
+            <div className="gauge">
+              <div className="gauge-label">Owned vs fork</div>
+              <div className="gauge-val">{ownedCount}<span>/{totalProjects}</span></div>
+              <div className="bar">
+                <div className="fill fill-owned" style={{ width: `${ownedPct}%` }} />
+              </div>
+            </div>
+            <div className="gauge gauge-stat">
+              <div className="gauge-label">Languages used</div>
+              <div className="gauge-val">{languageCount}</div>
+            </div>
+            <div className="gauge gauge-stat">
+              <div className="gauge-label">Core projects</div>
+              <div className="gauge-val">{coreCount}</div>
+            </div>
+            <div className="gauge gauge-stat">
+              <div className="gauge-label">Merged PRs</div>
+              <div className="gauge-val">{data.kpi.mergedPRs}</div>
+            </div>
+            <div className="gauge gauge-stat">
+              <div className="gauge-label">Fork contrib</div>
+              <div className="gauge-val">{forkCount}</div>
+            </div>
           </div>
         </aside>
       </section>
