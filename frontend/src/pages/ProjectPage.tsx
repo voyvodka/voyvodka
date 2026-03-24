@@ -1,13 +1,8 @@
-import { lazy, Suspense } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { findProjectBySlug } from "@/lib/projectRoutes";
-
-const MarkdownRenderer = lazy(() =>
-  import("@/components/MarkdownRenderer").then((m) => ({ default: m.MarkdownRenderer }))
-);
 
 function fmtDate(iso: string) {
   if (!iso) return "-";
@@ -138,12 +133,10 @@ export function ProjectPage() {
         <div className="panel-title">
           <h3>README Snapshot</h3>
         </div>
-        {readme ? (
-          <div className="readme-block markdown-body">
-            <Suspense fallback={null}>
-              <MarkdownRenderer>{readme}</MarkdownRenderer>
-            </Suspense>
-          </div>
+        {data.readmeHtml ? (
+          <div className="readme-block markdown-body" dangerouslySetInnerHTML={{ __html: data.readmeHtml }} />
+        ) : readme ? (
+          <div className="readme-block markdown-body"><pre>{readme}</pre></div>
         ) : (
           <p className="mono">No README content found for this repository.</p>
         )}
@@ -153,18 +146,12 @@ export function ProjectPage() {
         <div className="panel-title">
           <h3>Changelog</h3>
         </div>
-        {changelog ? (
-          <div className="readme-block markdown-body">
-            <Suspense fallback={null}>
-              <MarkdownRenderer>{changelog}</MarkdownRenderer>
-            </Suspense>
-          </div>
+        {data.changelogHtml ? (
+          <div className="readme-block markdown-body" dangerouslySetInnerHTML={{ __html: data.changelogHtml }} />
+        ) : changelog ? (
+          <div className="readme-block markdown-body"><pre>{changelog}</pre></div>
         ) : releaseChangelog ? (
-          <div className="readme-block markdown-body">
-            <Suspense fallback={null}>
-              <MarkdownRenderer>{releaseChangelog}</MarkdownRenderer>
-            </Suspense>
-          </div>
+          <div className="readme-block markdown-body"><pre>{releaseChangelog}</pre></div>
         ) : (
           <p className="mono">No CHANGELOG file or release notes found for this repository.</p>
         )}

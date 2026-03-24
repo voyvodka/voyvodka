@@ -81,45 +81,44 @@ function caseApproach(p: ProjectSummary) {
 export function HomePage() {
   const { data, loading, error } = usePortfolioData();
 
-  if (loading) return null;
-  if (error) return <main className="console"><p className="mono">Failed to load data: {error}</p></main>;
-  if (!data) return <main className="console"><p className="mono">No data available.</p></main>;
+  const displayName = data?.profile.name || data?.profile.username || "Portfolio";
+  const githubUrl = data?.profile.username ? `https://github.com/${data.profile.username}` : "https://github.com";
 
-  const latest = data.projects[0]?.updatedAt;
-  const latestRepos = data.projects.slice(0, 5);
-  const topProjects = data.projects.slice(0, 8);
+  const latest = data?.projects[0]?.updatedAt;
+  const latestRepos = data?.projects.slice(0, 5) ?? [];
+  const topProjects = data?.projects.slice(0, 8) ?? [];
 
-  const caseProjects = data.projects
+  const caseProjects = data?.projects
     .filter((p) => !p.isFork && p.category === "core")
-    .slice(0, 3);
+    .slice(0, 3) ?? [];
 
-  const timelineProjects = data.projects.filter((p) => !p.isFork).slice(0, 4);
+  const timelineProjects = data?.projects.filter((p) => !p.isFork).slice(0, 4) ?? [];
 
-  const languageCounts = data.projects.reduce<Record<string, number>>((acc, project) => {
+  const languageCounts = data?.projects.reduce<Record<string, number>>((acc, project) => {
     if (!project.language) return acc;
     acc[project.language] = (acc[project.language] || 0) + 1;
     return acc;
-  }, {});
+  }, {}) ?? {};
   const topLanguages = Object.entries(languageCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
   const maxLangCount = topLanguages[0]?.[1] || 1;
 
-  const displayName = data.profile.name || data.profile.username;
-
   const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-  const activeThisQuarter = data.projects.filter(
+  const totalProjects = data?.projects.length ?? 0;
+  const activeThisQuarter = data?.projects.filter(
     (p) => new Date(p.updatedAt).getTime() > ninetyDaysAgo
-  ).length;
-  const totalProjects = data.projects.length;
-  const ownedCount = data.projects.filter((p) => !p.isFork).length;
-  const coreCount = data.projects.filter((p) => p.category === "core").length;
+  ).length ?? 0;
+  const ownedCount = data?.projects.filter((p) => !p.isFork).length ?? 0;
+  const coreCount = data?.projects.filter((p) => p.category === "core").length ?? 0;
   const topLangCount = topLanguages[0]?.[1] ?? 0;
   const topLangName = topLanguages[0]?.[0] ?? "";
   const activePct = totalProjects > 0 ? Math.round((activeThisQuarter / totalProjects) * 100) : 0;
   const ownedPct = totalProjects > 0 ? Math.round((ownedCount / totalProjects) * 100) : 0;
   const corePct = ownedCount > 0 ? Math.round((coreCount / ownedCount) * 100) : 0;
   const topLangPct = totalProjects > 0 ? Math.round((topLangCount / totalProjects) * 100) : 0;
+
+  const dataUnavailable = !loading && (error != null || data == null);
 
   return (
     <main className="console">
@@ -146,13 +145,13 @@ export function HomePage() {
           </p>
           <div className="hero-actions">
             <a className="btn" href="#projects">Open Project Logs</a>
-            <a className="btn" href={`https://github.com/${data.profile.username}`} target="_blank" rel="noreferrer">GitHub</a>
+            <a className="btn" href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
             <a className="btn" href="https://linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
           </div>
           <div className="kpis">
-            <div className="kpi"><b>{data.kpi.ownedRepositories}</b><span className="mono">owned repositories</span></div>
-            <div className="kpi"><b>{data.kpi.mergedPRs}</b><span className="mono">merged prs</span></div>
-            <div className="kpi"><b>{data.profile.followers}</b><span className="mono">github followers</span></div>
+            <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
+            <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
+            <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
             <div className="kpi"><b>{latest ? ago(latest) : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
@@ -162,30 +161,36 @@ export function HomePage() {
             <h2>Activity Signals</h2>
             <span className="mono">Computed from GitHub data</span>
           </div>
-          <div className="gauges">
-            <div className="gauge">
-              <div className="gauge-label">Active this quarter</div>
-              <div className="gauge-val">{activeThisQuarter}<span>/{totalProjects}</span></div>
-              <div className="bar"><div className="fill" style={{ width: `${activePct}%` }} /></div>
-            </div>
-            <div className="gauge">
-              <div className="gauge-label">Owned ratio</div>
-              <div className="gauge-val">{ownedCount}<span>/{totalProjects}</span></div>
-              <div className="bar"><div className="fill fill-owned" style={{ width: `${ownedPct}%` }} /></div>
-            </div>
-            <div className="gauge">
-              <div className="gauge-label">Core focus</div>
-              <div className="gauge-val">{coreCount}<span>/{ownedCount}</span></div>
-              <div className="bar"><div className="fill fill-core" style={{ width: `${corePct}%` }} /></div>
-            </div>
-            <div className="gauge">
-              <div className="gauge-label">Top lang — {topLangName}</div>
-              <div className="gauge-val">{topLangCount}<span>/{totalProjects}</span></div>
-              <div className="bar"><div className="fill fill-lang" style={{ width: `${topLangPct}%` }} /></div>
-            </div>
-          </div>
-          {(data.contributionCalendar?.length ?? 0) > 0 && (
-            <ContribHeatmap calendar={data.contributionCalendar} />
+          {dataUnavailable ? (
+            <p className="mono" style={{ opacity: 0.5 }}>Activity data unavailable.</p>
+          ) : (
+            <>
+              <div className="gauges">
+                <div className="gauge">
+                  <div className="gauge-label">Active this quarter</div>
+                  <div className="gauge-val">{activeThisQuarter}<span>/{totalProjects}</span></div>
+                  <div className="bar"><div className="fill" style={{ width: `${activePct}%` }} /></div>
+                </div>
+                <div className="gauge">
+                  <div className="gauge-label">Owned ratio</div>
+                  <div className="gauge-val">{ownedCount}<span>/{totalProjects}</span></div>
+                  <div className="bar"><div className="fill fill-owned" style={{ width: `${ownedPct}%` }} /></div>
+                </div>
+                <div className="gauge">
+                  <div className="gauge-label">Core focus</div>
+                  <div className="gauge-val">{coreCount}<span>/{ownedCount}</span></div>
+                  <div className="bar"><div className="fill fill-core" style={{ width: `${corePct}%` }} /></div>
+                </div>
+                <div className="gauge">
+                  <div className="gauge-label">Top lang — {topLangName}</div>
+                  <div className="gauge-val">{topLangCount}<span>/{totalProjects}</span></div>
+                  <div className="bar"><div className="fill fill-lang" style={{ width: `${topLangPct}%` }} /></div>
+                </div>
+              </div>
+              {(data?.contributionCalendar?.length ?? 0) > 0 && (
+                <ContribHeatmap calendar={data!.contributionCalendar} />
+              )}
+            </>
           )}
         </aside>
       </section>
@@ -195,61 +200,65 @@ export function HomePage() {
           <h2>GitHub Live Feed</h2>
           <span className="mono">Public API synchronized</span>
         </div>
-        <div className="live-grid">
-          <article className="live-box">
-            <div className="section-head">
-              <span className="mono">Latest repositories</span>
-              <Link className="mono" to="/projects">view all</Link>
-            </div>
-            <ul className="live-list">
-              {latestRepos.map((repo) => (
-                <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
-                  <strong>
-                    <Link className="repo-link" to={toProjectPath(repo.repository)}>
-                      {repo.repository}
-                    </Link>
-                  </strong>
-                  <span className="mono">{repo.description || "No description provided."}</span>
-                  <span className="mono">
-                    {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | {ago(repo.updatedAt)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <ul className="lang-bars">
-              {topLanguages.map(([lang, count]) => {
-                const pct = Math.round((count / maxLangCount) * 100);
-                return (
-                  <li key={lang}>
-                    <span>{lang}</span>
-                    <div className="lang-track"><div className="lang-fill" style={{ width: `${pct}%` }} /></div>
-                    <span>{count} repo</span>
+        {dataUnavailable ? (
+          <p className="mono" style={{ opacity: 0.5 }}>Live feed unavailable — backend unreachable.</p>
+        ) : (
+          <div className="live-grid">
+            <article className="live-box">
+              <div className="section-head">
+                <span className="mono">Latest repositories</span>
+                <Link className="mono" to="/projects">view all</Link>
+              </div>
+              <ul className="live-list">
+                {latestRepos.map((repo) => (
+                  <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
+                    <strong>
+                      <Link className="repo-link" to={toProjectPath(repo.repository)}>
+                        {repo.repository}
+                      </Link>
+                    </strong>
+                    <span className="mono">{repo.description || "No description provided."}</span>
+                    <span className="mono">
+                      {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | {ago(repo.updatedAt)}
+                    </span>
                   </li>
-                );
-              })}
-            </ul>
-          </article>
+                ))}
+              </ul>
+              <ul className="lang-bars">
+                {topLanguages.map(([lang, count]) => {
+                  const pct = Math.round((count / maxLangCount) * 100);
+                  return (
+                    <li key={lang}>
+                      <span>{lang}</span>
+                      <div className="lang-track"><div className="lang-fill" style={{ width: `${pct}%` }} /></div>
+                      <span>{count} repo</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </article>
 
-          <article className="live-box">
-            <div className="section-head">
-              <span className="mono">Recent activity events</span>
-              <a className="mono" href={`https://github.com/${data.profile.username}`} target="_blank" rel="noreferrer">profile</a>
-            </div>
-            <ul className="live-list">
-              {data.events.slice(0, 6).map((event, idx) => (
-                <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
-                  <strong>
-                    <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
-                      {event.repository}
-                    </Link>
-                  </strong>
-                  <span className="mono">{eventLabel(event.type)}</span>
-                  <span className="mono">{ago(event.createdAt)}</span>
-                </li>
-              ))}
-            </ul>
-          </article>
-        </div>
+            <article className="live-box">
+              <div className="section-head">
+                <span className="mono">Recent activity events</span>
+                <a className="mono" href={githubUrl} target="_blank" rel="noreferrer">profile</a>
+              </div>
+              <ul className="live-list">
+                {(data?.events ?? []).slice(0, 6).map((event, idx) => (
+                  <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
+                    <strong>
+                      <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
+                        {event.repository}
+                      </Link>
+                    </strong>
+                    <span className="mono">{eventLabel(event.type)}</span>
+                    <span className="mono">{ago(event.createdAt)}</span>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </div>
+        )}
       </section>
 
       <section className="projects" id="projects">
@@ -260,29 +269,35 @@ export function HomePage() {
           <div>Stack</div>
           <div>Status</div>
         </div>
-        {topProjects.map((project, idx) => (
-          <div className="row" key={`${project.owner}/${project.repository}`}>
-            <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
-            <div>
-              <b>
-                <Link className="repo-link" to={toProjectPath(project.repository)}>
-                  {project.repository}
-                </Link>
-              </b>
-              <div className="mono">{project.description || "No description"}</div>
+        {dataUnavailable ? (
+          <div className="row"><span className="mono" style={{ opacity: 0.5 }}>Project data unavailable — backend unreachable.</span></div>
+        ) : (
+          <>
+            {topProjects.map((project, idx) => (
+              <div className="row" key={`${project.owner}/${project.repository}`}>
+                <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
+                <div>
+                  <b>
+                    <Link className="repo-link" to={toProjectPath(project.repository)}>
+                      {project.repository}
+                    </Link>
+                  </b>
+                  <div className="mono">{project.description || "No description"}</div>
+                </div>
+                <div className="mono">
+                  {project.isFork ? "Contribution and PR workflow" : "Design and maintain reliable product workflows"}
+                </div>
+                <div className="mono">{project.language || "Unknown"}</div>
+                <span className={statusClass(project.category, project.isFork)}>
+                  <Link to={toProjectPath(project.repository)}>{statusLabel(project.category, project.isFork)}</Link>
+                </span>
+              </div>
+            ))}
+            <div className="projects-footer">
+              <Link className="mono" to="/projects">View all {totalProjects} repositories →</Link>
             </div>
-            <div className="mono">
-              {project.isFork ? "Contribution and PR workflow" : "Design and maintain reliable product workflows"}
-            </div>
-            <div className="mono">{project.language || "Unknown"}</div>
-            <span className={statusClass(project.category, project.isFork)}>
-              <Link to={toProjectPath(project.repository)}>{statusLabel(project.category, project.isFork)}</Link>
-            </span>
-          </div>
-        ))}
-        <div className="projects-footer">
-          <Link className="mono" to="/projects">View all {data.projects.length} repositories →</Link>
-        </div>
+          </>
+        )}
       </section>
 
       <section className="panel" id="cases">
@@ -291,7 +306,12 @@ export function HomePage() {
           <span className="mono">Stack / Context / Outcome</span>
         </div>
         <div className="grid-3">
-          {caseProjects.length > 0 ? caseProjects.map((p) => (
+          {dataUnavailable ? (
+            <article className="case">
+              <h3>Unavailable</h3>
+              <ul><li><span>Status</span>Backend unreachable — case data not loaded.</li></ul>
+            </article>
+          ) : caseProjects.length > 0 ? caseProjects.map((p) => (
             <article className="case" key={p.repository}>
               <h3>
                 <Link to={toProjectPath(p.repository)} style={{ color: "inherit", textDecoration: "none" }}>
@@ -319,7 +339,9 @@ export function HomePage() {
             <h2>Build Timeline</h2>
             <span className="mono">Recent milestones</span>
           </div>
-          {timelineProjects.map((p) => (
+          {dataUnavailable ? (
+            <p className="mono" style={{ opacity: 0.5 }}>Timeline unavailable.</p>
+          ) : timelineProjects.map((p) => (
             <div className="time-item" key={p.repository}>
               <span className="mono">{toQuarter(p.updatedAt)}</span>
               <div>
@@ -371,7 +393,7 @@ export function HomePage() {
           <div className="mono">Open to .NET backend and MVC full-stack roles. Interested in product teams that value practical engineering and AI-accelerated delivery.</div>
         </div>
         <div className="hero-actions">
-          <a className="btn" href={`https://github.com/${data.profile.username}`} target="_blank" rel="noreferrer">GitHub</a>
+          <a className="btn" href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
           <a className="btn" href="https://linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
         </div>
       </section>

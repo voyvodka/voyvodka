@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 
 import { getProjectDetail } from "@/lib/apiClient";
 import type { ProjectDetail } from "@/types/api";
-
-const CACHE_PREFIX = "project_detail_cache:";
+import { useSSRData } from "@/context/DataContext";
 
 type State = {
   data: ProjectDetail | null;
@@ -11,45 +10,29 @@ type State = {
   error: string | null;
 };
 
-function readCache(key: string): ProjectDetail | null {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as ProjectDetail) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(key: string, data: ProjectDetail) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch {
-  }
-}
-
 export function useProjectDetail(owner: string, repo: string) {
-  const cacheKey = `${CACHE_PREFIX}${owner}/${repo}`;
-  const cached = owner && repo ? readCache(cacheKey) : null;
+  const { projectDetail: ssrProjectDetail } = useSSRData();
+
+  const ssrMatch =
+    ssrProjectDetail?.owner === owner && ssrProjectDetail.repository === repo
+      ? ssrProjectDetail
+      : null;
 
   const [state, setState] = useState<State>({
-    data: cached,
-    loading: cached === null,
+    data: ssrMatch ?? null,
+    loading: ssrMatch == null && Boolean(owner && repo),
     error: null,
   });
 
   useEffect(() => {
     if (!owner || !repo) return;
+    if (ssrMatch) return;
+
     const controller = new AbortController();
 
     getProjectDetail(owner, repo, controller.signal)
       .then((data) => {
-        writeCache(cacheKey, data);
-        setState((prev) => {
-          if (prev.data && JSON.stringify(prev.data) === JSON.stringify(data)) {
-            return prev.loading ? { ...prev, loading: false } : prev;
-          }
-          return { data, loading: false, error: null };
-        });
+        setState({ data, loading: false, error: null });
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
@@ -63,7 +46,7 @@ export function useProjectDetail(owner: string, repo: string) {
     return () => {
       controller.abort();
     };
-  }, [owner, repo, cacheKey]);
+  }, [owner, repo]);
 
   return state;
 }

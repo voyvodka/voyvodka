@@ -73,6 +73,8 @@ export type ProjectDetail = {
   category: "core" | "contrib" | "explore";
   readme: string;
   changelog: string;
+  readmeHtml?: string;
+  changelogHtml?: string;
   releases: Release[];
 };
 

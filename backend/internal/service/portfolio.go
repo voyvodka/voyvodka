@@ -19,6 +19,7 @@ import (
 
 const cacheKey = "portfolio_data"
 const projectDetailCachePrefix = "project_detail:"
+const maxContentLength = 12000
 
 type PortfolioService struct {
 	store          storage.Store
@@ -133,21 +134,46 @@ func (s *PortfolioService) GetProjectDetail(ctx context.Context, owner, repo str
 }
 
 func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo string) (domain.ProjectDetail, error) {
-	repository, err := s.githubClient.GetRepository(ctx, owner, repo)
-	if err != nil {
-		return domain.ProjectDetail{}, err
-	}
+	var (
+		repository github.Repository
+		readme     string
+		changelog  string
+		releases   []github.Release
+		repoErr    error
+	)
 
-	readme, err := s.githubClient.GetReadme(ctx, owner, repo)
-	if err != nil {
-		readme = ""
-	}
+	var wg sync.WaitGroup
+	wg.Add(4)
 
-	changelog := s.getChangelog(ctx, owner, repo)
+	go func() {
+		defer wg.Done()
+		repository, repoErr = s.githubClient.GetRepository(ctx, owner, repo)
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		readme, err = s.githubClient.GetReadme(ctx, owner, repo)
+		if err != nil {
+			readme = ""
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		changelog = s.getChangelog(ctx, owner, repo)
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		releases, err = s.githubClient.GetReleases(ctx, owner, repo)
+		if err != nil {
+			releases = []github.Release{}
+		}
+	}()
 
-	releases, err := s.githubClient.GetReleases(ctx, owner, repo)
-	if err != nil {
-		releases = []github.Release{}
+	wg.Wait()
+
+	if repoErr != nil {
+		return domain.ProjectDetail{}, repoErr
 	}
 
 	if len(releases) == 0 {
@@ -208,8 +234,8 @@ func normalizeReadme(raw string) string {
 		return ""
 	}
 
-	if len(trimmed) > 12000 {
-		return trimmed[:12000]
+	if len(trimmed) > maxContentLength {
+		return trimmed[:maxContentLength]
 	}
 
 	return trimmed
@@ -238,17 +264,38 @@ func (s *PortfolioService) getChangelog(ctx context.Context, owner, repo string)
 		"docs/changelog.md",
 	}
 
-	for _, filePath := range candidates {
-		content, err := s.githubClient.GetFileContent(ctx, owner, repo, filePath)
-		if err != nil {
-			continue
-		}
-		if strings.TrimSpace(content) != "" {
-			return content
+	type hit struct {
+		content string
+		idx     int
+	}
+
+	hits := make(chan hit, len(candidates))
+
+	var wg sync.WaitGroup
+	for i, filePath := range candidates {
+		wg.Add(1)
+		go func(idx int, path string) {
+			defer wg.Done()
+			content, err := s.githubClient.GetFileContent(ctx, owner, repo, path)
+			if err == nil && strings.TrimSpace(content) != "" {
+				hits <- hit{content: content, idx: idx}
+			}
+		}(i, filePath)
+	}
+
+	go func() {
+		wg.Wait()
+		close(hits)
+	}()
+
+	best := hit{idx: len(candidates)}
+	for h := range hits {
+		if h.idx < best.idx {
+			best = h
 		}
 	}
 
-	return ""
+	return best.content
 }
 
 func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, error) {
@@ -258,29 +305,58 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	ctx, cancel := context.WithTimeout(ctx, s.refreshLockTTL)
 	defer cancel()
 
-	user, err := s.githubClient.GetUser(ctx, s.username)
-	if err != nil {
-		return domain.PortfolioData{}, err
-	}
+	var (
+		user                 github.User
+		repos                []github.Repository
+		events               []github.Event
+		mergedPRs            []github.PullRequestItem
+		contributionCalendar []domain.ContributionDay
+		userErr, reposErr    error
+	)
 
-	repos, err := s.githubClient.GetRepositories(ctx, s.username)
-	if err != nil {
-		return domain.PortfolioData{}, err
-	}
+	var wg sync.WaitGroup
+	wg.Add(5)
 
-	events, err := s.githubClient.GetEvents(ctx, s.username)
-	if err != nil {
-		events = []github.Event{}
-	}
+	go func() {
+		defer wg.Done()
+		user, userErr = s.githubClient.GetUser(ctx, s.username)
+	}()
+	go func() {
+		defer wg.Done()
+		repos, reposErr = s.githubClient.GetRepositories(ctx, s.username)
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		events, err = s.githubClient.GetEvents(ctx, s.username)
+		if err != nil {
+			events = []github.Event{}
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		mergedPRs, err = s.githubClient.SearchMergedPRs(ctx, s.username)
+		if err != nil {
+			mergedPRs = []github.PullRequestItem{}
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		var err error
+		contributionCalendar, err = s.githubClient.GetContributionCalendar(ctx, s.username)
+		if err != nil {
+			contributionCalendar = []domain.ContributionDay{}
+		}
+	}()
 
-	mergedPRs, prErr := s.githubClient.SearchMergedPRs(ctx, s.username)
-	if prErr != nil {
-		mergedPRs = []github.PullRequestItem{}
-	}
+	wg.Wait()
 
-	contributionCalendar, calErr := s.githubClient.GetContributionCalendar(ctx, s.username)
-	if calErr != nil {
-		contributionCalendar = []domain.ContributionDay{}
+	if userErr != nil {
+		return domain.PortfolioData{}, userErr
+	}
+	if reposErr != nil {
+		return domain.PortfolioData{}, reposErr
 	}
 
 	projects := make([]domain.Project, 0, len(repos))

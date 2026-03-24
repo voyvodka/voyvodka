@@ -37,6 +37,12 @@ func (h *Handler) getPortfolioData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if data.IsStale {
+		w.Header().Set("Cache-Control", "public, max-age=0, must-revalidate")
+	} else {
+		w.Header().Set("Cache-Control", "public, max-age=60, stale-while-revalidate=1800")
+	}
+
 	writeJSON(w, http.StatusOK, data)
 }
 
@@ -53,6 +59,8 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load project details"})
 		return
 	}
+
+	w.Header().Set("Cache-Control", "public, max-age=300, stale-while-revalidate=3600")
 
 	writeJSON(w, http.StatusOK, detail)
 }
