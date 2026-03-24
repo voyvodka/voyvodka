@@ -47,7 +47,7 @@ function caseApproach(p: ProjectSummary) {
 export function HomePage() {
   const { data, loading, error } = usePortfolioData();
 
-  if (loading) return <main className="console"><p className="mono">Loading portfolio data...</p></main>;
+  if (loading) return null;
   if (error) return <main className="console"><p className="mono">Failed to load data: {error}</p></main>;
   if (!data) return <main className="console"><p className="mono">No data available.</p></main>;
 

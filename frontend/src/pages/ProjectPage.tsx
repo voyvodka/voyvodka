@@ -45,7 +45,7 @@ export function ProjectPage() {
   if (portfolioLoading) return <main className="console"><p className="mono">Loading project details...</p></main>;
   if (portfolioError) return <main className="console"><p className="mono">Failed to load project list: {portfolioError}</p></main>;
   if (!matchedProject) return <main className="console"><p className="mono">Project not found.</p></main>;
-  if (loading) return <main className="console"><p className="mono">Loading project details...</p></main>;
+  if (loading) return null;
   if (error) return <main className="console"><p className="mono">Failed to load project: {error}</p></main>;
   if (!data) return <main className="console"><p className="mono">Project not found.</p></main>;
 

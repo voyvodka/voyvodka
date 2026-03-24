@@ -3,16 +3,45 @@ import { useEffect, useState } from "react";
 import { getPortfolioData } from "@/lib/apiClient";
 import type { PortfolioData } from "@/types/api";
 
+declare global {
+  interface Window {
+    __PORTFOLIO_SEED__?: PortfolioData;
+  }
+}
+
+const CACHE_KEY = "portfolio_data_cache";
+
 type State = {
   data: PortfolioData | null;
   loading: boolean;
   error: string | null;
 };
 
+function readCache(): PortfolioData | null {
+  if (typeof window !== "undefined" && window.__PORTFOLIO_SEED__) {
+    return window.__PORTFOLIO_SEED__;
+  }
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? (JSON.parse(raw) as PortfolioData) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(data: PortfolioData) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // storage quota exceeded — ignore
+  }
+}
+
 export function usePortfolioData() {
+  const cached = readCache();
   const [state, setState] = useState<State>({
-    data: null,
-    loading: true,
+    data: cached,
+    loading: cached === null,
     error: null,
   });
 
@@ -21,15 +50,21 @@ export function usePortfolioData() {
 
     getPortfolioData(controller.signal)
       .then((data) => {
-        setState({ data, loading: false, error: null });
+        writeCache(data);
+        setState((prev) => {
+          if (prev.data && JSON.stringify(prev.data) === JSON.stringify(data)) {
+            return prev.loading ? { ...prev, loading: false } : prev;
+          }
+          return { data, loading: false, error: null };
+        });
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === "AbortError") return;
-        setState({
-          data: null,
+        setState((prev) => ({
+          data: prev.data,
           loading: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+          error: prev.data ? null : (error instanceof Error ? error.message : "Unknown error"),
+        }));
       });
 
     return () => {
