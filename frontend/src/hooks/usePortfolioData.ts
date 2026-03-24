@@ -22,7 +22,6 @@ function readCache(): PortfolioData | null {
     const raw = localStorage.getItem(CACHE_KEY);
     if (raw) return JSON.parse(raw) as PortfolioData;
   } catch {
-    // ignore
   }
   if (typeof window !== "undefined" && window.__PORTFOLIO_SEED__) {
     return window.__PORTFOLIO_SEED__;
@@ -34,7 +33,6 @@ function writeCache(data: PortfolioData) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
   } catch {
-    // storage quota exceeded — ignore
   }
 }
 

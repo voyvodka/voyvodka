@@ -1,3 +1,8 @@
+export type ContributionDay = {
+  date: string;
+  count: number;
+};
+
 export type PortfolioData = {
   updatedAt: string;
   profile: {
@@ -14,6 +19,7 @@ export type PortfolioData = {
   projects: ProjectSummary[];
   contributions: Contribution[];
   events: EventSummary[];
+  contributionCalendar: ContributionDay[];
   isStale: boolean;
 };
 

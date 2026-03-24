@@ -1,9 +1,43 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { extractRepositoryName, toProjectPath } from "@/lib/projectRoutes";
-import type { ProjectSummary } from "@/types/api";
+import type { ContributionDay, ProjectSummary } from "@/types/api";
+
+const WEEKS_TO_SHOW = 30;
+
+function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const tail = calendar.slice(-(WEEKS_TO_SHOW * 7));
+  const firstDow = tail.length > 0 ? (new Date(tail[0].date).getDay() + 6) % 7 : 0;
+  const recent = calendar.slice(-(WEEKS_TO_SHOW * 7 + firstDow));
+  const level = (n: number) => n === 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4;
+  const fmt = (date: string, count: number) => {
+    const label = new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return count === 0 ? `No contributions · ${label}` : `${count} contribution${count !== 1 ? "s" : ""} · ${label}`;
+  };
+
+  return (
+    <div className="contrib-section">
+      <div className="gauge-label" style={{ marginBottom: 8 }}>Contribution activity</div>
+      <div className="contrib-grid">
+        {recent.map((day) => (
+          <span
+            key={day.date}
+            className="contrib-cell"
+            data-level={level(day.count)}
+            onMouseEnter={() => setHovered(fmt(day.date, day.count))}
+            onMouseLeave={() => setHovered(null)}
+          />
+        ))}
+      </div>
+      <div className="contrib-info">{hovered ?? "\u00A0"}</div>
+    </div>
+  );
+}
 
 function ago(isoDate: string) {
   const ms = Date.now() - new Date(isoDate).getTime();
@@ -79,11 +113,13 @@ export function HomePage() {
   ).length;
   const totalProjects = data.projects.length;
   const ownedCount = data.projects.filter((p) => !p.isFork).length;
-  const forkCount = totalProjects - ownedCount;
-  const languageCount = new Set(data.projects.map((p) => p.language).filter(Boolean)).size;
   const coreCount = data.projects.filter((p) => p.category === "core").length;
+  const topLangCount = topLanguages[0]?.[1] ?? 0;
+  const topLangName = topLanguages[0]?.[0] ?? "";
   const activePct = totalProjects > 0 ? Math.round((activeThisQuarter / totalProjects) * 100) : 0;
   const ownedPct = totalProjects > 0 ? Math.round((ownedCount / totalProjects) * 100) : 0;
+  const corePct = ownedCount > 0 ? Math.round((coreCount / ownedCount) * 100) : 0;
+  const topLangPct = totalProjects > 0 ? Math.round((topLangCount / totalProjects) * 100) : 0;
 
   return (
     <main className="console">
@@ -133,29 +169,24 @@ export function HomePage() {
               <div className="bar"><div className="fill" style={{ width: `${activePct}%` }} /></div>
             </div>
             <div className="gauge">
-              <div className="gauge-label">Owned vs fork</div>
+              <div className="gauge-label">Owned ratio</div>
               <div className="gauge-val">{ownedCount}<span>/{totalProjects}</span></div>
-              <div className="bar">
-                <div className="fill fill-owned" style={{ width: `${ownedPct}%` }} />
-              </div>
+              <div className="bar"><div className="fill fill-owned" style={{ width: `${ownedPct}%` }} /></div>
             </div>
-            <div className="gauge gauge-stat">
-              <div className="gauge-label">Languages used</div>
-              <div className="gauge-val">{languageCount}</div>
+            <div className="gauge">
+              <div className="gauge-label">Core focus</div>
+              <div className="gauge-val">{coreCount}<span>/{ownedCount}</span></div>
+              <div className="bar"><div className="fill fill-core" style={{ width: `${corePct}%` }} /></div>
             </div>
-            <div className="gauge gauge-stat">
-              <div className="gauge-label">Core projects</div>
-              <div className="gauge-val">{coreCount}</div>
-            </div>
-            <div className="gauge gauge-stat">
-              <div className="gauge-label">Merged PRs</div>
-              <div className="gauge-val">{data.kpi.mergedPRs}</div>
-            </div>
-            <div className="gauge gauge-stat">
-              <div className="gauge-label">Fork contrib</div>
-              <div className="gauge-val">{forkCount}</div>
+            <div className="gauge">
+              <div className="gauge-label">Top lang — {topLangName}</div>
+              <div className="gauge-val">{topLangCount}<span>/{totalProjects}</span></div>
+              <div className="bar"><div className="fill fill-lang" style={{ width: `${topLangPct}%` }} /></div>
             </div>
           </div>
+          {(data.contributionCalendar?.length ?? 0) > 0 && (
+            <ContribHeatmap calendar={data.contributionCalendar} />
+          )}
         </aside>
       </section>
 

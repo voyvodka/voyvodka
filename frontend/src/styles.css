@@ -275,6 +275,14 @@ h2 {
   background: linear-gradient(to right, var(--blue), var(--green));
 }
 
+.fill-core {
+  background: linear-gradient(to right, var(--amber), #ffdd88);
+}
+
+.fill-lang {
+  background: linear-gradient(to right, #c084fc, var(--blue));
+}
+
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -765,6 +773,42 @@ h2 {
   display: grid;
   gap: 6px;
 }
+
+.contrib-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.contrib-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 10px);
+  grid-template-columns: repeat(auto-fill, 10px);
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.contrib-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: #1e2a31;
+  cursor: default;
+}
+
+.contrib-info {
+  margin-top: 6px;
+  font-family: "Space Mono", monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  height: 14px;
+}
+
+.contrib-cell[data-level="1"] { background: #0a3628; }
+.contrib-cell[data-level="2"] { background: #0f5c3a; }
+.contrib-cell[data-level="3"] { background: #26a66a; }
+.contrib-cell[data-level="4"] { background: var(--green); }
 
 @media (max-width: 1000px) {
   .layout {

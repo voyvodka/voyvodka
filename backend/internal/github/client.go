@@ -1,6 +1,7 @@
 package github
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"portfolio/backend/internal/domain"
 )
 
 const baseURL = "https://api.github.com"
@@ -157,6 +160,113 @@ func (c *Client) SearchMergedPRs(ctx context.Context, username string) ([]PullRe
 		return nil, err
 	}
 	return result.Items, nil
+}
+
+func (c *Client) GetContributionCalendar(ctx context.Context, login string) ([]domain.ContributionDay, error) {
+	type graphQLRequest struct {
+		Query     string            `json:"query"`
+		Variables map[string]string `json:"variables"`
+	}
+
+	type contributionDayResponse struct {
+		Date              string `json:"date"`
+		ContributionCount int    `json:"contributionCount"`
+	}
+
+	type weekResponse struct {
+		ContributionDays []contributionDayResponse `json:"contributionDays"`
+	}
+
+	type calendarResponse struct {
+		Weeks []weekResponse `json:"weeks"`
+	}
+
+	type contributionsCollectionResponse struct {
+		ContributionCalendar calendarResponse `json:"contributionCalendar"`
+	}
+
+	type userResponse struct {
+		ContributionsCollection contributionsCollectionResponse `json:"contributionsCollection"`
+	}
+
+	type dataResponse struct {
+		User userResponse `json:"user"`
+	}
+
+	type graphQLError struct {
+		Message string `json:"message"`
+	}
+
+	type graphQLResponse struct {
+		Data   dataResponse   `json:"data"`
+		Errors []graphQLError `json:"errors"`
+	}
+
+	query := `query($login: String!) {
+  user(login: $login) {
+    contributionsCollection {
+      contributionCalendar {
+        weeks {
+          contributionDays {
+            date
+            contributionCount
+          }
+        }
+      }
+    }
+  }
+}`
+
+	reqBody := graphQLRequest{
+		Query:     query,
+		Variables: map[string]string{"login": login},
+	}
+
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.github.com/graphql", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/vnd.github+json")
+	if c.token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("github graphql api responded with status %d", resp.StatusCode)
+	}
+
+	var gqlResp graphQLResponse
+	if err := json.NewDecoder(resp.Body).Decode(&gqlResp); err != nil {
+		return nil, err
+	}
+
+	if len(gqlResp.Errors) > 0 {
+		return nil, fmt.Errorf("github graphql error: %s", gqlResp.Errors[0].Message)
+	}
+
+	days := make([]domain.ContributionDay, 0)
+	for _, week := range gqlResp.Data.User.ContributionsCollection.ContributionCalendar.Weeks {
+		for _, d := range week.ContributionDays {
+			days = append(days, domain.ContributionDay{
+				Date:  d.Date,
+				Count: d.ContributionCount,
+			})
+		}
+	}
+
+	return days, nil
 }
 
 func (c *Client) getRaw(ctx context.Context, path string) (string, error) {

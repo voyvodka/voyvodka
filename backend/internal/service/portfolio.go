@@ -278,6 +278,11 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		mergedPRs = []github.PullRequestItem{}
 	}
 
+	contributionCalendar, calErr := s.githubClient.GetContributionCalendar(ctx, s.username)
+	if calErr != nil {
+		contributionCalendar = []domain.ContributionDay{}
+	}
+
 	projects := make([]domain.Project, 0, len(repos))
 	ownedCount := 0
 	totalStars := 0
@@ -347,10 +352,11 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 			MergedPRs:         len(contributions),
 			TotalStars:        totalStars,
 		},
-		Projects:      projects,
-		Contributions: contributions,
-		Events:        mappedEvents,
-		IsStale:       false,
+		Projects:             projects,
+		Contributions:        contributions,
+		Events:               mappedEvents,
+		ContributionCalendar: contributionCalendar,
+		IsStale:              false,
 	}
 
 	raw, err := json.Marshal(payload)

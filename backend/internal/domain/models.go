@@ -1,13 +1,19 @@
 package domain
 
+type ContributionDay struct {
+	Date  string `json:"date"`
+	Count int    `json:"count"`
+}
+
 type PortfolioData struct {
-	UpdatedAt     string         `json:"updatedAt"`
-	Profile       ProfileSummary `json:"profile"`
-	KPI           KPI            `json:"kpi"`
-	Projects      []Project      `json:"projects"`
-	Contributions []Contribution `json:"contributions"`
-	Events        []Event        `json:"events"`
-	IsStale       bool           `json:"isStale"`
+	UpdatedAt            string            `json:"updatedAt"`
+	Profile              ProfileSummary    `json:"profile"`
+	KPI                  KPI               `json:"kpi"`
+	Projects             []Project         `json:"projects"`
+	Contributions        []Contribution    `json:"contributions"`
+	Events               []Event           `json:"events"`
+	ContributionCalendar []ContributionDay `json:"contributionCalendar"`
+	IsStale              bool              `json:"isStale"`
 }
 
 type ProfileSummary struct {

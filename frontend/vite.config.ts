@@ -21,7 +21,6 @@ function portfolioSeedPlugin(): import("vite").Plugin {
           },
         ];
       } catch {
-        // API unavailable at build time — skip seed, app will fetch at runtime
       }
     },
   };
@@ -41,7 +40,7 @@ export default defineConfig({
           if (id.includes("node_modules/react-markdown") || id.includes("node_modules/remark")) {
             return "markdown";
           }
-if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
+          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
             return "vendor";
           }
         },

@@ -24,7 +24,6 @@ function writeCache(key: string, data: ProjectDetail) {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch {
-    // storage quota exceeded — ignore
   }
 }
 
