@@ -129,7 +129,7 @@ async function createServer() {
       "/assets",
       express.static(path.join(clientDist, "assets"), { maxAge: "1y", immutable: true }),
     );
-    app.use(express.static(clientDist, { maxAge: "1h" }));
+    app.use(express.static(clientDist, { maxAge: "1h", index: false }));
     const prodAssets = getProdAssets();
     cssLinks = prodAssets.cssLinks;
     clientScriptTag = prodAssets.scriptTag;
