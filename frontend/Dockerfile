@@ -22,6 +22,8 @@ RUN yarn install --frozen-lockfile --production
 COPY --from=build /app/dist ./dist
 COPY server.ts ./
 
+ENV NODE_ENV=production
+
 EXPOSE 3000
 
 CMD ["node", "--import", "tsx", "server.ts"]
