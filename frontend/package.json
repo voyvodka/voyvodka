@@ -1,10 +1,11 @@
 {
   "name": "portfolio-frontend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false server.ts",
+    "typecheck": "tsc -b && tsc --noEmit -p tsconfig.server.json",
     "build": "tsc -b && yarn build:client && yarn build:server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
@@ -16,7 +17,7 @@
     "marked": "^17.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.1",
+    "react-router-dom": "^7.13.2",
     "tsx": "^4.21.0"
   },
   "devDependencies": {

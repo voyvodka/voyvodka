@@ -67,7 +67,125 @@ window.$RefreshSig$ = () => () => {}
 window.__vite_plugin_react_preamble_installed__ = true
 </script>`;
 
-function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean): string {
+const _cnamePath = path.join(__dirname, "public/CNAME");
+const _cnameHost = fs.existsSync(_cnamePath) ? fs.readFileSync(_cnamePath, "utf-8").trim() : "";
+const SITE_URL = _cnameHost ? `https://${_cnameHost}` : "http://localhost:3000";
+
+function generateJsonLd(pathname: string, ssrData: SSRData): string {
+  const schemas: object[] = [];
+
+  const person = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": ssrData.portfolioData?.profile.name || "Samet Özkan",
+    "jobTitle": "Backend Engineer",
+    "url": SITE_URL,
+    "sameAs": [
+      `https://github.com/${ssrData.portfolioData?.profile.username || "devsamet"}`,
+      "https://linkedin.com/in/samet-ozkan",
+    ],
+    "knowsAbout": [".NET Core", "C#", "ASP.NET", "REST APIs", "EF Core", "Go", "Rust", "TypeScript", "Docker", "SQLite"],
+  };
+
+  if (pathname === "/") {
+    schemas.push(person);
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Samet Özkan — Software Engineer Portfolio & Projects",
+      "description": "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.",
+      "author": { "@type": "Person", "name": "Samet Özkan" },
+      "url": SITE_URL,
+      "mainEntityOfPage": SITE_URL,
+    });
+
+    if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Projects by Samet Özkan",
+        "description": "Open source projects and contributions by Samet Özkan, .NET backend engineer.",
+        "url": `${SITE_URL}/projects`,
+        "itemListElement": ssrData.portfolioData!.projects.slice(0, 10).map((project, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "name": project.repository,
+          ...(project.description ? { "description": project.description } : {}),
+          "url": `${SITE_URL}/projects/${toSlug(project.repository)}`,
+        })),
+      });
+    }
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is your primary programming language and stack?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "C# is my production language. I build reliable backends with .NET Core — layered service architecture, clean API contracts, EF Core data flows, and predictable release cycles.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "How do you use AI in your development workflow?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For React, Go, Rust, and desktop work I ship with AI acceleration. The decisions and trade-offs are mine — the speed is not. I mark the distinction clearly in every project.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "How do you handle deployment and infrastructure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Every project goes from commit to production on self-hosted infrastructure I manage myself. Docker, Coolify, Linux — no magic between me and what runs in production.",
+          },
+        },
+      ],
+    });
+  } else if (pathname === "/projects") {
+    schemas.push(person);
+    if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "All Repositories by Samet Özkan",
+        "description": `${ssrData.portfolioData!.projects.length} repositories — projects and contributions by Samet Özkan.`,
+        "url": `${SITE_URL}/projects`,
+        "itemListElement": ssrData.portfolioData!.projects.map((project, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "name": project.repository,
+          ...(project.description ? { "description": project.description } : {}),
+          "url": `${SITE_URL}/projects/${toSlug(project.repository)}`,
+        })),
+      });
+    }
+  } else if (pathname.startsWith("/projects/") && ssrData.projectDetail) {
+    const detail = ssrData.projectDetail;
+    schemas.push(person);
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": `${detail.owner}/${detail.repository} — Samet Özkan`,
+      "description": detail.description || "A project by Samet Özkan.",
+      "author": { "@type": "Person", "name": "Samet Özkan" },
+      "url": `${SITE_URL}${pathname}`,
+      "mainEntityOfPage": `${SITE_URL}${pathname}`,
+    });
+  }
+
+  if (schemas.length === 0) return "";
+  return schemas
+    .map((s) => `<script type="application/ld+json">\n${JSON.stringify(s, null, 2)}\n</script>`)
+    .join("\n    ");
+}
+
+function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = ""): string {
   return `<!doctype html>
 <html lang="en">
   <head>
@@ -82,6 +200,7 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean): string {
     <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
     ${devMode ? `<link rel="stylesheet" href="/src/styles.css" />` : cssLinks}
     ${devMode ? REACT_REFRESH_PREAMBLE : ""}
+    ${jsonLd}
   </head>
   <body>
     <div id="root">`;
@@ -118,6 +237,7 @@ function toSlug(s: string): string {
 
 async function createServer() {
   const app = express();
+  app.disable("x-powered-by");
 
   let vite: ViteDevServer | null = null;
   let cssLinks = "";
@@ -142,6 +262,22 @@ async function createServer() {
     });
     app.use(vite.middlewares);
   }
+
+  app.get("/sitemap.xml", async (_req, res) => {
+    const portfolio = await fetchJSON<{ projects: { repository: string }[] }>(`${API_BASE_URL}/api/portfolio-data`);
+    const projectUrls = (portfolio?.projects ?? [])
+      .map((p) => `  <url><loc>${SITE_URL}/projects/${toSlug(p.repository)}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`)
+      .join("\n");
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>${SITE_URL}/projects</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+${projectUrls}
+</urlset>`;
+    res.setHeader("Content-Type", "application/xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(xml);
+  });
 
   app.use("/api", async (req, res) => {
     const target = `${API_BASE_URL}/api${req.url}`;
@@ -220,6 +356,7 @@ async function createServer() {
       }
 
       const meta = getPageMeta(pathname, ssrData.portfolioData, ssrData.projectDetail);
+      const jsonLd = generateJsonLd(pathname, ssrData);
 
       let didError = false;
 
@@ -237,7 +374,7 @@ async function createServer() {
           res.status(didError ? 500 : 200);
           res.setHeader("Content-Type", "text/html; charset=utf-8");
           res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-          res.write(buildHead(meta, cssLinks, !isProd));
+          res.write(buildHead(meta, cssLinks, !isProd, jsonLd));
           stream.pipe(tailInject).pipe(res);
         },
         onShellError(err: unknown) {

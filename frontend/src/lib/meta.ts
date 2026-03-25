@@ -6,7 +6,7 @@ export type PageMeta = {
 };
 
 const DEFAULT_DESCRIPTION =
-  "Samet Özkan — Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence. Portfolio of projects, contributions, and build history.";
+  "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.";
 
 export function getPageMeta(
   pathname: string,
@@ -15,7 +15,7 @@ export function getPageMeta(
 ): PageMeta {
   if (pathname === "/") {
     return {
-      title: "Samet Özkan — Backend Engineer Portfolio",
+      title: "Samet Özkan — Software Engineer Portfolio & Projects",
       description: DEFAULT_DESCRIPTION,
     };
   }
@@ -23,24 +23,24 @@ export function getPageMeta(
   if (pathname === "/projects") {
     const count = portfolioData?.projects?.length ?? 0;
     return {
-      title: "All Repositories — Samet Özkan",
+      title: "All Repositories — Samet Özkan | Projects & Contributions",
       description: count > 0
-        ? `${count} repositories — projects and contributions by Samet Özkan.`
+        ? `${count} open source repositories — projects and contributions by Samet Özkan, .NET backend engineer.`
         : DEFAULT_DESCRIPTION,
     };
   }
 
   if (pathname.startsWith("/projects/") && projectDetail) {
     const name = `${projectDetail.owner}/${projectDetail.repository}`;
-    const desc = projectDetail.description || DEFAULT_DESCRIPTION;
-    return {
-      title: `${name} — Samet Özkan`,
-      description: desc,
-    };
+    const rawDesc = projectDetail.description || DEFAULT_DESCRIPTION;
+    const desc = rawDesc.length > 158 ? rawDesc.slice(0, 155) + "..." : rawDesc;
+    const titleBase = `${name} — Samet Özkan`;
+    const title = titleBase.length < 50 ? `${titleBase} | Project Detail` : titleBase;
+    return { title, description: desc };
   }
 
   return {
-    title: "Samet Özkan — Backend Engineer Portfolio",
+    title: "Samet Özkan — Software Engineer Portfolio & Projects",
     description: DEFAULT_DESCRIPTION,
   };
 }
