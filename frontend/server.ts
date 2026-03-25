@@ -69,7 +69,9 @@ window.__vite_plugin_react_preamble_installed__ = true
 
 const _cnamePath = path.join(__dirname, "public/CNAME");
 const _cnameHost = fs.existsSync(_cnamePath) ? fs.readFileSync(_cnamePath, "utf-8").trim() : "";
-const SITE_URL = _cnameHost ? `https://${_cnameHost}` : "http://localhost:3000";
+const SITE_URL =
+  process.env["SITE_URL"] ||
+  (_cnameHost ? `https://${_cnameHost}` : "http://localhost:3000");
 
 function generateJsonLd(pathname: string, ssrData: SSRData): string {
   const schemas: object[] = [];
@@ -149,6 +151,17 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     });
   } else if (pathname === "/projects") {
     schemas.push(person);
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "All Repositories — Samet Özkan | Projects & Contributions",
+      "description": "Complete list of open source projects and contributions by Samet Özkan, .NET backend engineer.",
+      "author": { "@type": "Person", "name": "Samet Özkan" },
+      "url": `${SITE_URL}/projects`,
+      "mainEntityOfPage": `${SITE_URL}/projects`,
+    });
+
     if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
       schemas.push({
         "@context": "https://schema.org",
@@ -165,9 +178,41 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
         })),
       });
     }
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What kinds of projects has Samet Özkan built?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Samet Özkan builds backend systems with .NET Core and C#, API services, CLI tools in Go and Rust, and full-stack products. All repositories are publicly listed on this page.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "Does Samet Özkan contribute to open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Both owned projects and fork-based contributions appear in this list, each labeled CORE, EXPLORE, or CONTRIB to indicate the nature of involvement.",
+          },
+        },
+        {
+          "@type": "Question",
+          "name": "What is Samet Özkan's primary programming language?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "C# is his production language. He builds reliable backends with .NET Core — layered service architecture, clean API contracts, EF Core data flows, and predictable release cycles.",
+          },
+        },
+      ],
+    });
   } else if (pathname.startsWith("/projects/") && ssrData.projectDetail) {
     const detail = ssrData.projectDetail;
     schemas.push(person);
+
     schemas.push({
       "@context": "https://schema.org",
       "@type": "Article",
@@ -177,6 +222,45 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "url": `${SITE_URL}${pathname}`,
       "mainEntityOfPage": `${SITE_URL}${pathname}`,
     });
+
+    if ((detail.releases?.length ?? 0) > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": `Releases for ${detail.repository}`,
+        "description": `${detail.releases.length} release${detail.releases.length !== 1 ? "s" : ""} for ${detail.owner}/${detail.repository}.`,
+        "url": `${SITE_URL}${pathname}`,
+        "itemListElement": detail.releases.slice(0, 10).map((release, idx) => ({
+          "@type": "ListItem",
+          "position": idx + 1,
+          "name": release.name || release.tagName,
+          "url": release.url,
+        })),
+      });
+    }
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": `What is ${detail.repository}?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": detail.description || `${detail.repository} is an open source project by Samet Özkan.`,
+          },
+        },
+        {
+          "@type": "Question",
+          "name": `Who built ${detail.repository}?`,
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": `${detail.repository} was built by Samet Özkan, a .NET backend engineer. The repository is available at ${detail.repoUrl || `https://github.com/${detail.owner}/${detail.repository}`}.`,
+          },
+        },
+      ],
+    });
   }
 
   if (schemas.length === 0) return "";
@@ -185,15 +269,16 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     .join("\n    ");
 }
 
-function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = ""): string {
+function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = "", canonicalUrl = ""): string {
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${meta.title}</title>
     <meta name="description" content="${meta.description.replace(/"/g, "&quot;")}" />
     <meta name="robots" content="index, follow" />
+    ${canonicalUrl ? `<link rel="canonical" href="${canonicalUrl}" />` : ""}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/rajdhani-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin />
@@ -374,7 +459,7 @@ ${projectUrls}
           res.status(didError ? 500 : 200);
           res.setHeader("Content-Type", "text/html; charset=utf-8");
           res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-          res.write(buildHead(meta, cssLinks, !isProd, jsonLd));
+          res.write(buildHead(meta, cssLinks, !isProd, jsonLd, `${SITE_URL}${pathname}`));
           stream.pipe(tailInject).pipe(res);
         },
         onShellError(err: unknown) {

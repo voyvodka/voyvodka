@@ -21,6 +21,7 @@ RUN yarn install --frozen-lockfile --production
 
 COPY --from=build /app/dist ./dist
 COPY server.ts ./
+COPY public/CNAME ./public/CNAME
 
 ENV NODE_ENV=production
 

@@ -46,7 +46,7 @@ export function ProjectsPage() {
     <main className="console projects-page">
       <section className="panel">
         <div className="section-head">
-          <h2>All Repositories</h2>
+          <h1>All Repositories</h1>
           <span className="mono">{data.projects.length} repositories</span>
         </div>
         <div className="hero-actions">

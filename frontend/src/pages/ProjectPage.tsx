@@ -76,9 +76,9 @@ export function ProjectPage() {
           </Link>
         </div>
         <div className="project-title-row">
-          <h2>
+          <h1>
             {data.owner}/{data.repository}
-          </h2>
+          </h1>
           {data.isFork ? (
             <span className="fork-badge">FORK</span>
           ) : null}

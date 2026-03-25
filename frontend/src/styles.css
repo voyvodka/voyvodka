@@ -628,8 +628,16 @@ h2 {
   flex-wrap: wrap;
 }
 
-.project-page .project-title-row h2 {
+.project-page .project-title-row h1 {
+  font-size: 24px;
+  line-height: 1;
   margin-bottom: 0;
+}
+
+.projects-page .section-head h1 {
+  font-size: 24px;
+  line-height: 1;
+  margin-bottom: 10px;
 }
 
 .project-page .fork-badge {
