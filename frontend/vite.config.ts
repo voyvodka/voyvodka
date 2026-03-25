@@ -14,6 +14,7 @@ export default defineConfig({
   },
   build: {
     manifest: true,
+    minify: "esbuild",
     rollupOptions: {
       output: {
         manualChunks(id) {
@@ -23,5 +24,8 @@ export default defineConfig({
         },
       },
     },
+  },
+  esbuild: {
+    drop: ["console", "debugger"],
   },
 });

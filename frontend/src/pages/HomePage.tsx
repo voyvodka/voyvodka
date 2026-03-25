@@ -273,26 +273,28 @@ export function HomePage() {
           <div className="row"><span className="mono" style={{ opacity: 0.5 }}>Project data unavailable — backend unreachable.</span></div>
         ) : (
           <>
-            {topProjects.map((project, idx) => (
-              <div className="row" key={`${project.owner}/${project.repository}`}>
-                <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
-                <div>
-                  <b>
-                    <Link className="repo-link" to={toProjectPath(project.repository)}>
-                      {project.repository}
-                    </Link>
-                  </b>
-                  <div className="mono">{project.description || "No description"}</div>
-                </div>
-                <div className="mono">
-                  {project.isFork ? "Contribution and PR workflow" : "Design and maintain reliable product workflows"}
-                </div>
-                <div className="mono">{project.language || "Unknown"}</div>
-                <span className={statusClass(project.category, project.isFork)}>
-                  <Link to={toProjectPath(project.repository)}>{statusLabel(project.category, project.isFork)}</Link>
-                </span>
-              </div>
-            ))}
+            <ol className="projects-list">
+              {topProjects.map((project, idx) => (
+                <li className="row" key={`${project.owner}/${project.repository}`}>
+                  <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
+                  <div>
+                    <b>
+                      <Link className="repo-link" to={toProjectPath(project.repository)}>
+                        {project.repository}
+                      </Link>
+                    </b>
+                    <div className="mono">{project.description || "No description"}</div>
+                  </div>
+                  <div className="mono">
+                    {project.isFork ? "Contribution and PR workflow" : "Design and maintain reliable product workflows"}
+                  </div>
+                  <div className="mono">{project.language || "Unknown"}</div>
+                  <span className={statusClass(project.category, project.isFork)}>
+                    <Link to={toProjectPath(project.repository)}>{statusLabel(project.category, project.isFork)}</Link>
+                  </span>
+                </li>
+              ))}
+            </ol>
             <div className="projects-footer">
               <Link className="mono" to="/projects">View all {totalProjects} repositories →</Link>
             </div>

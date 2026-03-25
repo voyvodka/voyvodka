@@ -308,6 +308,12 @@ h2 {
   background: var(--panel-3);
 }
 
+ol.projects-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
 .projects-header,
 .row {
   display: grid;

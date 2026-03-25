@@ -66,27 +66,29 @@ export function ProjectsPage() {
           <div>Updated</div>
           <div>Status</div>
         </div>
-        {data.projects.map((project, idx) => (
-          <div className="row row--full" key={`${project.owner}/${project.repository}`}>
-            <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
-            <div>
-              <b>
-                <Link className="repo-link" to={toProjectPath(project.repository)}>
-                  {project.repository}
-                </Link>
-              </b>
-              {project.isFork && (
-                <div className="mono">{project.owner}</div>
-              )}
-            </div>
-            <div className="mono">{project.description || "—"}</div>
-            <div className="mono">{project.language || "—"}</div>
-            <div className="mono updated-col">{githubDate(project.updatedAt)}</div>
-            <span className={badgeClass(project.category, project.isFork)}>
-              <Link to={toProjectPath(project.repository)}>{badgeLabel(project.category, project.isFork)}</Link>
-            </span>
-          </div>
-        ))}
+        <ol className="projects-list">
+          {data.projects.map((project, idx) => (
+            <li className="row row--full" key={`${project.owner}/${project.repository}`}>
+              <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
+              <div>
+                <b>
+                  <Link className="repo-link" to={toProjectPath(project.repository)}>
+                    {project.repository}
+                  </Link>
+                </b>
+                {project.isFork && (
+                  <div className="mono">{project.owner}</div>
+                )}
+              </div>
+              <div className="mono">{project.description || "—"}</div>
+              <div className="mono">{project.language || "—"}</div>
+              <div className="mono updated-col">{githubDate(project.updatedAt)}</div>
+              <span className={badgeClass(project.category, project.isFork)}>
+                <Link to={toProjectPath(project.repository)}>{badgeLabel(project.category, project.isFork)}</Link>
+              </span>
+            </li>
+          ))}
+        </ol>
       </section>
     </main>
   );
