@@ -16,4 +16,5 @@ run:
 	docker run --rm -p $(HOST_PORT):$(CONTAINER_PORT) -v $(DATA_VOLUME):/app/data --env-file $(ENV_FILE) $(IMAGE_NAME)
 
 dev:
-	docker run --rm -p $(HOST_PORT):$(CONTAINER_PORT) -v "$(CURDIR):/src" -w /src --env-file $(ENV_FILE) golang:1.25 go run ./cmd/api
+	@docker ps -q --filter "publish=$(HOST_PORT)" | xargs -r docker rm -f 2>/dev/null || true
+	docker run --rm --name $(IMAGE_NAME)-dev -p $(HOST_PORT):$(CONTAINER_PORT) -v "$(CURDIR):/src" -w /src --env-file $(ENV_FILE) golang:1.25 go run ./cmd/api

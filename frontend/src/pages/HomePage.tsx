@@ -86,6 +86,10 @@ export function HomePage() {
 
   const latest = data?.projects[0]?.updatedAt;
   const latestRepos = data?.projects.slice(0, 5) ?? [];
+
+  const projectRepoSet = new Set(
+    data?.projects.map((p) => p.repository) ?? [],
+  );
   const topProjects = data?.projects.slice(0, 8) ?? [];
 
   const caseProjects = data?.projects
@@ -244,17 +248,26 @@ export function HomePage() {
                 <a className="mono" href={githubUrl} target="_blank" rel="noreferrer">profile</a>
               </div>
               <ul className="live-list">
-                {(data?.events ?? []).slice(0, 6).map((event, idx) => (
-                  <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
-                    <strong>
-                      <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
-                        {event.repository}
-                      </Link>
-                    </strong>
-                    <span className="mono">{eventLabel(event.type)}</span>
-                    <span className="mono">{ago(event.createdAt)}</span>
-                  </li>
-                ))}
+                {(data?.events ?? []).slice(0, 30).map((event, idx) => {
+                  const isOwnProject = projectRepoSet.has(event.repository);
+                  return (
+                    <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
+                      <strong>
+                        {isOwnProject ? (
+                          <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
+                            {event.repository}
+                          </Link>
+                        ) : (
+                          <a className="repo-link" href={`https://github.com/${event.repository}`} target="_blank" rel="noreferrer">
+                            {event.repository}
+                          </a>
+                        )}
+                      </strong>
+                      <span className="mono">{eventLabel(event.type)}</span>
+                      <span className="mono">{ago(event.createdAt)}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </article>
           </div>
