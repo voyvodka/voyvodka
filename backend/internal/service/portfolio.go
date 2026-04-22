@@ -377,6 +377,9 @@ func (s *PortfolioService) getChangelog(ctx context.Context, owner, repo string)
 		idx     int
 	}
 
+	ctxCancel, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	hits := make(chan hit, len(candidates))
 
 	var wg sync.WaitGroup
@@ -384,7 +387,7 @@ func (s *PortfolioService) getChangelog(ctx context.Context, owner, repo string)
 		wg.Add(1)
 		go func(idx int, path string) {
 			defer wg.Done()
-			content, err := s.githubClient.GetFileContent(ctx, owner, repo, path)
+			content, err := s.githubClient.GetFileContent(ctxCancel, owner, repo, path)
 			if err == nil && strings.TrimSpace(content) != "" {
 				hits <- hit{content: content, idx: idx}
 			}
@@ -400,10 +403,16 @@ func (s *PortfolioService) getChangelog(ctx context.Context, owner, repo string)
 	for h := range hits {
 		if h.idx < best.idx {
 			best = h
+			if best.idx == 0 {
+				cancel()
+			}
 		}
 	}
 
-	return best.content
+	if best.idx < len(candidates) {
+		return best.content
+	}
+	return ""
 }
 
 func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, error) {
@@ -592,14 +601,48 @@ func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo gith
 
 	if owner != "" && repository != "" {
 		cnameCandidates := []string{"CNAME", "docs/CNAME", "frontend/public/CNAME", "frontend/CNAME"}
-		for _, path := range cnameCandidates {
-			content, err := s.githubClient.GetFileContent(ctx, owner, repository, path)
-			if err != nil {
-				continue
+
+		ctxCancel, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		type hit struct {
+			content string
+			idx     int
+		}
+		hits := make(chan hit, len(cnameCandidates))
+
+		var wg sync.WaitGroup
+		for i, path := range cnameCandidates {
+			wg.Add(1)
+			go func(idx int, path string) {
+				defer wg.Done()
+				content, err := s.githubClient.GetFileContent(ctxCancel, owner, repository, path)
+				if err != nil {
+					return
+				}
+				if candidate := normalizeURLCandidate(content); candidate != "" {
+					hits <- hit{content: candidate, idx: idx}
+				}
+			}(i, path)
+		}
+
+		go func() {
+			wg.Wait()
+			close(hits)
+		}()
+
+		best := hit{idx: len(cnameCandidates)}
+		for h := range hits {
+			if h.idx < best.idx {
+				best = h
+				if best.idx == 0 {
+					cancel()
+				}
 			}
-			if candidate := normalizeURLCandidate(content); candidate != "" {
-				return candidate
-			}
+		}
+
+		if best.idx < len(cnameCandidates) {
+			return best.content
 		}
 
 		homepage := strings.TrimSpace(repo.Homepage)
