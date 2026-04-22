@@ -927,3 +927,11 @@ ol.projects-list {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Focus states for keyboard accessibility */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
