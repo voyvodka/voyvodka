@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/url"
 	"sort"
 	"strings"
@@ -21,23 +22,30 @@ const cacheKey = "portfolio_data"
 const projectDetailCachePrefix = "project_detail:"
 const maxContentLength = 12000
 
+const warmupDetailConcurrency = 3
+const warmupDetailTimeout = 60 * time.Second
+
 type PortfolioService struct {
 	store          storage.Store
 	githubClient   *github.Client
 	username       string
+	appEnv         string
 	cacheTTL       time.Duration
 	refreshLockTTL time.Duration
 
-	refreshing atomic.Bool
-	mu         sync.Mutex
-	detailLocks sync.Map
+	refreshing   atomic.Bool
+	warmingUp    atomic.Bool
+	lastWarmupAt atomic.Int64
+	mu           sync.Mutex
+	detailLocks  sync.Map
 }
 
-func NewPortfolioService(store storage.Store, gh *github.Client, username string, cacheTTLSeconds, lockSeconds int) *PortfolioService {
+func NewPortfolioService(store storage.Store, gh *github.Client, username, appEnv string, cacheTTLSeconds, lockSeconds int) *PortfolioService {
 	return &PortfolioService{
 		store:          store,
 		githubClient:   gh,
 		username:       username,
+		appEnv:         appEnv,
 		cacheTTL:       time.Duration(cacheTTLSeconds) * time.Second,
 		refreshLockTTL: time.Duration(lockSeconds) * time.Second,
 	}
@@ -54,6 +62,7 @@ func (s *PortfolioService) GetPortfolioData(ctx context.Context) (domain.Portfol
 		var cached domain.PortfolioData
 		if uErr := json.Unmarshal(entry.Payload, &cached); uErr == nil {
 			cached.IsStale = false
+			s.maybeWarmupDetails(cached.Projects)
 			return cached, nil
 		}
 	}
@@ -62,6 +71,7 @@ func (s *PortfolioService) GetPortfolioData(ctx context.Context) (domain.Portfol
 		defer s.refreshing.Store(false)
 		fresh, syncErr := s.refresh(ctx)
 		if syncErr == nil {
+			s.maybeWarmupDetails(fresh.Projects)
 			return fresh, nil
 		}
 	}
@@ -70,15 +80,36 @@ func (s *PortfolioService) GetPortfolioData(ctx context.Context) (domain.Portfol
 		var stale domain.PortfolioData
 		if uErr := json.Unmarshal(entry.Payload, &stale); uErr == nil {
 			stale.IsStale = true
+			s.maybeWarmupDetails(stale.Projects)
 			return stale, nil
 		}
 	}
 
-	return s.refresh(ctx)
+	final, refreshErr := s.refresh(ctx)
+	if refreshErr == nil {
+		s.maybeWarmupDetails(final.Projects)
+	}
+	return final, refreshErr
 }
 
 func (s *PortfolioService) ForceRefresh(ctx context.Context) (domain.PortfolioData, error) {
-	return s.refresh(ctx)
+	data, err := s.refresh(ctx)
+	if err == nil {
+		s.maybeWarmupDetails(data.Projects)
+	}
+	return data, err
+}
+
+type WarmupStatus struct {
+	InProgress   bool  `json:"in_progress"`
+	LastWarmupAt int64 `json:"last_warmup_at,omitempty"`
+}
+
+func (s *PortfolioService) WarmupStatus() WarmupStatus {
+	return WarmupStatus{
+		InProgress:   s.warmingUp.Load(),
+		LastWarmupAt: s.lastWarmupAt.Load(),
+	}
 }
 
 func (s *PortfolioService) GetProjectDetail(ctx context.Context, owner, repo string) (domain.ProjectDetail, error) {
@@ -116,6 +147,12 @@ func (s *PortfolioService) GetProjectDetail(ctx context.Context, owner, repo str
 
 	detail, err := s.fetchProjectDetail(ctx, owner, repo)
 	if err != nil {
+		// A 404 means the repo is gone (deleted / renamed / made private).
+		// Don't mask that with stale cache — propagate so the handler can
+		// return a proper 404.
+		if errors.Is(err, domain.ErrNotFound) {
+			return domain.ProjectDetail{}, err
+		}
 		if hasCached {
 			var stale domain.ProjectDetail
 			if uErr := json.Unmarshal(entry.Payload, &stale); uErr == nil {
@@ -241,6 +278,72 @@ func normalizeReadme(raw string) string {
 	return trimmed
 }
 
+func (s *PortfolioService) maybeWarmupDetails(projects []domain.Project) {
+	if s.appEnv != "production" {
+		return
+	}
+	if len(projects) == 0 {
+		return
+	}
+	if !s.warmingUp.CompareAndSwap(false, true) {
+		return
+	}
+
+	last := s.lastWarmupAt.Load()
+	if last > 0 && time.Since(time.Unix(last, 0)) < s.cacheTTL/2 {
+		s.warmingUp.Store(false)
+		return
+	}
+
+	snapshot := make([]domain.Project, len(projects))
+	copy(snapshot, projects)
+
+	go func() {
+		defer s.warmingUp.Store(false)
+		start := time.Now()
+		log.Printf("warmup: starting for %d projects", len(snapshot))
+		s.warmAllDetails(snapshot)
+		log.Printf("warmup: completed in %s", time.Since(start))
+		s.lastWarmupAt.Store(time.Now().Unix())
+	}()
+}
+
+func (s *PortfolioService) warmAllDetails(projects []domain.Project) {
+	sem := make(chan struct{}, warmupDetailConcurrency)
+	var wg sync.WaitGroup
+
+	for _, p := range projects {
+		owner := strings.TrimSpace(p.Owner)
+		repo := strings.TrimSpace(p.Repository)
+		if owner == "" || repo == "" {
+			continue
+		}
+
+		key := detailCacheKey(owner, repo)
+		if entry, err := s.store.GetCache(context.Background(), key); err == nil {
+			if time.Since(entry.UpdatedAt) <= s.cacheTTL {
+				continue
+			}
+		}
+
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(owner, repo string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			ctx, cancel := context.WithTimeout(context.Background(), warmupDetailTimeout)
+			defer cancel()
+
+			if _, err := s.GetProjectDetail(ctx, owner, repo); err != nil {
+				log.Printf("warmup: %s/%s failed: %v", owner, repo, err)
+			}
+		}(owner, repo)
+	}
+
+	wg.Wait()
+}
+
 func (s *PortfolioService) detailLock(key string) *sync.Mutex {
 	if lock, ok := s.detailLocks.Load(key); ok {
 		return lock.(*sync.Mutex)
@@ -346,6 +449,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		var err error
 		contributionCalendar, err = s.githubClient.GetContributionCalendar(ctx, s.username)
 		if err != nil {
+			log.Printf("GetContributionCalendar failed for user=%q: %v", s.username, err)
 			contributionCalendar = []domain.ContributionDay{}
 		}
 	}()
@@ -442,6 +546,19 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 
 	if err := s.store.UpsertCache(ctx, cacheKey, raw, time.Now().UTC()); err != nil {
 		return domain.PortfolioData{}, err
+	}
+
+	// Purge detail cache entries for repos that no longer belong to the
+	// current portfolio (deleted, renamed, or made private upstream). Best
+	// effort — a failure here doesn't invalidate the refresh itself.
+	keep := make([]string, 0, len(projects))
+	for _, p := range projects {
+		keep = append(keep, detailCacheKey(p.Owner, p.Repository))
+	}
+	if removed, purgeErr := s.store.DeleteCacheNotIn(ctx, projectDetailCachePrefix, keep); purgeErr != nil {
+		log.Printf("orphan detail cache purge failed: %v", purgeErr)
+	} else if removed > 0 {
+		log.Printf("orphan detail cache purge: removed %d entries", removed)
 	}
 
 	return payload, nil

@@ -30,6 +30,7 @@ func New() (*App, error) {
 		store,
 		ghClient,
 		cfg.GitHubUsername,
+		cfg.AppEnv,
 		cfg.CacheTTLSeconds,
 		cfg.RefreshLockSeconds,
 	)

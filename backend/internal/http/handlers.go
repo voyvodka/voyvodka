@@ -2,8 +2,10 @@ package httpx
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"portfolio/backend/internal/domain"
 	"portfolio/backend/internal/service"
 )
 
@@ -27,7 +29,12 @@ func (h *Handler) Register(mux *http.ServeMux) {
 }
 
 func (h *Handler) health(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+	ws := h.portfolioService.WarmupStatus()
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":             "ok",
+		"warmup_in_progress": ws.InProgress,
+		"last_warmup_at":     ws.LastWarmupAt,
+	})
 }
 
 func (h *Handler) getPortfolioData(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +63,10 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 
 	detail, err := h.portfolioService.GetProjectDetail(r.Context(), owner, repo)
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "project not found"})
+			return
+		}
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to load project details"})
 		return
 	}

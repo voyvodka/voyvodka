@@ -19,7 +19,7 @@ type Config struct {
 
 func Load() Config {
 	return Config{
-		Port:                  getenv("PORT", "8080"),
+		Port:                  getenv("PORT", "8081"),
 		AppEnv:                getenv("APP_ENV", "development"),
 		GitHubToken:           getenv("GITHUB_TOKEN", ""),
 		GitHubUsername:        getenv("GITHUB_USERNAME", "voyvodka"),

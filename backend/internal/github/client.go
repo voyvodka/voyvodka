@@ -329,6 +329,10 @@ func (c *Client) getJSON(ctx context.Context, path string, out any) error {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("github api 404 for %s: %w", path, domain.ErrNotFound)
+	}
+
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return fmt.Errorf("github api responded with status %d", resp.StatusCode)
 	}

@@ -30,7 +30,7 @@ go mod tidy
 go run ./cmd/api
 ```
 
-Default container port: `8080` (mapped to host `5555` in Makefile).
+Default container port: `8081` (mapped to host `5555` in Makefile).
 
 If Go is not installed locally, use Docker-based commands with Makefile:
 
@@ -55,7 +55,7 @@ make dev
 
 ```bash
 docker build -t portfolio-backend .
-docker run --rm -p 5555:8080 -v portfolio_data:/app/data --env-file .env portfolio-backend
+docker run --rm -p 5555:8081 -v portfolio_data:/app/data --env-file .env portfolio-backend
 ```
 
 ## Security

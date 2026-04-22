@@ -9,10 +9,19 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"portfolio/backend/internal/app"
 )
 
 func main() {
+	// Load .env from the current working directory when present. In Docker
+	// and other containerized flows, environment variables are already set
+	// via --env-file, so a missing .env here is expected — ignore the error.
+	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+		log.Printf(".env load warning: %v", err)
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 

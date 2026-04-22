@@ -1,7 +1,7 @@
 IMAGE_NAME ?= portfolio-backend
 ENV_FILE ?= .env
 HOST_PORT ?= 5555
-CONTAINER_PORT ?= 8080
+CONTAINER_PORT ?= 8081
 DATA_VOLUME ?= portfolio_data
 
 .PHONY: tidy build run dev
