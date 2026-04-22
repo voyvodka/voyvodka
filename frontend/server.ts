@@ -4,6 +4,7 @@ import { Transform } from "node:stream";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { marked } from "marked";
+import DOMPurify from "isomorphic-dompurify";
 import type { ViteDevServer } from "vite";
 
 import type { SSRData } from "./src/context/DataContext";
@@ -64,7 +65,8 @@ function demoteRawHeadings(markdown: string): string {
 
 function renderMarkdown(raw: string): string {
   if (!raw) return "";
-  return marked.parse(demoteRawHeadings(raw)) as string;
+  const html = marked.parse(demoteRawHeadings(raw)) as string;
+  return DOMPurify.sanitize(html);
 }
 
 function enrichProjectDetail(detail: ProjectDetail): ProjectDetail {
