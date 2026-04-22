@@ -3,21 +3,24 @@
   "version": "1.0.2",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "tsx watch --clear-screen=false server.ts",
     "typecheck": "tsc -b && tsc --noEmit -p tsconfig.server.json",
-    "build": "tsc -b && yarn build:client && yarn build:server",
+    "build": "tsc -b && pnpm run build:client && pnpm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
     "start": "NODE_ENV=production node --import tsx server.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "express": "^5.2.1",
     "marked": "^17.0.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2",
+    "satori": "^0.26.0",
     "tsx": "^4.21.0"
   },
   "devDependencies": {

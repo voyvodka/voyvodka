@@ -2,25 +2,28 @@ FROM node:22-alpine AS build
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-ARG VITE_PUBLIC_API_BASE_URL
-ENV VITE_PUBLIC_API_BASE_URL=$VITE_PUBLIC_API_BASE_URL
-
-RUN yarn build
+RUN pnpm build
 
 FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --production
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
 COPY --from=build /app/dist ./dist
 COPY server.ts ./
+COPY og ./og
+COPY og-fonts ./og-fonts
 COPY public/CNAME ./public/CNAME
 
 ENV NODE_ENV=production

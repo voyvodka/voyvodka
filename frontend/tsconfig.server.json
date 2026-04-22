@@ -14,5 +14,5 @@
     "noEmit": true,
     "paths": { "@/*": ["./src/*"] }
   },
-  "include": ["server.ts", "src"]
+  "include": ["server.ts", "src", "og"]
 }

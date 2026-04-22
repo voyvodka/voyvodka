@@ -16,8 +16,8 @@ React + Vite + TypeScript frontend for the portfolio interface.
 ## Run
 
 ```bash
-yarn install
-yarn dev
+pnpm install
+pnpm dev
 ```
 
-Default address: `http://localhost:5173`
+Default address: `http://localhost:3000` (SSR server).

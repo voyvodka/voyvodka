@@ -1,5 +1,5 @@
 import { renderToPipeableStream } from "react-dom/server";
-import { StaticRouter } from "react-router";
+import { StaticRouter } from "react-router-dom";
 
 import { App } from "./App";
 import { DataProvider } from "./context/DataContext";
