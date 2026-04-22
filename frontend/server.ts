@@ -7,13 +7,14 @@ import { marked } from "marked";
 import type { ViteDevServer } from "vite";
 
 import type { SSRData } from "./src/context/DataContext";
-import type { ProjectDetail } from "./src/types/api";
+import type { ProjectDetail, ProjectSummary, PortfolioData } from "./src/types/api";
 import type { PageMeta } from "./src/lib/meta";
+import { renderOg, type OgTemplateInput } from "./og/render";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isProd = process.env["NODE_ENV"] === "production";
 const port = Number(process.env["PORT"] ?? 3000);
-const API_BASE_URL = process.env["API_BASE_URL"] ?? "http://localhost:5555";
+const API_BASE_URL = process.env["API_BASE_URL"] ?? "http://localhost:8081";
 
 const SSR_FETCH_TIMEOUT_MS = 8000;
 const PROXY_FETCH_TIMEOUT_MS = 10000;
@@ -36,9 +37,34 @@ type GetPageMetaFn = (
 
 marked.setOptions({ async: false });
 
+// C10: demote README headings by one level so page-owned <h1>owner/repo</h1>
+// stays the only h1 on detail pages. h1→h2, h2→h3, ..., h5→h6, h6 clamped.
+marked.use({
+  renderer: {
+    heading({ tokens, depth }) {
+      const text = this.parser.parseInline(tokens);
+      const target = Math.min(depth + 1, 6);
+      return `<h${target}>${text}</h${target}>\n`;
+    },
+  },
+});
+
+// marked's heading renderer only touches markdown heading tokens, not raw HTML
+// blocks. READMEs often embed `<h1 align="center">…</h1>` which would leak a
+// second h1 into the detail DOM and break the owner/repo h1 uniqueness. Demote
+// raw headings in the input. Bottom-up order prevents cascading demotions.
+function demoteRawHeadings(markdown: string): string {
+  return markdown
+    .replace(/<h5(\b[^>]*)>/gi, "<h6$1>").replace(/<\/h5>/gi, "</h6>")
+    .replace(/<h4(\b[^>]*)>/gi, "<h5$1>").replace(/<\/h4>/gi, "</h5>")
+    .replace(/<h3(\b[^>]*)>/gi, "<h4$1>").replace(/<\/h3>/gi, "</h4>")
+    .replace(/<h2(\b[^>]*)>/gi, "<h3$1>").replace(/<\/h2>/gi, "</h3>")
+    .replace(/<h1(\b[^>]*)>/gi, "<h2$1>").replace(/<\/h1>/gi, "</h2>");
+}
+
 function renderMarkdown(raw: string): string {
   if (!raw) return "";
-  return marked.parse(raw) as string;
+  return marked.parse(demoteRawHeadings(raw)) as string;
 }
 
 function enrichProjectDetail(detail: ProjectDetail): ProjectDetail {
@@ -73,33 +99,115 @@ const SITE_URL =
   process.env["SITE_URL"] ||
   (_cnameHost ? `https://${_cnameHost}` : "http://localhost:3000");
 
+// IndexNow — Bing / Yandex / Seznam push-indexing. Key file lives at /<key>.txt.
+// Enabled automatically in prod; can be overridden via INDEXNOW_KEY env.
+const INDEXNOW_KEY =
+  process.env["INDEXNOW_KEY"] ||
+  "500d876fc5ccdb101ee8b881cfbec1d8e13ec187618e8693684beef7a4f229fc";
+const INDEXNOW_MIN_INTERVAL_MS = 10 * 60 * 1000;
+let lastIndexNowPingAt = 0;
+let lastIndexNowSignature = "";
+
+async function pingIndexNow(hostname: string, urls: string[], signature: string): Promise<void> {
+  if (!isProd) return;
+  if (!INDEXNOW_KEY || urls.length === 0) return;
+  if (signature === lastIndexNowSignature) return;
+  const now = Date.now();
+  if (now - lastIndexNowPingAt < INDEXNOW_MIN_INTERVAL_MS) return;
+  lastIndexNowPingAt = now;
+  lastIndexNowSignature = signature;
+  try {
+    const res = await fetch("https://api.indexnow.org/indexnow", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: hostname,
+        key: INDEXNOW_KEY,
+        keyLocation: `https://${hostname}/${INDEXNOW_KEY}.txt`,
+        urlList: urls.slice(0, 10000),
+      }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) console.warn(`IndexNow ping ${res.status}`);
+  } catch (err) {
+    console.warn("IndexNow ping failed:", err);
+  }
+}
+
 function generateJsonLd(pathname: string, ssrData: SSRData): string {
   const schemas: object[] = [];
+  const portfolioUpdatedAt = ssrData.portfolioData?.updatedAt;
+  const homeOgImage = `${SITE_URL}/og/home.png`;
+  const projectsOgImage = `${SITE_URL}/og/projects.png`;
 
   const person = {
     "@context": "https://schema.org",
     "@type": "Person",
+    "@id": `${SITE_URL}/#person`,
     "name": ssrData.portfolioData?.profile.name || "Samet Özkan",
     "jobTitle": "Backend Engineer",
     "url": SITE_URL,
+    "image": homeOgImage,
     "sameAs": [
-      `https://github.com/${ssrData.portfolioData?.profile.username || "devsamet"}`,
+      `https://github.com/${ssrData.portfolioData?.profile.username || "voyvodka"}`,
       "https://linkedin.com/in/samet-ozkan",
+      "https://x.com/voyvodka",
     ],
     "knowsAbout": [".NET Core", "C#", "ASP.NET", "REST APIs", "EF Core", "Go", "Rust", "TypeScript", "Docker", "SQLite"],
   };
 
+  const organization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": `${SITE_URL}/#organization`,
+    "name": "Samet Özkan",
+    "url": SITE_URL,
+    "logo": {
+      "@type": "ImageObject",
+      "url": `${SITE_URL}/favicon.svg`,
+      "width": 32,
+      "height": 32,
+    },
+    "image": homeOgImage,
+    "sameAs": [
+      `https://github.com/${ssrData.portfolioData?.profile.username || "voyvodka"}`,
+      "https://linkedin.com/in/samet-ozkan",
+      "https://x.com/voyvodka",
+    ],
+    "founder": { "@id": `${SITE_URL}/#person` },
+  };
+
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${SITE_URL}/#website`,
+    "url": SITE_URL,
+    "name": "Samet Özkan — Portfolio",
+    "description": "Portfolio of Samet Özkan — Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
+    "inLanguage": "en",
+    "publisher": { "@id": `${SITE_URL}/#person` },
+  };
+
   if (pathname === "/") {
     schemas.push(person);
+    schemas.push(organization);
+    schemas.push(website);
+
+    const articleDates = portfolioUpdatedAt
+      ? { "datePublished": portfolioUpdatedAt, "dateModified": portfolioUpdatedAt }
+      : {};
 
     schemas.push({
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": "Samet Özkan — Software Engineer Portfolio & Projects",
       "description": "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.",
-      "author": { "@type": "Person", "name": "Samet Özkan" },
+      "author": { "@id": `${SITE_URL}/#person` },
+      "publisher": { "@id": `${SITE_URL}/#organization` },
+      "image": homeOgImage,
       "url": SITE_URL,
       "mainEntityOfPage": SITE_URL,
+      ...articleDates,
     });
 
     if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
@@ -115,6 +223,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
           "name": project.repository,
           ...(project.description ? { "description": project.description } : {}),
           "url": `${SITE_URL}/projects/${toSlug(project.repository)}`,
+          ...(project.updatedAt ? { "datePublished": project.updatedAt } : {}),
         })),
       });
     }
@@ -151,15 +260,33 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     });
   } else if (pathname === "/projects") {
     schemas.push(person);
+    schemas.push(organization);
+    schemas.push(website);
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "All Repositories", "item": `${SITE_URL}/projects` },
+      ],
+    });
+
+    const projectsArticleDates = portfolioUpdatedAt
+      ? { "datePublished": portfolioUpdatedAt, "dateModified": portfolioUpdatedAt }
+      : {};
 
     schemas.push({
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": "All Repositories — Samet Özkan | Projects & Contributions",
       "description": "Complete list of open source projects and contributions by Samet Özkan, .NET backend engineer.",
-      "author": { "@type": "Person", "name": "Samet Özkan" },
+      "author": { "@id": `${SITE_URL}/#person` },
+      "publisher": { "@id": `${SITE_URL}/#organization` },
+      "image": projectsOgImage,
       "url": `${SITE_URL}/projects`,
       "mainEntityOfPage": `${SITE_URL}/projects`,
+      ...projectsArticleDates,
     });
 
     if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
@@ -175,6 +302,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
           "name": project.repository,
           ...(project.description ? { "description": project.description } : {}),
           "url": `${SITE_URL}/projects/${toSlug(project.repository)}`,
+          ...(project.updatedAt ? { "datePublished": project.updatedAt } : {}),
         })),
       });
     }
@@ -211,16 +339,55 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     });
   } else if (pathname.startsWith("/projects/") && ssrData.projectDetail) {
     const detail = ssrData.projectDetail;
+    const detailUrl = `${SITE_URL}${pathname}`;
+    const detailOgImage = `${SITE_URL}/og/${toSlug(detail.repository)}.png`;
+    const repoUrl = detail.repoUrl || `https://github.com/${detail.owner}/${detail.repository}`;
+    const firstRelease = detail.releases && detail.releases.length > 0 ? detail.releases[detail.releases.length - 1] : null;
+    const datePublished = firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
+    const dateModified = detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
     schemas.push(person);
+    schemas.push(organization);
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE_URL },
+        { "@type": "ListItem", "position": 2, "name": "All Repositories", "item": `${SITE_URL}/projects` },
+        { "@type": "ListItem", "position": 3, "name": `${detail.owner}/${detail.repository}`, "item": detailUrl },
+      ],
+    });
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "SoftwareSourceCode",
+      "@id": `${detailUrl}#code`,
+      "name": detail.repository,
+      "headline": `${detail.owner}/${detail.repository}`,
+      "description": detail.description || `${detail.repository} is an open source project by Samet Özkan.`,
+      "author": { "@id": `${SITE_URL}/#person` },
+      "codeRepository": repoUrl,
+      "url": detailUrl,
+      "image": detailOgImage,
+      ...(detail.language ? { "programmingLanguage": detail.language } : {}),
+      ...(detail.license ? { "license": detail.license } : {}),
+      ...(detail.topics && detail.topics.length > 0 ? { "keywords": detail.topics.join(", ") } : {}),
+      ...(datePublished ? { "datePublished": datePublished } : {}),
+      ...(dateModified ? { "dateModified": dateModified } : {}),
+    });
 
     schemas.push({
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": `${detail.owner}/${detail.repository} — Samet Özkan`,
       "description": detail.description || "A project by Samet Özkan.",
-      "author": { "@type": "Person", "name": "Samet Özkan" },
-      "url": `${SITE_URL}${pathname}`,
-      "mainEntityOfPage": `${SITE_URL}${pathname}`,
+      "author": { "@id": `${SITE_URL}/#person` },
+      "publisher": { "@id": `${SITE_URL}/#organization` },
+      "image": detailOgImage,
+      "url": detailUrl,
+      "mainEntityOfPage": detailUrl,
+      ...(datePublished ? { "datePublished": datePublished } : {}),
+      ...(dateModified ? { "dateModified": dateModified } : {}),
     });
 
     if ((detail.releases?.length ?? 0) > 0) {
@@ -229,12 +396,13 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
         "@type": "ItemList",
         "name": `Releases for ${detail.repository}`,
         "description": `${detail.releases.length} release${detail.releases.length !== 1 ? "s" : ""} for ${detail.owner}/${detail.repository}.`,
-        "url": `${SITE_URL}${pathname}`,
+        "url": detailUrl,
         "itemListElement": detail.releases.slice(0, 10).map((release, idx) => ({
           "@type": "ListItem",
           "position": idx + 1,
           "name": release.name || release.tagName,
           "url": release.url,
+          ...(release.publishedAt ? { "datePublished": release.publishedAt } : {}),
         })),
       });
     }
@@ -269,17 +437,56 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     .join("\n    ");
 }
 
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = "", canonicalUrl = ""): string {
+  const ogTitle = escapeAttr(meta.ogTitle ?? meta.title);
+  const ogDescription = escapeAttr(meta.ogDescription ?? meta.description);
+  const ogImage = meta.ogImage ?? `${SITE_URL}/og/home.png`;
+  const ogType = meta.ogType ?? "website";
+  const ogUrl = canonicalUrl || SITE_URL;
+  const siteName = "Samet Özkan";
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${meta.title}</title>
-    <meta name="description" content="${meta.description.replace(/"/g, "&quot;")}" />
+    <meta name="description" content="${escapeAttr(meta.description)}" />
     <meta name="robots" content="index, follow" />
-    ${canonicalUrl ? `<link rel="canonical" href="${canonicalUrl}" />` : ""}
+    <meta name="author" content="Samet Özkan" />
+    <meta name="theme-color" content="#101417" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="application-name" content="${siteName}" />
+    <meta name="apple-mobile-web-app-title" content="${siteName}" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    ${canonicalUrl ? `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />` : ""}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="mask-icon" href="/favicon.svg" color="#75a8ff" />
+    <link rel="author" href="/humans.txt" />
+    <meta property="og:type" content="${escapeAttr(ogType)}" />
+    <meta property="og:site_name" content="${siteName}" />
+    <meta property="og:title" content="${ogTitle}" />
+    <meta property="og:description" content="${ogDescription}" />
+    <meta property="og:url" content="${escapeAttr(ogUrl)}" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content="${escapeAttr(ogImage)}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${ogTitle}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@voyvodka" />
+    <meta name="twitter:creator" content="@voyvodka" />
+    <meta name="twitter:title" content="${ogTitle}" />
+    <meta name="twitter:description" content="${ogDescription}" />
+    <meta name="twitter:image" content="${escapeAttr(ogImage)}" />
+    <meta name="twitter:image:alt" content="${ogTitle}" />
     <link rel="preload" href="/fonts/rajdhani-500.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/rajdhani-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/space-mono-400.woff2" as="font" type="font/woff2" crossorigin />
@@ -320,9 +527,74 @@ function toSlug(s: string): string {
   return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+function send404(res: express.Response): void {
+  res.status(404);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  res.end(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Not Found — Samet Özkan</title>
+  </head>
+  <body style="font-family:system-ui,sans-serif;padding:2rem;background:#101417;color:#e6e9ee;">
+    <h1>404 — Not Found</h1>
+    <p>The project you're looking for doesn't exist. <a style="color:#75a8ff" href="/projects">See all projects</a>.</p>
+  </body>
+</html>`);
+}
+
 async function createServer() {
   const app = express();
   app.disable("x-powered-by");
+  app.set("trust proxy", true);
+
+  // Normalize trailing slash — except root — so every path has one canonical
+  // form. Without this, /projects/foo and /projects/foo/ render as two
+  // different pages with two different canonicals (duplicate-content risk).
+  app.use((req, res, next) => {
+    if (req.path.length > 1 && req.path.endsWith("/")) {
+      const query = req.url.slice(req.path.length);
+      res.redirect(301, req.path.slice(0, -1) + query);
+      return;
+    }
+    next();
+  });
+
+  // Security headers — applied to every response before any route handler.
+  // HSTS is shipped without `preload` until the user explicitly opts in via the
+  // hstspreload.org directory; once submitted, add `; preload`.
+  // CSP is production-only; dev skips it so Vite HMR and the React refresh
+  // runtime keep working without needing nonces in every inline script.
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "interest-cohort=(), browsing-topics=()");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    if (isProd) {
+      res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+      res.setHeader(
+        "Content-Security-Policy",
+        [
+          "default-src 'self'",
+          "base-uri 'self'",
+          "frame-ancestors 'none'",
+          "form-action 'self'",
+          "img-src 'self' data: https:",
+          "style-src 'self' 'unsafe-inline'",
+          "font-src 'self' data:",
+          "script-src 'self' 'unsafe-inline'",
+          "connect-src 'self'",
+          "object-src 'none'",
+        ].join("; "),
+      );
+    }
+    next();
+  });
 
   let vite: ViteDevServer | null = null;
   let cssLinks = "";
@@ -349,19 +621,109 @@ async function createServer() {
   }
 
   app.get("/sitemap.xml", async (_req, res) => {
-    const portfolio = await fetchJSON<{ projects: { repository: string }[] }>(`${API_BASE_URL}/api/portfolio-data`);
+    const portfolio = await fetchJSON<PortfolioData>(`${API_BASE_URL}/api/portfolio-data`);
+    const today = new Date().toISOString().slice(0, 10);
+    const rootLastmod = portfolio?.updatedAt ? portfolio.updatedAt.slice(0, 10) : today;
+    const allUrls: string[] = [`${SITE_URL}/`, `${SITE_URL}/projects`];
     const projectUrls = (portfolio?.projects ?? [])
-      .map((p) => `  <url><loc>${SITE_URL}/projects/${toSlug(p.repository)}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`)
+      .map((p) => {
+        const url = `${SITE_URL}/projects/${toSlug(p.repository)}`;
+        allUrls.push(url);
+        const lastmod = (p.updatedAt && p.updatedAt.length >= 10 ? p.updatedAt.slice(0, 10) : rootLastmod);
+        return `  <url><loc>${url}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>`;
+      })
       .join("\n");
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${SITE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>${SITE_URL}/projects</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>${SITE_URL}/</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>${SITE_URL}/projects</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 ${projectUrls}
 </urlset>`;
     res.setHeader("Content-Type", "application/xml; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=3600");
     res.send(xml);
+
+    try {
+      const host = new URL(SITE_URL).hostname;
+      const signature = portfolio?.updatedAt ?? "";
+      void pingIndexNow(host, allUrls, signature);
+    } catch {
+      /* ignore */
+    }
+  });
+
+  app.get(/^\/og\/([a-z0-9-]+)\.png$/, async (req, res) => {
+    const slug = (req.params as unknown as string[])[0] ?? "";
+    try {
+      const portfolio = await fetchJSON<PortfolioData>(`${API_BASE_URL}/api/portfolio-data`);
+      let input: OgTemplateInput;
+
+      if (slug === "home" || slug === "index") {
+        const kpi = portfolio?.kpi;
+        const chips: OgTemplateInput["metaChips"] = [];
+        if (kpi) {
+          chips.push({ label: "repos", value: String(kpi.ownedRepositories), accent: "blue" });
+          chips.push({ label: "prs merged", value: String(kpi.mergedPRs), accent: "green" });
+          chips.push({ label: "stars", value: String(kpi.totalStars), accent: "amber" });
+        }
+        input = {
+          kind: "home",
+          title: "Samet Özkan",
+          subtitle: "Backend engineer · .NET Core · Go · Rust · Self-hosted delivery",
+          metaChips: chips,
+        };
+      } else if (slug === "projects") {
+        const count = portfolio?.projects?.length ?? 0;
+        input = {
+          kind: "projects",
+          title: "All Repositories",
+          subtitle: "Projects, explorations, and upstream contributions by Samet Özkan.",
+          metaChips: count > 0 ? [{ label: "total", value: String(count), accent: "blue" }] : [],
+        };
+      } else {
+        const project: ProjectSummary | undefined = portfolio?.projects?.find((p) => toSlug(p.repository) === slug);
+        if (!project) {
+          res.status(404).setHeader("Content-Type", "text/plain; charset=utf-8").send("not found");
+          return;
+        }
+        const badge = project.category === "contrib" || project.isFork
+          ? "CONTRIB"
+          : project.category === "explore"
+            ? "EXPLORE"
+            : "CORE";
+        const rawDesc = project.description || "A project by Samet Özkan.";
+        const subtitle = rawDesc.length > 180 ? rawDesc.slice(0, 177) + "..." : rawDesc;
+        const chips: OgTemplateInput["metaChips"] = [];
+        if (project.language) chips.push({ label: "lang", value: project.language, accent: "blue" });
+        chips.push({ label: "stars", value: String(project.stars ?? 0), accent: "amber" });
+        chips.push({ label: "owner", value: project.owner, accent: "muted" });
+        input = {
+          kind: "project",
+          statusBadge: badge,
+          title: project.repository,
+          subtitle,
+          metaChips: chips,
+        };
+      }
+
+      const png = await renderOg(input);
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+      );
+      res.end(png);
+    } catch (err) {
+      console.error("OG render error:", err);
+      res.status(500).setHeader("Content-Type", "text/plain; charset=utf-8").end("render failed");
+    }
+  });
+
+  // Any other /og/*.png path — e.g. /og/projects/foo.png — is invalid and
+  // would otherwise fall through to the SSR catch-all and return HTML, which
+  // Googlebot flags as a broken og:image. Return a clean 404 instead.
+  app.get(/^\/og\/.*\.png$/, (_req, res) => {
+    res.status(404).setHeader("Content-Type", "text/plain; charset=utf-8").send("not found");
   });
 
   app.use("/api", async (req, res) => {
@@ -430,14 +792,33 @@ ${projectUrls}
       }
 
       if (pathname.startsWith("/projects/") && ssrData.portfolioData) {
-        const slug = pathname.replace(/^\/projects\//, "").split("/")[0] ?? "";
-        const matched = ssrData.portfolioData.projects.find((p) => toSlug(p.repository) === slug);
-        if (matched) {
-          const raw = await fetchJSON<ProjectDetail>(
-            `${API_BASE_URL}/api/project/${matched.owner}/${matched.repository}`,
-          );
-          if (raw) ssrData.projectDetail = enrichProjectDetail(raw);
+        const rest = pathname.replace(/^\/projects\//, "");
+        const rawSlug = rest.split("/")[0] ?? "";
+        const hasExtraSegments = rest.includes("/");
+        const canonicalSlug = toSlug(rawSlug);
+
+        if (!canonicalSlug || hasExtraSegments) {
+          send404(res);
+          return;
         }
+
+        if (canonicalSlug !== rawSlug) {
+          res.redirect(301, `/projects/${canonicalSlug}`);
+          return;
+        }
+
+        const matched = ssrData.portfolioData.projects.find(
+          (p) => toSlug(p.repository) === canonicalSlug,
+        );
+        if (!matched) {
+          send404(res);
+          return;
+        }
+
+        const raw = await fetchJSON<ProjectDetail>(
+          `${API_BASE_URL}/api/project/${matched.owner}/${matched.repository}`,
+        );
+        if (raw) ssrData.projectDetail = enrichProjectDetail(raw);
       }
 
       const meta = getPageMeta(pathname, ssrData.portfolioData, ssrData.projectDetail);

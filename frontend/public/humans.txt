@@ -1,0 +1,20 @@
+/* TEAM */
+Developer: Samet Özkan
+Role: Backend Engineer (.NET Core, Go, Rust)
+Location: Istanbul, Turkey
+Site: https://www.sametozkan.com.tr
+GitHub: https://github.com/voyvodka
+LinkedIn: https://linkedin.com/in/samet-ozkan
+X: https://x.com/voyvodka
+
+/* SITE */
+Last updated: 2026-04-21
+Language: English
+Doctype: HTML5
+
+/* TECHNOLOGY COLOPHON */
+Frontend: React 19, Vite, TypeScript, React Router 7, SSR (Express)
+Backend: Go 1.25, SQLite (modernc.org/sqlite)
+Typography: Rajdhani, Space Mono
+Hosting: Self-hosted on Coolify (Hetzner)
+Source: https://github.com/voyvodka/portfolio

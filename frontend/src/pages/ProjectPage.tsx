@@ -168,7 +168,11 @@ export function ProjectPage() {
             {data.releases.map((release) => (
               <li key={`${release.tagName}-${release.publishedAt}`}>
                 <strong>{release.name || release.tagName}</strong>
-                <small>{new Date(release.publishedAt).toLocaleString()}</small>
+                {release.publishedAt ? (
+                  <small>
+                    <time dateTime={release.publishedAt}>{fmtDate(release.publishedAt)}</time>
+                  </small>
+                ) : null}
                 <p>{release.body || "No release notes"}</p>
                 <a href={release.url} target="_blank" rel="noreferrer">
                   Open on GitHub
