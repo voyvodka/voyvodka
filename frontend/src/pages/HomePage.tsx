@@ -150,7 +150,7 @@ export function HomePage() {
           <div className="hero-actions">
             <a className="btn" href="#projects">Open Project Logs</a>
             <a className="btn" href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
-            <a className="btn" href="https://linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
           </div>
           <div className="kpis">
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
@@ -409,7 +409,7 @@ export function HomePage() {
         </div>
         <div className="hero-actions">
           <a className="btn" href={githubUrl} target="_blank" rel="noreferrer">GitHub</a>
-          <a className="btn" href="https://linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
+          <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer">LinkedIn</a>
         </div>
       </section>
     </main>

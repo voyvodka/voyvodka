@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/url"
 	"sort"
@@ -221,7 +222,11 @@ func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo s
 					TagName: tag.Name,
 					Name:    tag.Name,
 					Body:    "Tag snapshot (no GitHub release notes).",
-					HTMLURL: tag.ZipURL,
+					// Point at the canonical release-page URL on github.com
+					// instead of the zipball API URL. The zipball is a raw
+					// archive download — users (and LLM crawlers reading
+					// JSON-LD ItemList) expect an HTML page.
+					HTMLURL: fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", owner, repo, tag.Name),
 				})
 			}
 		}

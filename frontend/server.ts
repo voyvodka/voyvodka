@@ -150,7 +150,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "image": homeOgImage,
     "sameAs": [
       `https://github.com/${ssrData.portfolioData?.profile.username || "voyvodka"}`,
-      "https://linkedin.com/in/samet-ozkan",
+      "https://www.linkedin.com/in/samet-ozkan",
       "https://x.com/voyvodka",
     ],
     "knowsAbout": [".NET Core", "C#", "ASP.NET", "REST APIs", "EF Core", "Go", "Rust", "TypeScript", "Docker", "SQLite"],
@@ -164,14 +164,15 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "url": SITE_URL,
     "logo": {
       "@type": "ImageObject",
-      "url": `${SITE_URL}/favicon.svg`,
-      "width": 32,
-      "height": 32,
+      "url": `${SITE_URL}/brand/logo-D1.png`,
+      "contentUrl": `${SITE_URL}/brand/logo-D1.png`,
+      "width": 512,
+      "height": 512,
     },
     "image": homeOgImage,
     "sameAs": [
       `https://github.com/${ssrData.portfolioData?.profile.username || "voyvodka"}`,
-      "https://linkedin.com/in/samet-ozkan",
+      "https://www.linkedin.com/in/samet-ozkan",
       "https://x.com/voyvodka",
     ],
     "founder": { "@id": `${SITE_URL}/#person` },
@@ -345,6 +346,10 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     const firstRelease = detail.releases && detail.releases.length > 0 ? detail.releases[detail.releases.length - 1] : null;
     const datePublished = firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
     const dateModified = detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
+    // Fallback description for repos without an upstream GitHub description.
+    // Language-aware so the schema/FAQ text remains entity-dense for LLMs.
+    const langLabel = detail.language ? `${detail.language} ` : "";
+    const fallbackDesc = `A ${langLabel}project by Samet Özkan — ${detail.repository}.`;
     schemas.push(person);
     schemas.push(organization);
 
@@ -364,7 +369,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "@id": `${detailUrl}#code`,
       "name": detail.repository,
       "headline": `${detail.owner}/${detail.repository}`,
-      "description": detail.description || `${detail.repository} is an open source project by Samet Özkan.`,
+      "description": detail.description || fallbackDesc,
       "author": { "@id": `${SITE_URL}/#person` },
       "codeRepository": repoUrl,
       "url": detailUrl,
@@ -380,7 +385,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": `${detail.owner}/${detail.repository} — Samet Özkan`,
-      "description": detail.description || "A project by Samet Özkan.",
+      "description": detail.description || fallbackDesc,
       "author": { "@id": `${SITE_URL}/#person` },
       "publisher": { "@id": `${SITE_URL}/#organization` },
       "image": detailOgImage,
@@ -390,19 +395,24 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       ...(dateModified ? { "dateModified": dateModified } : {}),
     });
 
-    if ((detail.releases?.length ?? 0) > 0) {
+    // Only emit ItemList for releases with real publishedAt. Forked repos
+    // sometimes carry release objects with empty publishedAt — keeping them
+    // would leave schema items without datePublished, which is low-quality
+    // for AEO/GEO. DOM rendering already hides the <time> for those.
+    const publishedReleases = (detail.releases ?? []).filter((r) => r.publishedAt);
+    if (publishedReleases.length > 0) {
       schemas.push({
         "@context": "https://schema.org",
         "@type": "ItemList",
         "name": `Releases for ${detail.repository}`,
-        "description": `${detail.releases.length} release${detail.releases.length !== 1 ? "s" : ""} for ${detail.owner}/${detail.repository}.`,
+        "description": `${publishedReleases.length} release${publishedReleases.length !== 1 ? "s" : ""} for ${detail.owner}/${detail.repository}.`,
         "url": detailUrl,
-        "itemListElement": detail.releases.slice(0, 10).map((release, idx) => ({
+        "itemListElement": publishedReleases.slice(0, 10).map((release, idx) => ({
           "@type": "ListItem",
           "position": idx + 1,
           "name": release.name || release.tagName,
           "url": release.url,
-          ...(release.publishedAt ? { "datePublished": release.publishedAt } : {}),
+          "datePublished": release.publishedAt,
         })),
       });
     }
@@ -416,7 +426,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
           "name": `What is ${detail.repository}?`,
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": detail.description || `${detail.repository} is an open source project by Samet Özkan.`,
+            "text": detail.description || fallbackDesc,
           },
         },
         {
@@ -552,6 +562,20 @@ async function createServer() {
   app.disable("x-powered-by");
   app.set("trust proxy", true);
 
+  // Reject unsafe/unused HTTP methods at the edge. Default Express handles
+  // DELETE/PUT/TRACE/OPTIONS by falling through to the SSR catch-all (which
+  // returned 200 HTML) — a cache-poisoning / log-pollution vector. Keep only
+  // the methods the app actually uses.
+  const ALLOWED_METHODS = new Set(["GET", "HEAD", "POST"]);
+  app.use((req, res, next) => {
+    if (!ALLOWED_METHODS.has(req.method)) {
+      res.setHeader("Allow", "GET, HEAD, POST");
+      res.status(405).type("text/plain").send("Method Not Allowed");
+      return;
+    }
+    next();
+  });
+
   // Normalize trailing slash — except root — so every path has one canonical
   // form. Without this, /projects/foo and /projects/foo/ render as two
   // different pages with two different canonicals (duplicate-content risk).
@@ -606,7 +630,10 @@ async function createServer() {
       "/assets",
       express.static(path.join(clientDist, "assets"), { maxAge: "1y", immutable: true }),
     );
-    app.use(express.static(clientDist, { maxAge: "1h", index: false }));
+    // dotfiles: "allow" so /.well-known/security.txt (and future RFC-defined
+    // well-known resources) are served as static files instead of falling
+    // through to the SSR catch-all, which would return HTML.
+    app.use(express.static(clientDist, { maxAge: "1h", index: false, dotfiles: "allow" }));
     const prodAssets = getProdAssets();
     cssLinks = prodAssets.cssLinks;
     clientScriptTag = prodAssets.scriptTag;

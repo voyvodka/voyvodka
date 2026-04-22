@@ -1,0 +1,16 @@
+<svg width="800" height="800" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" fill="#151e25"/>
+  <rect x="12" y="12" width="776" height="776" stroke="#3a4650" stroke-width="3" fill="none"/>
+  <rect x="0" y="0" width="800" height="36" fill="url(#a)"/>
+  <text x="400" y="400" text-anchor="middle" font-family="Space Mono, monospace" font-size="240" font-weight="700" fill="#75a8ff" letter-spacing="20">SO</text>
+  <line x1="240" y1="500" x2="560" y2="500" stroke="#3a4650" stroke-width="2"/>
+  <text x="400" y="580" text-anchor="middle" font-family="Rajdhani, sans-serif" font-size="80" font-weight="600" fill="#e6e9ee" letter-spacing="3">Samet Özkan</text>
+  <text x="400" y="640" text-anchor="middle" font-family="Space Mono, monospace" font-size="28" font-weight="400" fill="#75a8ff" letter-spacing="8">BACKEND · ENGINEER</text>
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#151e25" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#75a8ff"/>
+      <stop offset="100%" stop-color="#151e25" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,13 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#151e25"/>
+  <rect x="8" y="8" width="496" height="496" stroke="#3a4650" stroke-width="2" fill="none"/>
+  <rect x="0" y="0" width="512" height="24" fill="url(#a)"/>
+  <text x="256" y="340" text-anchor="middle" font-family="Space Mono, monospace" font-size="208" font-weight="700" fill="#75a8ff" letter-spacing="18">SO</text>
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="512" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#151e25" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#75a8ff"/>
+      <stop offset="100%" stop-color="#151e25" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg>

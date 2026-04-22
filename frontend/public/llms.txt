@@ -9,7 +9,7 @@ Samet Özkan builds production backends with .NET Core and C# (layered service a
 - Portfolio: https://www.sametozkan.com.tr
 - All repositories: https://www.sametozkan.com.tr/projects
 - GitHub: https://github.com/voyvodka
-- LinkedIn: https://linkedin.com/in/samet-ozkan
+- LinkedIn: https://www.linkedin.com/in/samet-ozkan
 - X: https://x.com/voyvodka
 
 ## Profile facts

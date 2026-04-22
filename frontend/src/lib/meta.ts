@@ -20,7 +20,13 @@ function toSlug(s: string): string {
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, max - 3).trimEnd() + "...";
+  const cut = text.slice(0, max - 3);
+  // Prefer a word boundary close to the cut so we don't leave dangling
+  // syllables like "dashboa...". If no space is reasonably close, fall back
+  // to the raw slice.
+  const lastSpace = cut.lastIndexOf(" ");
+  const safe = lastSpace > max * 0.7 ? cut.slice(0, lastSpace) : cut;
+  return safe.trimEnd() + "...";
 }
 
 export function getPageMeta(
@@ -56,7 +62,8 @@ export function getPageMeta(
 
   if (pathname.startsWith("/projects/") && projectDetail) {
     const name = `${projectDetail.owner}/${projectDetail.repository}`;
-    const rawDesc = projectDetail.description || `${projectDetail.repository} — an open source project`;
+    const langLabel = projectDetail.language ? `${projectDetail.language} ` : "";
+    const rawDesc = projectDetail.description || `A ${langLabel}project — ${projectDetail.repository}`;
     const BRAND_SUFFIX = " — by Samet Özkan, backend engineer.";
     const MAX_DESC = 160;
     const OG_MAX_DESC = 200;
