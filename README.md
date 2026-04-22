@@ -1,9 +1,10 @@
-# Samet Ozkan
+# Samet Özkan
 
 Backend-focused software engineer building reliable products with .NET and practical full-stack delivery.
 
 - Website: https://www.sametozkan.com.tr
 - GitHub: https://github.com/voyvodka
+- X: https://x.com/voyvodka
 
 ## Focus
 
@@ -18,6 +19,12 @@ Backend-focused software engineer building reliable products with .NET and pract
 - SQL, Redis, cache-first API patterns
 - TypeScript, React, Vite
 - Go for lightweight service tooling
+
+## Featured
+
+- **[LumaSync](https://github.com/voyvodka/LumaSync)** — tray-first desktop Ambilight app for WS2812B strips and Philips Hue (Tauri 2 + Rust + React)
+- **[webhook-engine](https://github.com/voyvodka/webhook-engine)** — self-hosted webhook delivery with retry, HMAC signing, and a live dashboard (.NET 10 + PostgreSQL)
+- **[back-on-screen](https://github.com/voyvodka/back-on-screen)** — bring off-screen windows back when a monitor disconnects
 
 ## Working Style
 
