@@ -856,7 +856,7 @@ ${projectUrls}
       let didError = false;
 
       const tail =
-        `</div><script>window.__SSR_DATA__=${JSON.stringify(ssrData)};</script>` +
+        `</div><script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")};</script>` +
         `${clientScriptTag}</body>\n</html>`;
 
       const tailInject = new Transform({
