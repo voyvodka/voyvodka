@@ -180,29 +180,38 @@ func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo s
 		repoErr    error
 	)
 
+	// Bolt Optimization: Use a cancellable context for concurrent API fetches.
+	// If the primary request (GetRepository) fails, cancel the context to immediately abort
+	// the secondary API requests and avoid wasting network resources or blocking execution.
+	ctxCancel, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	var wg sync.WaitGroup
 	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
-		repository, repoErr = s.githubClient.GetRepository(ctx, owner, repo)
+		repository, repoErr = s.githubClient.GetRepository(ctxCancel, owner, repo)
+		if repoErr != nil {
+			cancel()
+		}
 	}()
 	go func() {
 		defer wg.Done()
 		var err error
-		readme, err = s.githubClient.GetReadme(ctx, owner, repo)
+		readme, err = s.githubClient.GetReadme(ctxCancel, owner, repo)
 		if err != nil {
 			readme = ""
 		}
 	}()
 	go func() {
 		defer wg.Done()
-		changelog = s.getChangelog(ctx, owner, repo)
+		changelog = s.getChangelog(ctxCancel, owner, repo)
 	}()
 	go func() {
 		defer wg.Done()
 		var err error
-		releases, err = s.githubClient.GetReleases(ctx, owner, repo)
+		releases, err = s.githubClient.GetReleases(ctxCancel, owner, repo)
 		if err != nil {
 			releases = []github.Release{}
 		}
@@ -419,7 +428,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	ctx, cancel := context.WithTimeout(ctx, s.refreshLockTTL)
+	ctxCancel, cancel := context.WithTimeout(ctx, s.refreshLockTTL)
 	defer cancel()
 
 	var (
@@ -436,16 +445,22 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 
 	go func() {
 		defer wg.Done()
-		user, userErr = s.githubClient.GetUser(ctx, s.username)
+		user, userErr = s.githubClient.GetUser(ctxCancel, s.username)
+		if userErr != nil {
+			cancel()
+		}
 	}()
 	go func() {
 		defer wg.Done()
-		repos, reposErr = s.githubClient.GetRepositories(ctx, s.username)
+		repos, reposErr = s.githubClient.GetRepositories(ctxCancel, s.username)
+		if reposErr != nil {
+			cancel()
+		}
 	}()
 	go func() {
 		defer wg.Done()
 		var err error
-		events, err = s.githubClient.GetEvents(ctx, s.username)
+		events, err = s.githubClient.GetEvents(ctxCancel, s.username)
 		if err != nil {
 			events = []github.Event{}
 		}
@@ -453,7 +468,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	go func() {
 		defer wg.Done()
 		var err error
-		mergedPRs, err = s.githubClient.SearchMergedPRs(ctx, s.username)
+		mergedPRs, err = s.githubClient.SearchMergedPRs(ctxCancel, s.username)
 		if err != nil {
 			mergedPRs = []github.PullRequestItem{}
 		}
@@ -461,7 +476,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	go func() {
 		defer wg.Done()
 		var err error
-		contributionCalendar, err = s.githubClient.GetContributionCalendar(ctx, s.username)
+		contributionCalendar, err = s.githubClient.GetContributionCalendar(ctxCancel, s.username)
 		if err != nil {
 			log.Printf("GetContributionCalendar failed for user=%q: %v", s.username, err)
 			contributionCalendar = []domain.ContributionDay{}
@@ -470,6 +485,12 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 
 	wg.Wait()
 
+	if userErr != nil && !errors.Is(userErr, context.Canceled) {
+		return domain.PortfolioData{}, userErr
+	}
+	if reposErr != nil && !errors.Is(reposErr, context.Canceled) {
+		return domain.PortfolioData{}, reposErr
+	}
 	if userErr != nil {
 		return domain.PortfolioData{}, userErr
 	}
