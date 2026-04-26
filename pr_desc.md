@@ -1,0 +1,4 @@
+💡 What: Added early `cancel()` to the primary API fetches (`GetUser` and `GetRepositories`) in `PortfolioService.refresh`. We also ignore `context.Canceled` in the non-mandatory fetches.
+🎯 Why: If a primary mandatory request fails, the entire payload cannot be assembled and fails anyway. Letting the other 3 secondary API requests run completely wastes time and resources. Short-circuiting avoids wasteful waiting.
+📊 Impact: Expected to reduce the total error response time to the maximum of `GetUser` and `GetRepositories` failure times rather than waiting out up to 5 requests when a mandatory fails early. Also conserves GitHub API rate limit by immediately cancelling pending secondary requests.
+🔬 Measurement: Verify by mocking an error for `GetUser` while tracking API hits on the other endpoints; hits to `GetEvents`, `SearchMergedPRs`, and `GetContributionCalendar` will drop/cancel if `GetUser` fails fast.

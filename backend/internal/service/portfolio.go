@@ -437,16 +437,22 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	go func() {
 		defer wg.Done()
 		user, userErr = s.githubClient.GetUser(ctx, s.username)
+		if userErr != nil {
+			cancel()
+		}
 	}()
 	go func() {
 		defer wg.Done()
 		repos, reposErr = s.githubClient.GetRepositories(ctx, s.username)
+		if reposErr != nil {
+			cancel()
+		}
 	}()
 	go func() {
 		defer wg.Done()
 		var err error
 		events, err = s.githubClient.GetEvents(ctx, s.username)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			events = []github.Event{}
 		}
 	}()
@@ -454,7 +460,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		defer wg.Done()
 		var err error
 		mergedPRs, err = s.githubClient.SearchMergedPRs(ctx, s.username)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			mergedPRs = []github.PullRequestItem{}
 		}
 	}()
@@ -462,7 +468,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		defer wg.Done()
 		var err error
 		contributionCalendar, err = s.githubClient.GetContributionCalendar(ctx, s.username)
-		if err != nil {
+		if err != nil && !errors.Is(err, context.Canceled) {
 			log.Printf("GetContributionCalendar failed for user=%q: %v", s.username, err)
 			contributionCalendar = []domain.ContributionDay{}
 		}
