@@ -445,7 +445,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
 
   if (schemas.length === 0) return "";
   return schemas
-    .map((s) => `<script type="application/ld+json">\n${JSON.stringify(s, null, 2)}\n</script>`)
+    .map((s) => `<script type="application/ld+json">\n${JSON.stringify(s, null, 2).replace(/</g, "\\u003c")}\n</script>`)
     .join("\n    ");
 }
 
@@ -856,7 +856,7 @@ ${projectUrls}
       let didError = false;
 
       const tail =
-        `</div><script>window.__SSR_DATA__=${JSON.stringify(ssrData)};</script>` +
+        `</div><script>window.__SSR_DATA__=${JSON.stringify(ssrData).replace(/</g, "\\u003c")};</script>` +
         `${clientScriptTag}</body>\n</html>`;
 
       const tailInject = new Transform({
