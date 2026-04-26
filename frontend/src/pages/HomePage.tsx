@@ -124,6 +124,16 @@ export function HomePage() {
 
   const dataUnavailable = !loading && (error != null || data == null);
 
+  if (loading) {
+    return (
+      <main className="console">
+        <p className="mono" role="status" aria-live="polite">
+          Loading dashboard...
+        </p>
+      </main>
+    );
+  }
+
   return (
     <main className="console">
       <header className="header">
