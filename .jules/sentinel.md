@@ -7,3 +7,8 @@
 **Vulnerability:** XSS (Cross-Site Scripting) vulnerability during Server-Side Rendering (SSR). Serialized JSON payloads injected into `<script>` tags (e.g., `window.__SSR_DATA__`, `application/ld+json`) using `JSON.stringify()` were not escaped.
 **Learning:** If a JSON payload contains strings like `</script>`, it can prematurely close the `<script>` tag and allow execution of subsequent malicious HTML or JavaScript.
 **Prevention:** Always escape `<` characters in JSON strings injected into the DOM by appending `.replace(/</g, "\\u003c")` to the `JSON.stringify()` output to prevent tag breakout.
+
+## 2025-04-27 - Timing attack vulnerability in API key comparison
+**Vulnerability:** The internal refresh endpoint used a standard string comparison (`!=`) to validate the `X-API-Key` header against the configured internal API key.
+**Learning:** Standard string comparisons terminate early if a character mismatch is found. This creates a timing vulnerability where an attacker can theoretically infer the correct API key by measuring the response time of requests, discovering the key one character at a time.
+**Prevention:** Always use `crypto/subtle.ConstantTimeCompare` (or equivalent in other languages) when comparing secrets, passwords, tokens, or API keys to ensure the comparison time is independent of the input contents.
