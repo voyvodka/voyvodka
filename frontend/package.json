@@ -16,7 +16,7 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "express": "^5.2.1",
-    "isomorphic-dompurify": "^3.9.0",
+    "isomorphic-dompurify": "^3.10.0",
     "marked": "^18.0.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.5",
@@ -31,6 +31,6 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "typescript": "^6.0.2",
-    "vite": "^8.0.9"
+    "vite": "^8.0.10"
   }
 }
