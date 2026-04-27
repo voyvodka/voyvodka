@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -77,7 +78,8 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) forceRefresh(w http.ResponseWriter, r *http.Request) {
-	if h.internalAPIKey == "" || r.Header.Get("X-API-Key") != h.internalAPIKey {
+	providedKey := r.Header.Get("X-API-Key")
+	if h.internalAPIKey == "" || subtle.ConstantTimeCompare([]byte(providedKey), []byte(h.internalAPIKey)) != 1 {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}
