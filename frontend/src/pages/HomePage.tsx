@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
@@ -84,43 +84,89 @@ export function HomePage() {
   const displayName = data?.profile.name || data?.profile.username || "Portfolio";
   const githubUrl = data?.profile.username ? `https://github.com/${data.profile.username}` : "https://github.com";
 
-  const latest = data?.projects[0]?.updatedAt;
-  const latestRepos = data?.projects.slice(0, 5) ?? [];
+  // Memoize expensive derived calculations to prevent redundant
+  // array traversals, sorting, and mapping on every render.
+  const derivedData = useMemo(() => {
+    const projects = data?.projects ?? [];
 
-  const projectRepoSet = new Set(
-    data?.projects.map((p) => p.repository) ?? [],
-  );
-  const topProjects = data?.projects.slice(0, 8) ?? [];
+    const latest = projects[0]?.updatedAt;
+    const latestRepos = projects.slice(0, 5);
 
-  const caseProjects = data?.projects
-    .filter((p) => !p.isFork && p.category === "core")
-    .slice(0, 3) ?? [];
+    const projectRepoSet = new Set(projects.map((p) => p.repository));
+    const topProjects = projects.slice(0, 8);
 
-  const timelineProjects = data?.projects.filter((p) => !p.isFork).slice(0, 4) ?? [];
+    const caseProjects = projects
+      .filter((p) => !p.isFork && p.category === "core")
+      .slice(0, 3);
 
-  const languageCounts = data?.projects.reduce<Record<string, number>>((acc, project) => {
-    if (!project.language) return acc;
-    acc[project.language] = (acc[project.language] || 0) + 1;
-    return acc;
-  }, {}) ?? {};
-  const topLanguages = Object.entries(languageCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-  const maxLangCount = topLanguages[0]?.[1] || 1;
+    const timelineProjects = projects.filter((p) => !p.isFork).slice(0, 4);
 
-  const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
-  const totalProjects = data?.projects.length ?? 0;
-  const activeThisQuarter = data?.projects.filter(
-    (p) => new Date(p.updatedAt).getTime() > ninetyDaysAgo
-  ).length ?? 0;
-  const ownedCount = data?.projects.filter((p) => !p.isFork).length ?? 0;
-  const coreCount = data?.projects.filter((p) => p.category === "core").length ?? 0;
-  const topLangCount = topLanguages[0]?.[1] ?? 0;
-  const topLangName = topLanguages[0]?.[0] ?? "";
-  const activePct = totalProjects > 0 ? Math.round((activeThisQuarter / totalProjects) * 100) : 0;
-  const ownedPct = totalProjects > 0 ? Math.round((ownedCount / totalProjects) * 100) : 0;
-  const corePct = ownedCount > 0 ? Math.round((coreCount / ownedCount) * 100) : 0;
-  const topLangPct = totalProjects > 0 ? Math.round((topLangCount / totalProjects) * 100) : 0;
+    const languageCounts = projects.reduce<Record<string, number>>((acc, project) => {
+      if (!project.language) return acc;
+      acc[project.language] = (acc[project.language] || 0) + 1;
+      return acc;
+    }, {});
+    const topLanguages = Object.entries(languageCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    const maxLangCount = topLanguages[0]?.[1] || 1;
+
+    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    const totalProjects = projects.length;
+    const activeThisQuarter = projects.filter(
+      (p) => new Date(p.updatedAt).getTime() > ninetyDaysAgo
+    ).length;
+    const ownedCount = projects.filter((p) => !p.isFork).length;
+    const coreCount = projects.filter((p) => p.category === "core").length;
+    const topLangCount = topLanguages[0]?.[1] ?? 0;
+    const topLangName = topLanguages[0]?.[0] ?? "";
+    const activePct = totalProjects > 0 ? Math.round((activeThisQuarter / totalProjects) * 100) : 0;
+    const ownedPct = totalProjects > 0 ? Math.round((ownedCount / totalProjects) * 100) : 0;
+    const corePct = ownedCount > 0 ? Math.round((coreCount / ownedCount) * 100) : 0;
+    const topLangPct = totalProjects > 0 ? Math.round((topLangCount / totalProjects) * 100) : 0;
+
+    return {
+      latest,
+      latestRepos,
+      projectRepoSet,
+      topProjects,
+      caseProjects,
+      timelineProjects,
+      topLanguages,
+      maxLangCount,
+      totalProjects,
+      activeThisQuarter,
+      ownedCount,
+      coreCount,
+      topLangCount,
+      topLangName,
+      activePct,
+      ownedPct,
+      corePct,
+      topLangPct,
+    };
+  }, [data?.projects]);
+
+  const {
+    latest,
+    latestRepos,
+    projectRepoSet,
+    topProjects,
+    caseProjects,
+    timelineProjects,
+    topLanguages,
+    maxLangCount,
+    totalProjects,
+    activeThisQuarter,
+    ownedCount,
+    coreCount,
+    topLangCount,
+    activePct,
+    ownedPct,
+    corePct,
+    topLangPct,
+    topLangName,
+  } = derivedData;
 
   const dataUnavailable = !loading && (error != null || data == null);
 
