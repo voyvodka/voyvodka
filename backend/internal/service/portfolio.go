@@ -604,6 +604,8 @@ func (s *PortfolioService) resolveLiveURLFast(repo github.Repository) string {
 		return repo.HTMLURL
 	}
 
+	// Early return optimization: Check configured homepage first to short-circuit
+	// the expensive concurrent CNAME API fetch, saving up to 4 unnecessary network calls.
 	homepage := strings.TrimSpace(repo.Homepage)
 	if candidate := normalizeURLCandidate(homepage); candidate != "" {
 		return candidate
@@ -615,6 +617,11 @@ func (s *PortfolioService) resolveLiveURLFast(repo github.Repository) string {
 func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo github.Repository) string {
 	if repo.Fork {
 		return repo.HTMLURL
+	}
+
+	homepage := strings.TrimSpace(repo.Homepage)
+	if candidate := normalizeURLCandidate(homepage); candidate != "" {
+		return candidate
 	}
 
 	owner := strings.TrimSpace(repo.Owner.Login)
@@ -664,11 +671,6 @@ func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo gith
 
 		if best.idx < len(cnameCandidates) {
 			return best.content
-		}
-
-		homepage := strings.TrimSpace(repo.Homepage)
-		if candidate := normalizeURLCandidate(homepage); candidate != "" {
-			return candidate
 		}
 	}
 

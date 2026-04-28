@@ -4,3 +4,6 @@
 ## 2024-08-16 - Memoizing Expensive Derived State in React Components
 **Learning:** In React components like `HomePage`, expensive operations such as iterating over large arrays, filtering, sorting, and aggregating data on every render lead to unnecessary performance bottlenecks, especially when the underlying data (`data?.projects`) hasn't changed.
 **Action:** Always wrap these derived calculations inside a `useMemo` hook, with the source data as the dependency array. This ensures the calculations run only when the source data actually updates, improving component rendering performance without sacrificing readability.
+## 2024-08-20 - Early Returns to Short-Circuit Expensive API Fan-outs
+**Learning:** In backend data enrichment pipelines, such as `resolveLiveURLDetailed` checking for `CNAME` files concurrently across multiple paths, making exhaustive requests when the answer is already available locally wastes API rate limits and adds significant latency (especially when the requests result in 404s).
+**Action:** Always check local or immediately available structured data (like `repo.Homepage`) before initiating expensive concurrent API fan-outs. Implement early returns to short-circuit processing when the required data can be resolved cheaply.
