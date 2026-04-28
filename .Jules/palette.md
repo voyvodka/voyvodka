@@ -1,0 +1,3 @@
+## 2023-10-27 - Keyboard Accessibility in Heatmap
+**Learning:** The contribution heatmap component previously relied purely on `onMouseEnter` and `onMouseLeave` for displaying tooltip information. This interaction pattern excluded keyboard-only users and screen readers from accessing contribution data for specific days.
+**Action:** Added `tabIndex={0}`, `role="button"`, and an `aria-label` to each heatmap cell to make them focusable and announceable by screen readers. Mapped the tooltip update handlers to `onFocus` and `onBlur` for consistent experience regardless of interaction method. Added `aria-hidden="true"` to the info text element to avoid screen reader redundancy.

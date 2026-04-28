@@ -24,17 +24,25 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
     <div className="contrib-section">
       <div className="gauge-label" style={{ marginBottom: 8 }}>Contribution activity</div>
       <div className="contrib-grid">
-        {recent.map((day) => (
-          <span
-            key={day.date}
-            className="contrib-cell"
-            data-level={level(day.count)}
-            onMouseEnter={() => setHovered(fmt(day.date, day.count))}
-            onMouseLeave={() => setHovered(null)}
-          />
-        ))}
+        {recent.map((day) => {
+          const labelText = fmt(day.date, day.count);
+          return (
+            <span
+              key={day.date}
+              className="contrib-cell"
+              data-level={level(day.count)}
+              role="button"
+              tabIndex={0}
+              aria-label={labelText}
+              onMouseEnter={() => setHovered(labelText)}
+              onMouseLeave={() => setHovered(null)}
+              onFocus={() => setHovered(labelText)}
+              onBlur={() => setHovered(null)}
+            />
+          );
+        })}
       </div>
-      <div className="contrib-info">{hovered ?? "\u00A0"}</div>
+      <div className="contrib-info" aria-hidden="true">{hovered ?? "\u00A0"}</div>
     </div>
   );
 }
