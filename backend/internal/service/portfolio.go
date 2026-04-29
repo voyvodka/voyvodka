@@ -617,6 +617,13 @@ func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo gith
 		return repo.HTMLURL
 	}
 
+	// ⚡ OPTIMIZATION: Check locally available structured data (repo.Homepage)
+	// before executing the expensive API fan-out for CNAME files.
+	homepage := strings.TrimSpace(repo.Homepage)
+	if candidate := normalizeURLCandidate(homepage); candidate != "" {
+		return candidate
+	}
+
 	owner := strings.TrimSpace(repo.Owner.Login)
 	repository := strings.TrimSpace(repo.Name)
 
@@ -664,11 +671,6 @@ func (s *PortfolioService) resolveLiveURLDetailed(ctx context.Context, repo gith
 
 		if best.idx < len(cnameCandidates) {
 			return best.content
-		}
-
-		homepage := strings.TrimSpace(repo.Homepage)
-		if candidate := normalizeURLCandidate(homepage); candidate != "" {
-			return candidate
 		}
 	}
 

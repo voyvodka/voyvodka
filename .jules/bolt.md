@@ -4,3 +4,6 @@
 ## 2024-08-16 - Memoizing Expensive Derived State in React Components
 **Learning:** In React components like `HomePage`, expensive operations such as iterating over large arrays, filtering, sorting, and aggregating data on every render lead to unnecessary performance bottlenecks, especially when the underlying data (`data?.projects`) hasn't changed.
 **Action:** Always wrap these derived calculations inside a `useMemo` hook, with the source data as the dependency array. This ensures the calculations run only when the source data actually updates, improving component rendering performance without sacrificing readability.
+## 2024-10-24 - Early Returns for API Fan-Out Optimization
+**Learning:** In backend Go services, executing concurrent API requests (fan-outs) to resolve values (like `CNAME` files) without first checking locally available structured data (like `repo.Homepage`) wastes resources, exacerbates rate limits, and increases tail latency.
+**Action:** When implementing or optimizing API fan-outs to resolve properties, always check local or easily accessible structured data first. Short-circuiting the expensive fan-out saves network requests and speeds up data fetching.
