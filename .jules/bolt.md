@@ -7,3 +7,6 @@
 ## 2024-08-20 - Early Returns to Short-Circuit Expensive API Fan-outs
 **Learning:** In backend data enrichment pipelines, such as `resolveLiveURLDetailed` checking for `CNAME` files concurrently across multiple paths, making exhaustive requests when the answer is already available locally wastes API rate limits and adds significant latency (especially when the requests result in 404s).
 **Action:** Always check local or immediately available structured data (like `repo.Homepage`) before initiating expensive concurrent API fan-outs. Implement early returns to short-circuit processing when the required data can be resolved cheaply.
+## 2024-08-28 - Intl.DateTimeFormat Instantiation Overhead in React
+**Learning:** Instantiating `Intl.DateTimeFormat` or calling `Date.prototype.toLocaleDateString` directly inside a heavily invoked callback (like formatting a label for hundreds of items rendered dynamically on interaction or in an array map) incurs significant performance penalties due to expensive parser/formatter setup overhead in JS engines.
+**Action:** When repeatedly formatting dates using native APIs across many items, always instantiate the `Intl.DateTimeFormat` object once outside the component or loop, and reuse its `.format()` method to dramatically reduce compute overhead.

@@ -8,6 +8,14 @@ import type { ContributionDay, ProjectSummary } from "@/types/api";
 
 const WEEKS_TO_SHOW = 30;
 
+// Cache the formatter outside the component to avoid expensive
+// re-instantiations of Intl.DateTimeFormat on every render and hover.
+const heatmapDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric"
+});
+
 function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -16,7 +24,7 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   const recent = calendar.slice(-(WEEKS_TO_SHOW * 7 + firstDow));
   const level = (n: number) => n === 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4;
   const fmt = (date: string, count: number) => {
-    const label = new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const label = heatmapDateFormatter.format(new Date(date));
     return count === 0 ? `No contributions · ${label}` : `${count} contribution${count !== 1 ? "s" : ""} · ${label}`;
   };
 
