@@ -29,8 +29,13 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
             key={day.date}
             className="contrib-cell"
             data-level={level(day.count)}
+            role="img"
+            aria-label={fmt(day.date, day.count)}
+            tabIndex={0}
             onMouseEnter={() => setHovered(fmt(day.date, day.count))}
             onMouseLeave={() => setHovered(null)}
+            onFocus={() => setHovered(fmt(day.date, day.count))}
+            onBlur={() => setHovered(null)}
           />
         ))}
       </div>
