@@ -38,12 +38,12 @@ function githubDate(isoDate: string) {
 export function ProjectsPage() {
   const { data, loading, error } = usePortfolioData();
 
-  if (loading) return <main className="console"><p className="mono" role="status" aria-live="polite">Loading repositories...</p></main>;
-  if (error) return <main className="console"><p className="mono">Failed to load repositories: {error}</p></main>;
-  if (!data) return <main className="console"><p className="mono">No repositories found.</p></main>;
+  if (loading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading repositories...</p></main>;
+  if (error) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Failed to load repositories: {error}</p></main>;
+  if (!data) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">No repositories found.</p></main>;
 
   return (
-    <main className="console projects-page">
+    <main id="main-content" className="console projects-page" tabIndex={-1}>
       <section className="panel">
         <div className="section-head">
           <h1>All Repositories</h1>

@@ -185,7 +185,7 @@ export function HomePage() {
 
   if (loading) {
     return (
-      <main className="console">
+      <main id="main-content" className="console" tabIndex={-1}>
         <p className="mono" role="status" aria-live="polite">
           Loading dashboard...
         </p>
@@ -194,7 +194,7 @@ export function HomePage() {
   }
 
   return (
-    <main className="console">
+    <main id="main-content" className="console" tabIndex={-1}>
       <header className="header">
         <div className="header-brand">
           <Logo />
