@@ -756,38 +756,63 @@ ol.projects-list {
 .markdown-body ul,
 .markdown-body ol,
 .markdown-body blockquote,
-.markdown-body pre {
-  margin: 8px 0;
+.markdown-body pre,
+.markdown-body table {
+  margin: 0 0 16px;
 }
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: 20px;
+  padding-left: 24px;
+}
+
+.markdown-body li + li {
+  margin-top: 4px;
+}
+
+.markdown-body li > p {
+  margin: 0 0 8px;
 }
 
 .markdown-body a {
   color: var(--blue);
 }
 
+.markdown-body h1,
+.markdown-body h2 {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
 .markdown-body code {
-  background: #1a232a;
-  border: 1px solid var(--line-soft);
-  padding: 1px 4px;
+  background: rgba(140, 160, 175, 0.18);
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
   font-family: "Space Mono", monospace;
-  font-size: 11px;
+  font-size: 0.85em;
 }
 
 .markdown-body pre {
-  background: #121b21;
-  border: 1px solid var(--line-soft);
-  padding: 10px;
+  background: #0d1117;
+  padding: 16px;
+  border-radius: 6px;
   overflow: auto;
+  font-size: 0.9em;
+  line-height: 1.45;
 }
 
 .markdown-body pre code {
-  border: none;
-  padding: 0;
   background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 1em;
+  white-space: pre;
+}
+
+.markdown-body blockquote {
+  padding: 0 14px;
+  border-left: 0.25em solid var(--line-soft);
+  color: var(--muted);
 }
 
 .markdown-body img {
@@ -798,13 +823,25 @@ ol.projects-list {
 .markdown-body table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 0.9em;
 }
 
 .markdown-body th,
 .markdown-body td {
   border: 1px solid var(--line-soft);
-  padding: 6px;
+  padding: 6px 13px;
+}
+
+.markdown-body th {
+  background: rgba(140, 160, 175, 0.08);
+  font-weight: 600;
+}
+
+.markdown-body hr {
+  border: 0;
+  height: 1px;
+  background: var(--line-soft);
+  margin: 16px 0;
 }
 
 .release-list {
@@ -813,7 +850,7 @@ ol.projects-list {
   gap: 10px;
 }
 
-.release-list li {
+.release-list > li {
   border: 1px solid var(--line-soft);
   background: #12191e;
   padding: 10px;
