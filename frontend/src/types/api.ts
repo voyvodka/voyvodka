@@ -34,6 +34,7 @@ export type ProjectSummary = {
   liveUrl: string;
   isFork: boolean;
   category: "core" | "contrib" | "explore";
+  latestRelease?: string;
 };
 
 export type Contribution = {
@@ -83,5 +84,6 @@ export type Release = {
   name: string;
   publishedAt: string;
   body: string;
+  bodyHtml?: string;
   url: string;
 };

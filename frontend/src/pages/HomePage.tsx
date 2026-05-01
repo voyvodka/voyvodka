@@ -364,6 +364,9 @@ export function HomePage() {
                       <Link className="repo-link" to={toProjectPath(project.repository)}>
                         {project.repository}
                       </Link>
+                      {project.latestRelease ? (
+                        <span className="repo-version mono">{project.latestRelease}</span>
+                      ) : null}
                     </b>
                     <div className="mono">{project.description || "No description"}</div>
                   </div>

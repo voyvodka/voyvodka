@@ -63,17 +63,54 @@ function demoteRawHeadings(markdown: string): string {
     .replace(/<h1(\b[^>]*)>/gi, "<h2$1>").replace(/<\/h1>/gi, "</h2>");
 }
 
-function renderMarkdown(raw: string): string {
+type RepoCtx = { owner: string; repo: string; branch: string };
+
+// READMEs reference screenshots with repo-relative paths like `./assets/x.png`
+// or `assets/x.png`. They render on github.com because GitHub resolves them
+// against the repo, but on this site they 404. Rewrite <img src> to absolute
+// raw.githubusercontent.com URLs after sanitization.
+function resolveRepoRelativeUrl(src: string, base: string): string {
+  const trimmed = src.trim();
+  if (!trimmed) return src;
+  if (/^(https?:|data:|mailto:|#)/i.test(trimmed)) return src;
+  if (trimmed.startsWith("//")) return src;
+  if (trimmed.startsWith("/")) return base + trimmed.slice(1);
+  if (trimmed.startsWith("./")) return base + trimmed.slice(2);
+  return base + trimmed;
+}
+
+function rewriteRelativeImageSrc(html: string, ctx: RepoCtx): string {
+  if (!ctx.owner || !ctx.repo) return html;
+  const base = `https://raw.githubusercontent.com/${ctx.owner}/${ctx.repo}/${ctx.branch || "HEAD"}/`;
+  return html.replace(/<img\b[^>]*>/gi, (tag) =>
+    tag.replace(/\bsrc=(["'])([^"']+)\1/i, (_full, quote: string, src: string) => {
+      const rewritten = resolveRepoRelativeUrl(src, base);
+      return `src=${quote}${rewritten}${quote}`;
+    }),
+  );
+}
+
+function renderMarkdown(raw: string, ctx?: RepoCtx): string {
   if (!raw) return "";
   const html = marked.parse(demoteRawHeadings(raw)) as string;
-  return DOMPurify.sanitize(html);
+  const sanitized = DOMPurify.sanitize(html);
+  return ctx ? rewriteRelativeImageSrc(sanitized, ctx) : sanitized;
 }
 
 function enrichProjectDetail(detail: ProjectDetail): ProjectDetail {
+  const ctx: RepoCtx = {
+    owner: detail.owner,
+    repo: detail.repository,
+    branch: detail.defaultBranch || "HEAD",
+  };
   return {
     ...detail,
-    readmeHtml: renderMarkdown(detail.readme ?? ""),
-    changelogHtml: renderMarkdown(detail.changelog ?? ""),
+    readmeHtml: renderMarkdown(detail.readme ?? "", ctx),
+    changelogHtml: renderMarkdown(detail.changelog ?? "", ctx),
+    releases: (detail.releases ?? []).map((release) => ({
+      ...release,
+      bodyHtml: renderMarkdown(release.body ?? "", ctx),
+    })),
   };
 }
 
