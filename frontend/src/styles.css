@@ -2,35 +2,35 @@
   font-family: 'Rajdhani';
   font-style: normal;
   font-weight: 500;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/rajdhani-500.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Rajdhani';
   font-style: normal;
   font-weight: 600;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/rajdhani-600.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Rajdhani';
   font-style: normal;
   font-weight: 700;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/rajdhani-700.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Space Mono';
   font-style: normal;
   font-weight: 400;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/space-mono-400.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Space Mono';
   font-style: normal;
   font-weight: 700;
-  font-display: optional;
+  font-display: swap;
   src: url('/fonts/space-mono-700.woff2') format('woff2');
 }
 
@@ -382,6 +382,15 @@ ol.projects-list {
   text-decoration: underline;
 }
 
+.repo-version {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--green);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
 .status {
   font-family: "Space Mono", monospace;
   font-size: 10px;
@@ -657,6 +666,30 @@ ol.projects-list {
   background: rgba(117, 168, 255, 0.08);
   flex-shrink: 0;
   align-self: center;
+}
+
+.project-page .release-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Space Mono", monospace;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--green);
+  background: rgba(84, 244, 172, 0.06);
+  padding: 4px 9px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.project-page .release-badge__label {
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.project-page .release-badge__value {
+  color: var(--green);
 }
 
 .project-page .fork-origin {
@@ -937,17 +970,24 @@ button:focus-visible,
 }
 
 .skip-link {
-  position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--blue);
-  color: #fff;
-  padding: 8px;
-  z-index: 100;
-  transition: top 0.2s;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  padding: 8px 14px;
+  font-family: "Space Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   text-decoration: none;
+  color: var(--bg);
+  background: var(--green);
+  transform: translateY(calc(-100% - 24px));
+  transition: transform 0.18s ease;
 }
 
-.skip-link:focus {
-  top: 0;
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }

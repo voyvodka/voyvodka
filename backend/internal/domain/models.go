@@ -30,16 +30,17 @@ type KPI struct {
 }
 
 type Project struct {
-	Owner       string `json:"owner"`
-	Repository  string `json:"repository"`
-	Description string `json:"description"`
-	Language    string `json:"language"`
-	Stars       int    `json:"stars"`
-	UpdatedAt   string `json:"updatedAt"`
-	RepoURL     string `json:"repoUrl"`
-	LiveURL     string `json:"liveUrl"`
-	IsFork      bool   `json:"isFork"`
-	Category    string `json:"category"`
+	Owner         string `json:"owner"`
+	Repository    string `json:"repository"`
+	Description   string `json:"description"`
+	Language      string `json:"language"`
+	Stars         int    `json:"stars"`
+	UpdatedAt     string `json:"updatedAt"`
+	RepoURL       string `json:"repoUrl"`
+	LiveURL       string `json:"liveUrl"`
+	IsFork        bool   `json:"isFork"`
+	Category      string `json:"category"`
+	LatestRelease string `json:"latestRelease,omitempty"`
 }
 
 type Contribution struct {

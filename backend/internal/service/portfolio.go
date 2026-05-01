@@ -498,6 +498,8 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		return domain.PortfolioData{}, reposErr
 	}
 
+	latestReleases := s.fetchLatestReleases(refreshCtx, repos)
+
 	projects := make([]domain.Project, 0, len(repos))
 	ownedCount := 0
 	totalStars := 0
@@ -509,16 +511,17 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		totalStars += repo.StargazersCount
 
 		projects = append(projects, domain.Project{
-			Owner:       repo.Owner.Login,
-			Repository:  repo.Name,
-			Description: strings.TrimSpace(repo.Description),
-			Language:    repo.Language,
-			Stars:       repo.StargazersCount,
-			UpdatedAt:   repo.UpdatedAt,
-			RepoURL:     repo.HTMLURL,
-			LiveURL:     s.resolveLiveURLFast(repo),
-			IsFork:      repo.Fork,
-			Category:    categoryForRepository(repo),
+			Owner:         repo.Owner.Login,
+			Repository:    repo.Name,
+			Description:   strings.TrimSpace(repo.Description),
+			Language:      repo.Language,
+			Stars:         repo.StargazersCount,
+			UpdatedAt:     repo.UpdatedAt,
+			RepoURL:       repo.HTMLURL,
+			LiveURL:       s.resolveLiveURLFast(repo),
+			IsFork:        repo.Fork,
+			Category:      categoryForRepository(repo),
+			LatestRelease: latestReleases[repo.Owner.Login+"/"+repo.Name],
 		})
 	}
 
@@ -597,6 +600,54 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	}
 
 	return payload, nil
+}
+
+// fetchLatestReleases fan-outs /releases?per_page=1 calls for non-fork repos
+// in parallel. Best-effort: any per-repo failure just leaves that entry blank.
+// Concurrency is bounded so we don't burst the GitHub rate limit on refresh.
+func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []github.Repository) map[string]string {
+	const releaseFetchConcurrency = 5
+	out := make(map[string]string, len(repos))
+	if len(repos) == 0 {
+		return out
+	}
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	sem := make(chan struct{}, releaseFetchConcurrency)
+
+	for _, repo := range repos {
+		if repo.Fork {
+			continue
+		}
+		owner := strings.TrimSpace(repo.Owner.Login)
+		name := strings.TrimSpace(repo.Name)
+		if owner == "" || name == "" {
+			continue
+		}
+
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(owner, name string) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			rels, err := s.githubClient.GetReleases(ctx, owner, name)
+			if err != nil || len(rels) == 0 {
+				return
+			}
+			tag := strings.TrimSpace(rels[0].TagName)
+			if tag == "" {
+				return
+			}
+			mu.Lock()
+			out[owner+"/"+name] = tag
+			mu.Unlock()
+		}(owner, name)
+	}
+
+	wg.Wait()
+	return out
 }
 
 func (s *PortfolioService) resolveLiveURLFast(repo github.Repository) string {

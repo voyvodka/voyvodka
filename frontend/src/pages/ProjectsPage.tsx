@@ -75,6 +75,9 @@ export function ProjectsPage() {
                   <Link className="repo-link" to={toProjectPath(project.repository)}>
                     {project.repository}
                   </Link>
+                  {project.latestRelease ? (
+                    <span className="repo-version mono">{project.latestRelease}</span>
+                  ) : null}
                 </b>
                 {project.isFork && (
                   <div className="mono">{project.owner}</div>

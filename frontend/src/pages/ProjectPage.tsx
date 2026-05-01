@@ -59,6 +59,7 @@ export function ProjectPage() {
   const readme = data.readme ?? "";
   const changelog = data.changelog ?? "";
   const releaseChangelog = buildReleaseChangelog(data.releases);
+  const latestRelease = data.releases.find((r) => r.tagName);
   const hasDistinctLiveURL = Boolean(data.liveUrl) && data.liveUrl !== data.repoUrl;
 
   const parentRepoUrl = data.parentRepoUrl || "";
@@ -81,6 +82,12 @@ export function ProjectPage() {
           </h1>
           {data.isFork ? (
             <span className="fork-badge">FORK</span>
+          ) : null}
+          {latestRelease ? (
+            <span className="release-badge">
+              <span className="release-badge__label">release</span>
+              <span className="release-badge__value">{latestRelease.tagName}</span>
+            </span>
           ) : null}
         </div>
         {data.isFork && parentRepo ? (
@@ -173,7 +180,11 @@ export function ProjectPage() {
                     <time dateTime={release.publishedAt}>{fmtDate(release.publishedAt)}</time>
                   </small>
                 ) : null}
-                <p>{release.body || "No release notes"}</p>
+                {release.bodyHtml ? (
+                  <div className="release-body markdown-body" dangerouslySetInnerHTML={{ __html: release.bodyHtml }} />
+                ) : (
+                  <p>{release.body || "No release notes"}</p>
+                )}
                 <a href={release.url} target="_blank" rel="noreferrer">
                   Open on GitHub
                 </a>
