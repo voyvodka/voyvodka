@@ -55,11 +55,28 @@ func (h *Handler) getPortfolioData(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, data)
 }
 
+func isValidGitHubName(name string) bool {
+	if name == "" || name == "." || name == ".." {
+		return false
+	}
+	for _, c := range name {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.') {
+			return false
+		}
+	}
+	return true
+}
+
 func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 	owner := r.PathValue("owner")
 	repo := r.PathValue("repo")
 	if owner == "" || repo == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "owner and repo are required"})
+		return
+	}
+
+	if !isValidGitHubName(owner) || !isValidGitHubName(repo) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid owner or repo name"})
 		return
 	}
 
