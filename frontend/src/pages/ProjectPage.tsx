@@ -4,11 +4,22 @@ import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { findProjectBySlug } from "@/lib/projectRoutes";
 
+// Cache the formatter outside the component to avoid expensive
+// re-instantiations of Intl.DateTimeFormat (or toLocaleString) on every format.
+const dateFormatter = new Intl.DateTimeFormat(undefined, {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric'
+});
+
 function fmtDate(iso: string) {
   if (!iso) return "-";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString();
+  return dateFormatter.format(date);
 }
 
 function statusLabel(category: string, isFork: boolean) {
