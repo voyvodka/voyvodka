@@ -793,6 +793,19 @@ ${projectUrls}
   });
 
   app.use("/api", async (req, res) => {
+    let decoded = req.url;
+    try {
+      decoded = decodeURIComponent(req.url);
+    } catch {
+      res.status(400).json({ error: "bad request" });
+      return;
+    }
+    const checkUrl = new URL(`/api${decoded}`, "http://localhost");
+    if (!checkUrl.pathname.startsWith("/api/") && checkUrl.pathname !== "/api") {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+
     const target = `${API_BASE_URL}/api${req.url}`;
     const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(req.url);
     try {
