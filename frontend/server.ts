@@ -806,8 +806,16 @@ ${projectUrls}
       return;
     }
 
-    const target = `${API_BASE_URL}/api${req.url}`;
-    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(req.url);
+    // Also parse the raw req.url to resolve traversals without fully decoding (e.g. keeping %2F)
+    const forwardUrl = new URL(`/api${req.url}`, "http://localhost");
+    if (!forwardUrl.pathname.startsWith("/api/") && forwardUrl.pathname !== "/api") {
+      res.status(403).json({ error: "forbidden" });
+      return;
+    }
+
+    // Forward the normalized pathname and search to prevent SSRF and path traversal
+    const target = `${API_BASE_URL}${forwardUrl.pathname}${forwardUrl.search}`;
+    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(forwardUrl.pathname.replace(/^\/api/, ""));
     try {
       const upstream = await fetch(target, {
         method: req.method,
