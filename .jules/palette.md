@@ -16,3 +16,7 @@
 ## 2024-05-14 - Adding tabIndex for skip link target
 **Learning:** When using skip links in React/SPAs, simply adding `id="main-content"` isn't always enough because older browsers or specific screen readers might not correctly shift programmatic focus to a non-interactive element like `<main>`.
 **Action:** Always add `tabIndex={-1}` to the target container of a skip link (e.g., `<main id="main-content" tabIndex={-1}>`) to ensure focus is reliably managed.
+
+## 2024-05-24 - Focus visible styles for custom interactive elements
+**Learning:** Even when `tabIndex={0}` is added to custom interactive elements (like heatmap cells) to make them keyboard focusable, they are practically invisible to sighted keyboard users unless explicit `focus-visible` styles are provided. Furthermore, tightly packed grid elements may require `position: relative; z-index: 1;` so their focus outline isn't clipped by adjacent elements.
+**Action:** Always ensure that custom interactive components given `tabIndex={0}` also receive `focus-visible` styling (including `outline` and necessary layout tweaks like `z-index`) so their focus state is visually apparent.
