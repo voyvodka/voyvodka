@@ -389,6 +389,7 @@ ol.projects-list {
   font-weight: 400;
   letter-spacing: 0.02em;
   opacity: 0.85;
+  text-transform: none;
 }
 
 .status {

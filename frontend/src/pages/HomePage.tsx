@@ -417,6 +417,9 @@ export function HomePage() {
                 <Link to={toProjectPath(p.repository)} style={{ color: "inherit", textDecoration: "none" }}>
                   {p.repository}
                 </Link>
+                {p.latestRelease ? (
+                  <span className="repo-version mono">{p.latestRelease}</span>
+                ) : null}
               </h3>
               <ul>
                 <li><span>Stack</span>{p.language || "Multi-language"}</li>
