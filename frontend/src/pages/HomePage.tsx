@@ -19,14 +19,27 @@ const heatmapDateFormatter = new Intl.DateTimeFormat("en-US", {
 function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   const [hovered, setHovered] = useState<string | null>(null);
 
-  const tail = calendar.slice(-(WEEKS_TO_SHOW * 7));
-  const firstDow = tail.length > 0 ? (new Date(tail[0].date).getDay() + 6) % 7 : 0;
-  const recent = calendar.slice(-(WEEKS_TO_SHOW * 7 + firstDow));
-  const level = (n: number) => n === 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4;
-  const fmt = (date: string, count: number) => {
-    const label = heatmapDateFormatter.format(new Date(date));
-    return count === 0 ? `No contributions · ${label}` : `${count} contribution${count !== 1 ? "s" : ""} · ${label}`;
-  };
+  // Memoize the mapped contribution array to prevent expensive
+  // date formatting calculations on every hover re-render.
+  // This reduces re-renders computation complexity from O(n) to O(1) during hover state changes.
+  const recent = useMemo(() => {
+    const tail = calendar.slice(-(WEEKS_TO_SHOW * 7));
+    const firstDow = tail.length > 0 ? (new Date(tail[0].date).getDay() + 6) % 7 : 0;
+    const rawRecent = calendar.slice(-(WEEKS_TO_SHOW * 7 + firstDow));
+
+    const level = (n: number) => n === 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4;
+    const fmt = (date: string, count: number) => {
+      const label = heatmapDateFormatter.format(new Date(date));
+      return count === 0 ? `No contributions · ${label}` : `${count} contribution${count !== 1 ? "s" : ""} · ${label}`;
+    };
+
+    return rawRecent.map((day) => ({
+      date: day.date,
+      count: day.count,
+      level: level(day.count),
+      label: fmt(day.date, day.count)
+    }));
+  }, [calendar]);
 
   return (
     <div className="contrib-section">
@@ -36,13 +49,13 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
           <span
             key={day.date}
             className="contrib-cell"
-            data-level={level(day.count)}
+            data-level={day.level}
             role="img"
-            aria-label={fmt(day.date, day.count)}
+            aria-label={day.label}
             tabIndex={0}
-            onMouseEnter={() => setHovered(fmt(day.date, day.count))}
+            onMouseEnter={() => setHovered(day.label)}
             onMouseLeave={() => setHovered(null)}
-            onFocus={() => setHovered(fmt(day.date, day.count))}
+            onFocus={() => setHovered(day.label)}
             onBlur={() => setHovered(null)}
           />
         ))}
