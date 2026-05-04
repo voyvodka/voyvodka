@@ -1001,9 +1001,15 @@ ol.projects-list {
 /* Focus states for keyboard accessibility */
 a:focus-visible,
 button:focus-visible,
-.btn:focus-visible {
+.btn:focus-visible,
+.contrib-cell:focus-visible {
   outline: 2px solid var(--blue);
   outline-offset: 2px;
+}
+
+.contrib-cell:focus-visible {
+  position: relative;
+  z-index: 1;
 }
 
 .skip-link {
