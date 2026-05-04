@@ -52,11 +52,50 @@ export function ProjectPage() {
   const { data, loading, error } = useProjectDetail(owner, repo);
 
   if (portfolioLoading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading project details...</p></main>;
-  if (portfolioError) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Failed to load project list: {portfolioError}</p></main>;
-  if (!matchedProject) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Project not found.</p></main>;
+  if (portfolioError) return (
+    <main id="main-content" className="console project-page" tabIndex={-1}>
+      <div className="panel">
+        <p className="mono" role="alert">Failed to load project list: {portfolioError}</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+        </div>
+      </div>
+    </main>
+  );
+  if (!matchedProject) return (
+    <main id="main-content" className="console project-page" tabIndex={-1}>
+      <div className="panel">
+        <p className="mono" role="alert">Project not found.</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/projects" className="btn">All Repositories</Link>
+        </div>
+      </div>
+    </main>
+  );
   if (loading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading project...</p></main>;
-  if (error) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Failed to load project: {error}</p></main>;
-  if (!data) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Project not found.</p></main>;
+  if (error) return (
+    <main id="main-content" className="console project-page" tabIndex={-1}>
+      <div className="panel">
+        <p className="mono" role="alert">Failed to load project: {error}</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/projects" className="btn">All Repositories</Link>
+        </div>
+      </div>
+    </main>
+  );
+  if (!data) return (
+    <main id="main-content" className="console project-page" tabIndex={-1}>
+      <div className="panel">
+        <p className="mono" role="alert">Project not found.</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/projects" className="btn">All Repositories</Link>
+        </div>
+      </div>
+    </main>
+  );
 
   const topics = data.topics ?? [];
   const stars = data.stars ?? 0;

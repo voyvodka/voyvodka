@@ -20,3 +20,6 @@
 ## 2024-05-24 - Focus visible styles for custom interactive elements
 **Learning:** Even when `tabIndex={0}` is added to custom interactive elements (like heatmap cells) to make them keyboard focusable, they are practically invisible to sighted keyboard users unless explicit `focus-visible` styles are provided. Furthermore, tightly packed grid elements may require `position: relative; z-index: 1;` so their focus outline isn't clipped by adjacent elements.
 **Action:** Always ensure that custom interactive components given `tabIndex={0}` also receive `focus-visible` styling (including `outline` and necessary layout tweaks like `z-index`) so their focus state is visually apparent.
+## 2024-05-24 - Provide Actionable Recovery from Dead-end States
+**Learning:** Returning plain text paragraphs for UI error boundaries or empty states (e.g., "Project not found") creates a dead-end experience and lacks screen reader announcements.
+**Action:** Always wrap error/empty state messages in a styled container with `role="alert"` for accessibility, and provide an explicit navigation fallback (like a "Return Home" or "View All" link) so users are not forced to rely on browser navigation to recover.
