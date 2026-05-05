@@ -213,7 +213,7 @@ export function HomePage() {
           <Logo />
           <span>{displayName} / Portfolio</span>
         </div>
-        <nav>
+        <nav aria-label="Main Navigation">
           <a href="#projects">Projects</a>
           <a href="#cases">Case Files</a>
           <a href="#timeline">Timeline</a>
