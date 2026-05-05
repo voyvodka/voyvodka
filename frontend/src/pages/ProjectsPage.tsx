@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { usePortfolioData } from "@/hooks/usePortfolioData";
@@ -15,8 +16,9 @@ function badgeClass(projectCategory: string, isFork: boolean) {
   return "status online";
 }
 
-function githubDate(isoDate: string) {
-  const ms = Date.now() - new Date(isoDate).getTime();
+function githubDate(isoDate: string, nowMs: number, currentYear: number) {
+  const d = new Date(isoDate);
+  const ms = nowMs - d.getTime();
   const min = 60 * 1000;
   const hour = 60 * min;
   const day = 24 * hour;
@@ -26,10 +28,9 @@ function githubDate(isoDate: string) {
   if (ms < day) return `${Math.floor(ms / hour)} hours ago`;
   if (ms < 30 * day) return `${Math.floor(ms / day)} days ago`;
 
-  const d = new Date(isoDate);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  if (d.getFullYear() === new Date().getFullYear()) {
+  if (d.getFullYear() === currentYear) {
     return `on ${months[d.getMonth()]} ${d.getDate()}`;
   }
   return `on ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
@@ -37,6 +38,37 @@ function githubDate(isoDate: string) {
 
 export function ProjectsPage() {
   const { data, loading, error } = usePortfolioData();
+
+  const renderedProjects = useMemo(() => {
+    if (!data?.projects) return null;
+    const nowMs = Date.now();
+    const currentYear = new Date().getFullYear();
+
+    return data.projects.map((project, idx) => (
+      <li className="row row--full" key={`${project.owner}/${project.repository}`}>
+        <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
+        <div>
+          <b>
+            <Link className="repo-link" to={toProjectPath(project.repository)}>
+              {project.repository}
+            </Link>
+            {project.latestRelease ? (
+              <span className="repo-version mono">{project.latestRelease}</span>
+            ) : null}
+          </b>
+          {project.isFork && (
+            <div className="mono">{project.owner}</div>
+          )}
+        </div>
+        <div className="mono">{project.description || "—"}</div>
+        <div className="mono">{project.language || "—"}</div>
+        <div className="mono updated-col">{githubDate(project.updatedAt, nowMs, currentYear)}</div>
+        <span className={badgeClass(project.category, project.isFork)}>
+          <Link to={toProjectPath(project.repository)}>{badgeLabel(project.category, project.isFork)}</Link>
+        </span>
+      </li>
+    ));
+  }, [data?.projects]);
 
   if (loading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading repositories...</p></main>;
   if (error) return (
@@ -85,30 +117,7 @@ export function ProjectsPage() {
           <div>Status</div>
         </div>
         <ol className="projects-list">
-          {data.projects.map((project, idx) => (
-            <li className="row row--full" key={`${project.owner}/${project.repository}`}>
-              <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
-              <div>
-                <b>
-                  <Link className="repo-link" to={toProjectPath(project.repository)}>
-                    {project.repository}
-                  </Link>
-                  {project.latestRelease ? (
-                    <span className="repo-version mono">{project.latestRelease}</span>
-                  ) : null}
-                </b>
-                {project.isFork && (
-                  <div className="mono">{project.owner}</div>
-                )}
-              </div>
-              <div className="mono">{project.description || "—"}</div>
-              <div className="mono">{project.language || "—"}</div>
-              <div className="mono updated-col">{githubDate(project.updatedAt)}</div>
-              <span className={badgeClass(project.category, project.isFork)}>
-                <Link to={toProjectPath(project.repository)}>{badgeLabel(project.category, project.isFork)}</Link>
-              </span>
-            </li>
-          ))}
+          {renderedProjects}
         </ol>
       </section>
     </main>
