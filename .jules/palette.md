@@ -23,3 +23,7 @@
 ## 2024-05-24 - Provide Actionable Recovery from Dead-end States
 **Learning:** Returning plain text paragraphs for UI error boundaries or empty states (e.g., "Project not found") creates a dead-end experience and lacks screen reader announcements.
 **Action:** Always wrap error/empty state messages in a styled container with `role="alert"` for accessibility, and provide an explicit navigation fallback (like a "Return Home" or "View All" link) so users are not forced to rely on browser navigation to recover.
+
+## 2024-05-27 - Main navigation accessibility
+**Learning:** Screen readers announce `<nav>` elements as a "navigation landmark," but without an explicit label, users lack context about its purpose, particularly if a page has multiple navigations (e.g., footer, breadcrumbs).
+**Action:** Always add an explicit label like `aria-label="Main Navigation"` to primary navigation landmarks to clarify their role for assistive technology users.
