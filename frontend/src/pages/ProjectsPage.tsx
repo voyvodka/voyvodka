@@ -39,8 +39,26 @@ export function ProjectsPage() {
   const { data, loading, error } = usePortfolioData();
 
   if (loading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading repositories...</p></main>;
-  if (error) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">Failed to load repositories: {error}</p></main>;
-  if (!data) return <main id="main-content" className="console" tabIndex={-1}><p className="mono">No repositories found.</p></main>;
+  if (error) return (
+    <main id="main-content" className="console projects-page" tabIndex={-1}>
+      <section className="panel">
+        <p className="mono" role="alert">Failed to load repositories: {error}</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+        </div>
+      </section>
+    </main>
+  );
+  if (!data) return (
+    <main id="main-content" className="console projects-page" tabIndex={-1}>
+      <section className="panel">
+        <p className="mono" role="alert">No repositories found.</p>
+        <div className="hero-actions" style={{ marginTop: 16 }}>
+          <Link to="/" className="btn">Return Home</Link>
+        </div>
+      </section>
+    </main>
+  );
 
   return (
     <main id="main-content" className="console projects-page" tabIndex={-1}>
