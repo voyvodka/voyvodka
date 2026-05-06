@@ -71,3 +71,66 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  licenses:
+    name: Frontend — license audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Block copyleft licenses
+        run: pnpm dlx license-checker --production --failOn 'GPL-3.0;AGPL-3.0;SSPL-1.0'
+      - name: License summary (informational)
+        run: pnpm dlx license-checker --production --summary || true
+
+  sbom:
+    name: SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+    # SBOM generation is heavier than audit; run only on schedule + manual.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          cache: true
+          cache-dependency-path: backend/go.sum
+      - name: Frontend — install
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+      - name: Frontend — CycloneDX SBOM
+        working-directory: frontend
+        run: pnpm dlx @cyclonedx/cyclonedx-npm --output-format JSON --output-file sbom.frontend.cdx.json
+      - name: Backend — install cyclonedx-gomod
+        run: go install github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@latest
+      - name: Backend — CycloneDX SBOM
+        working-directory: backend
+        run: cyclonedx-gomod mod -json -licenses -output sbom.backend.cdx.json
+      - name: Upload SBOMs
+        uses: actions/upload-artifact@v6
+        with:
+          name: sbom-cyclonedx
+          path: |
+            frontend/sbom.frontend.cdx.json
+            backend/sbom.backend.cdx.json
+          retention-days: 90
