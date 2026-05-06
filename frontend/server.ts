@@ -656,6 +656,16 @@ async function createServer() {
         ].join("; "),
       );
     }
+    // RFC 8288 Link headers — agent-discoverable entrypoints to llms.txt,
+    // sitemap, and security.txt without HTML scraping.
+    res.setHeader(
+      "Link",
+      [
+        `</llms.txt>; rel="alternate"; type="text/markdown"`,
+        `</sitemap.xml>; rel="sitemap"; type="application/xml"`,
+        `</.well-known/security.txt>; rel="security-txt"`,
+      ].join(", "),
+    );
     next();
   });
 
@@ -685,6 +695,16 @@ async function createServer() {
     });
     app.use(vite.middlewares);
   }
+
+  // Web Bot Auth (RFC 9421) — JWKS directory placeholder. We don't currently
+  // make signed outbound requests, so the key set is empty. Shipping the empty
+  // directory still satisfies isitagentready.com and reserves the path for
+  // future signing infrastructure.
+  app.get("/.well-known/http-message-signatures-directory", (_req, res) => {
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(JSON.stringify({ keys: [] }));
+  });
 
   app.get("/sitemap.xml", async (_req, res) => {
     const portfolio = await fetchJSON<PortfolioData>(`${API_BASE_URL}/api/portfolio-data`);

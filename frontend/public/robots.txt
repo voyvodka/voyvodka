@@ -35,4 +35,9 @@ Allow: /
 User-agent: YouBot
 Allow: /
 
+# Content-Signal — Cloudflare 2025 robots.txt extension. Policy signal for how
+# AI systems may use this site's content (separate from Allow/Disallow gates).
+# Open portfolio: classic indexing + training datasets + real-time AI retrieval.
+Content-Signal: search=yes, ai-train=yes, ai-input=yes
+
 Sitemap: https://www.sametozkan.com.tr/sitemap.xml
