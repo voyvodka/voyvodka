@@ -8,7 +8,7 @@ LinkedIn: https://www.linkedin.com/in/samet-ozkan
 X: https://x.com/voyvodka
 
 /* SITE */
-Last updated: 2026-04-21
+Last updated: 2026-05-06
 Language: English
 Doctype: HTML5
 
