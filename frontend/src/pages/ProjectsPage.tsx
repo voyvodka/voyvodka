@@ -101,7 +101,7 @@ export function ProjectsPage() {
         </div>
         <div className="hero-actions">
           <Link className="btn" to="/">Back Home</Link>
-          <a className="btn" href={`https://github.com/${data.profile.username}?tab=repositories`} target="_blank" rel="noreferrer">
+          <a className="btn" href={`https://github.com/${data.profile.username}?tab=repositories`} target="_blank" rel="noreferrer" aria-label="Open repositories list on GitHub">
             Open on GitHub
           </a>
         </div>

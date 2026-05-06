@@ -27,3 +27,6 @@
 ## 2024-05-27 - Main navigation accessibility
 **Learning:** Screen readers announce `<nav>` elements as a "navigation landmark," but without an explicit label, users lack context about its purpose, particularly if a page has multiple navigations (e.g., footer, breadcrumbs).
 **Action:** Always add an explicit label like `aria-label="Main Navigation"` to primary navigation landmarks to clarify their role for assistive technology users.
+## 2024-05-15 - Improve accessibility of generic links and decorative characters
+**Learning:** Screen readers read link text out of context (e.g. from a links list). Repeated generic links like "view all", "profile", "Open on GitHub", or "Repository" lack context. Additionally, decorative text characters like "→" or "↗" are often read aloud, creating noise.
+**Action:** Always add descriptive `aria-label`s to generic links (e.g., `aria-label="View all latest repositories"`) and hide decorative text characters from screen readers using `<span aria-hidden="true">`.
