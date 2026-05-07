@@ -16,3 +16,6 @@
 ## 2024-09-04 - Redundant Date Instantiations in Render Loops
 **Learning:** In React components rendering large arrays without `useMemo`, calling functions that instantiate `Date` objects repeatedly inside mapping functions, especially duplicating identical instantiations (e.g. `Date.now()` or `new Date(isoDate)` multiple times), severely degrades performance during render cycles due to parsing and allocation overhead.
 **Action:** When a mapped formatting function requires current context (like `Date.now()` or `new Date().getFullYear()`), hoist these values outside the mapping loop. Additionally, wrap the array mapping in a `useMemo` block to memoize the rendered output, preventing O(n) re-calculations on potential future component updates.
+## 2024-10-25 - Pre-calculating Secret Hashes for API Verification
+**Learning:** Computing SHA256 hashes of expected static secrets on every incoming request adds unnecessary compute overhead, especially in frequently hit authorization paths, while attempting to mitigate timing attacks.
+**Action:** Pre-calculate the hash of expected static secrets in the constructor and store them as a `[32]byte` array on the handler. During request authorization, hash only the provided key and use `crypto/subtle.ConstantTimeCompare` against the pre-calculated hash to ensure both security and performance.

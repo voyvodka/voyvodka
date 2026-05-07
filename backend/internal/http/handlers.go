@@ -12,14 +12,19 @@ import (
 )
 
 type Handler struct {
-	portfolioService *service.PortfolioService
-	internalAPIKey   string
+	portfolioService   *service.PortfolioService
+	internalAPIKey     string
+	internalAPIKeyHash [32]byte
 }
 
 func NewHandler(portfolioService *service.PortfolioService, internalAPIKey string) *Handler {
 	return &Handler{
-		portfolioService: portfolioService,
-		internalAPIKey:   internalAPIKey,
+		portfolioService:   portfolioService,
+		internalAPIKey:     internalAPIKey,
+		// ⚡ Bolt optimization: Pre-calculate the SHA256 hash of the expected internalAPIKey
+		// here in the constructor. This avoids expensive re-hashing of the static secret
+		// on every incoming request, while still allowing for secure constant-time comparisons.
+		internalAPIKeyHash: sha256.Sum256([]byte(internalAPIKey)),
 	}
 }
 
@@ -98,11 +103,11 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) forceRefresh(w http.ResponseWriter, r *http.Request) {
 	providedKey := r.Header.Get("X-API-Key")
 
-	// Hash both keys to prevent leaking secret length via timing attack
-	expectedHash := sha256.Sum256([]byte(h.internalAPIKey))
+	// Hash the provided key to prevent leaking its length via timing attack.
+	// The expected internalAPIKeyHash is pre-calculated in the constructor for performance.
 	providedHash := sha256.Sum256([]byte(providedKey))
 
-	if h.internalAPIKey == "" || subtle.ConstantTimeCompare(providedHash[:], expectedHash[:]) != 1 {
+	if h.internalAPIKey == "" || subtle.ConstantTimeCompare(providedHash[:], h.internalAPIKeyHash[:]) != 1 {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}
