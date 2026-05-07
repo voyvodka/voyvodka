@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { findProjectBySlug } from "@/lib/projectRoutes";
+import type { ProjectDetail } from "@/types/api";
 
 // Cache the formatter outside the component to avoid expensive
 // re-instantiations of Intl.DateTimeFormat (or toLocaleString) on every format.
@@ -26,6 +27,67 @@ function statusLabel(category: string, isFork: boolean) {
   if (isFork || category === "contrib") return "CONTRIB";
   if (category === "explore") return "EXPLORE";
   return "CORE";
+}
+
+function ReadmeFallback({ data, topics, license }: { data: ProjectDetail; topics: string[]; license: string }) {
+  const lang = data.language || "open-source";
+  const topicLine = topics.length > 0
+    ? ` It's tagged ${topics.slice(0, 5).join(", ")}.`
+    : "";
+  const licenseLine = license ? ` Licensed under ${license}.` : "";
+  return (
+    <div className="readme-block">
+      <p>
+        <strong>{data.repository}</strong> is a {lang} project by {data.owner}, hosted on
+        GitHub.{topicLine}{licenseLine}
+      </p>
+      <p>
+        This repository doesn't ship a README in its default branch. The source
+        tree, issues, and commit history on GitHub are the canonical reference
+        for what the project does and how to run it.
+      </p>
+      <p>
+        <a href={data.repoUrl} target="_blank" rel="noreferrer">Browse the repository on GitHub →</a>
+      </p>
+    </div>
+  );
+}
+
+function ChangelogFallback({ repoUrl, defaultBranch }: { repoUrl: string; defaultBranch: string }) {
+  const branch = defaultBranch || "main";
+  const commitsUrl = `${repoUrl.replace(/\/$/, "")}/commits/${branch}`;
+  return (
+    <div className="readme-block">
+      <p>
+        This repository doesn't maintain a dedicated CHANGELOG file. Released
+        notes — when they exist — are listed in the Releases section below.
+      </p>
+      <p>
+        For an unfiltered view of every change, the commit history on the
+        <code> {branch} </code> branch is the source of truth.
+      </p>
+      <p>
+        <a href={commitsUrl} target="_blank" rel="noreferrer">View commit history on GitHub →</a>
+      </p>
+    </div>
+  );
+}
+
+function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: string; defaultBranch: string; pushedAt: string }) {
+  const branch = defaultBranch || "main";
+  const branchUrl = `${repoUrl.replace(/\/$/, "")}/tree/${branch}`;
+  const pushed = pushedAt ? fmtDate(pushedAt) : null;
+  return (
+    <div className="readme-block">
+      <p>
+        No tagged releases yet. The current state of the project lives on the
+        <code> {branch} </code> branch{pushed ? `, last pushed ${pushed}` : ""}.
+      </p>
+      <p>
+        <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub →</a>
+      </p>
+    </div>
+  );
 }
 
 function buildReleaseChangelog(releases: { name: string; tagName: string; publishedAt: string; body: string }[]) {
@@ -194,7 +256,7 @@ export function ProjectPage() {
         ) : readme ? (
           <div className="readme-block markdown-body"><pre>{readme}</pre></div>
         ) : (
-          <p className="mono">No README content found for this repository.</p>
+          <ReadmeFallback data={data} topics={topics} license={license} />
         )}
       </section>
 
@@ -209,7 +271,7 @@ export function ProjectPage() {
         ) : releaseChangelog ? (
           <div className="readme-block markdown-body"><pre>{releaseChangelog}</pre></div>
         ) : (
-          <p className="mono">No CHANGELOG file or release notes found for this repository.</p>
+          <ChangelogFallback repoUrl={data.repoUrl} defaultBranch={defaultBranch} />
         )}
       </section>
 
@@ -218,7 +280,7 @@ export function ProjectPage() {
           <h3>Releases</h3>
         </div>
         {data.releases.length === 0 ? (
-          <p className="info">No releases found for this repository.</p>
+          <ReleasesFallback repoUrl={data.repoUrl} defaultBranch={defaultBranch} pushedAt={pushedAt} />
         ) : (
           <ul className="release-list">
             {data.releases.map((release) => (
