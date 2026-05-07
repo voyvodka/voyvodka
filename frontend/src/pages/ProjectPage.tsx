@@ -127,9 +127,7 @@ export function ProjectPage() {
           </Link>
         </div>
         <div className="project-title-row">
-          <h1>
-            {data.owner}/{data.repository}
-          </h1>
+          <h1>{data.repository}</h1>
           {data.isFork ? (
             <span className="fork-badge">FORK</span>
           ) : null}
@@ -160,6 +158,7 @@ export function ProjectPage() {
           <div className="kpi"><b>{openIssues}</b><span className="mono">open issues</span></div>
         </div>
         <div className="project-meta">
+          <span className="mono">owner: {data.owner}</span>
           <span className="mono">status: {statusLabel(data.category, data.isFork)}</span>
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
