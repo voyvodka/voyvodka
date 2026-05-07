@@ -27,3 +27,6 @@
 ## 2024-05-27 - Main navigation accessibility
 **Learning:** Screen readers announce `<nav>` elements as a "navigation landmark," but without an explicit label, users lack context about its purpose, particularly if a page has multiple navigations (e.g., footer, breadcrumbs).
 **Action:** Always add an explicit label like `aria-label="Main Navigation"` to primary navigation landmarks to clarify their role for assistive technology users.
+## 2025-05-07 - Hide Decorative Arrows and Label Links for Screen Readers
+**Learning:** Screen readers announce text sequentially, so inline decorative text characters like `→` ("rightwards arrow") or `&larr;` ("leftwards arrow") can create a confusing audio experience when mixed with text, and generic link text ("Repository", "Live", "profile") provides poor context when read out of order.
+**Action:** Use `<span aria-hidden="true">` to hide decorative text characters from screen readers, and add explicit, context-rich `aria-label` attributes to any link whose visible text is ambiguous or non-descriptive out of context.

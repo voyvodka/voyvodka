@@ -120,7 +120,7 @@ export function ProjectPage() {
       <div className="panel">
         <div className="hero-actions">
           <Link to="/" className="back-link">
-            &larr; Home
+            <span aria-hidden="true">&larr;</span> Home
           </Link>
           <Link to="/projects" className="back-link">
             All Repositories
@@ -145,7 +145,7 @@ export function ProjectPage() {
             forked from{" "}
             {parentRepoUrl ? (
               <a href={parentRepoUrl} target="_blank" rel="noreferrer">
-                {parentRepo} ↗
+                {parentRepo} <span aria-hidden="true">↗</span>
               </a>
             ) : (
               parentRepo
@@ -175,11 +175,11 @@ export function ProjectPage() {
           </div>
         ) : null}
         <div className="actions">
-          <a href={data.repoUrl} target="_blank" rel="noreferrer">
+          <a href={data.repoUrl} target="_blank" rel="noreferrer" aria-label="Repository on GitHub">
             Repository
           </a>
           {hasDistinctLiveURL ? (
-            <a href={data.liveUrl} target="_blank" rel="noreferrer">
+            <a href={data.liveUrl} target="_blank" rel="noreferrer" aria-label="Live Demo">
               Live
             </a>
           ) : null}
@@ -235,7 +235,7 @@ export function ProjectPage() {
                 ) : (
                   <p>{release.body || "No release notes"}</p>
                 )}
-                <a href={release.url} target="_blank" rel="noreferrer">
+                <a href={release.url} target="_blank" rel="noreferrer" aria-label={`Open release on GitHub`}>
                   Open on GitHub
                 </a>
               </li>
