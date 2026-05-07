@@ -12,14 +12,16 @@ import (
 )
 
 type Handler struct {
-	portfolioService *service.PortfolioService
-	internalAPIKey   string
+	portfolioService   *service.PortfolioService
+	internalAPIKey     string
+	internalAPIKeyHash [32]byte
 }
 
 func NewHandler(portfolioService *service.PortfolioService, internalAPIKey string) *Handler {
 	return &Handler{
-		portfolioService: portfolioService,
-		internalAPIKey:   internalAPIKey,
+		portfolioService:   portfolioService,
+		internalAPIKey:     internalAPIKey,
+		internalAPIKeyHash: sha256.Sum256([]byte(internalAPIKey)),
 	}
 }
 
@@ -98,11 +100,14 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) forceRefresh(w http.ResponseWriter, r *http.Request) {
 	providedKey := r.Header.Get("X-API-Key")
 
-	// Hash both keys to prevent leaking secret length via timing attack
-	expectedHash := sha256.Sum256([]byte(h.internalAPIKey))
+	// Hash provided key to prevent leaking secret length via timing attack.
+	// Expected hash is pre-computed to save CPU cycles.
 	providedHash := sha256.Sum256([]byte(providedKey))
 
-	if h.internalAPIKey == "" || subtle.ConstantTimeCompare(providedHash[:], expectedHash[:]) != 1 {
+	// Constant time comparison must happen before length/empty checks to prevent timing attacks
+	match := subtle.ConstantTimeCompare(providedHash[:], h.internalAPIKeyHash[:])
+
+	if match != 1 || h.internalAPIKey == "" {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
 		return
 	}
