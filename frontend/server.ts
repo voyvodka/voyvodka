@@ -383,12 +383,8 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     const detailOgImage = `${SITE_URL}/og/${toSlug(detail.repository)}.png`;
     const repoUrl = detail.repoUrl || `https://github.com/${detail.owner}/${detail.repository}`;
     const firstRelease = detail.releases && detail.releases.length > 0 ? detail.releases[detail.releases.length - 1] : null;
-    // Avoid the portfolioUpdatedAt fallback here: it's the cache-refresh
-    // timestamp, which mutates on every backend sync and would make the
-    // Article date drift on every render. Google reads that as an unstable
-    // date signal. If the repo carries no real publishedAt/pushedAt/updatedAt,
-    // omit the fields entirely — schema.org allows it and it's a stronger
-    // quality signal than a fabricated one.
+    // Don't fall back to portfolioUpdatedAt — it's the cache-refresh time
+    // and would rotate the date on every backend sync.
     const datePublished = firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt;
     const dateModified = detail.pushedAt || detail.updatedAt;
     // Fallback description for repos without an upstream GitHub description.
@@ -582,8 +578,14 @@ function toSlug(s: string): string {
   return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-function send404(res: express.Response): void {
-  res.status(404);
+function sendStatusPage(
+  res: express.Response,
+  status: 404 | 410,
+  heading: string,
+  body: string,
+): void {
+  const title = status === 410 ? "Gone — Samet Özkan" : "Not Found — Samet Özkan";
+  res.status(status);
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
   res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
@@ -593,13 +595,100 @@ function send404(res: express.Response): void {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>Not Found — Samet Özkan</title>
+    <title>${title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: ui-monospace, "Space Mono", SFMono-Regular, Menlo, monospace;
+        background: #101417;
+        color: #e6e9ee;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      header {
+        padding: 1.25rem 2rem;
+        border-bottom: 1px solid #1d2329;
+      }
+      header a {
+        color: #e6e9ee;
+        text-decoration: none;
+        font-family: system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: 0.04em;
+      }
+      main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .panel { max-width: 36rem; text-align: center; }
+      .code {
+        font-family: system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 5rem;
+        line-height: 1;
+        color: #75a8ff;
+        margin-bottom: 1rem;
+        letter-spacing: -0.02em;
+      }
+      h1 {
+        font-family: system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #e6e9ee;
+      }
+      p { line-height: 1.6; color: #9ba3ad; margin-bottom: 1.5rem; font-size: 0.95rem; }
+      .actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+      .actions a {
+        color: #75a8ff;
+        text-decoration: none;
+        padding: 0.55rem 1rem;
+        border: 1px solid #1d2329;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+      .actions a:hover { background: #1d2329; }
+    </style>
   </head>
-  <body style="font-family:system-ui,sans-serif;padding:2rem;background:#101417;color:#e6e9ee;">
-    <h1>404 — Not Found</h1>
-    <p>The project you're looking for doesn't exist. <a style="color:#75a8ff" href="/projects">See all projects</a>.</p>
+  <body>
+    <header><a href="/">Samet Özkan</a></header>
+    <main>
+      <div class="panel">
+        <div class="code">${status}</div>
+        <h1>${heading}</h1>
+        <p>${body}</p>
+        <div class="actions">
+          <a href="/">Home</a>
+          <a href="/projects">All projects</a>
+        </div>
+      </div>
+    </main>
   </body>
 </html>`);
+}
+
+function send404(res: express.Response): void {
+  sendStatusPage(
+    res,
+    404,
+    "Page not found",
+    "The page you're looking for doesn't exist or has been moved. Try one of the links below.",
+  );
+}
+
+function send410(res: express.Response): void {
+  sendStatusPage(
+    res,
+    410,
+    "Page permanently removed",
+    "This page used to exist but has been permanently removed.",
+  );
 }
 
 async function createServer() {
@@ -818,6 +907,10 @@ ${projectUrls}
     res.status(404).setHeader("Content-Type", "text/plain; charset=utf-8").send("not found");
   });
 
+  // Stale URL Google indexed at some point but never appeared in our sitemap.
+  // 410 tells crawlers it's permanently gone, faster than 404 for de-indexing.
+  app.get("/projects/samples/README.md", (_req, res) => send410(res));
+
   app.use("/api", async (req, res) => {
     let decoded = req.url;
     try {
@@ -885,16 +978,21 @@ ${projectUrls}
         getPageMeta = metaMod.getPageMeta;
       }
 
-      const ssrData: SSRData = {};
-
-      const needsPortfolio =
+      // Whitelist known routes. Anything else — /random, /blog, typos — was
+      // returning 200 + index,follow with the SPA shell, which Google reads as
+      // a soft-404 against the apex domain.
+      const isKnownRoute =
         pathname === "/" ||
         pathname === "/projects" ||
         pathname.startsWith("/projects/");
 
-      if (needsPortfolio) {
-        ssrData.portfolioData = await fetchJSON(`${API_BASE_URL}/api/portfolio-data`) ?? undefined;
+      if (!isKnownRoute) {
+        send404(res);
+        return;
       }
+
+      const ssrData: SSRData = {};
+      ssrData.portfolioData = await fetchJSON(`${API_BASE_URL}/api/portfolio-data`) ?? undefined;
 
       if (pathname.startsWith("/projects/") && ssrData.portfolioData) {
         const rest = pathname.replace(/^\/projects\//, "");
