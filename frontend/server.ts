@@ -383,8 +383,14 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     const detailOgImage = `${SITE_URL}/og/${toSlug(detail.repository)}.png`;
     const repoUrl = detail.repoUrl || `https://github.com/${detail.owner}/${detail.repository}`;
     const firstRelease = detail.releases && detail.releases.length > 0 ? detail.releases[detail.releases.length - 1] : null;
-    const datePublished = firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
-    const dateModified = detail.pushedAt || detail.updatedAt || portfolioUpdatedAt;
+    // Avoid the portfolioUpdatedAt fallback here: it's the cache-refresh
+    // timestamp, which mutates on every backend sync and would make the
+    // Article date drift on every render. Google reads that as an unstable
+    // date signal. If the repo carries no real publishedAt/pushedAt/updatedAt,
+    // omit the fields entirely — schema.org allows it and it's a stronger
+    // quality signal than a fabricated one.
+    const datePublished = firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt;
+    const dateModified = detail.pushedAt || detail.updatedAt;
     // Fallback description for repos without an upstream GitHub description.
     // Language-aware so the schema/FAQ text remains entity-dense for LLMs.
     const langLabel = detail.language ? `${detail.language} ` : "";
