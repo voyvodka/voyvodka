@@ -293,7 +293,7 @@ export function HomePage() {
             <article className="live-box">
               <div className="section-head">
                 <span className="mono">Latest repositories</span>
-                <Link className="mono" to="/projects">view all</Link>
+                <Link className="mono" to="/projects" aria-label="View all latest repositories">view all</Link>
               </div>
               <ul className="live-list">
                 {latestRepos.map((repo) => (
@@ -327,7 +327,7 @@ export function HomePage() {
             <article className="live-box">
               <div className="section-head">
                 <span className="mono">Recent activity events</span>
-                <a className="mono" href={githubUrl} target="_blank" rel="noreferrer">profile</a>
+                <a className="mono" href={githubUrl} target="_blank" rel="noreferrer" aria-label="View GitHub profile">profile</a>
               </div>
               <ul className="live-list">
                 {(data?.events ?? []).slice(0, 30).map((event, idx) => {
@@ -394,7 +394,9 @@ export function HomePage() {
               ))}
             </ol>
             <div className="projects-footer">
-              <Link className="mono" to="/projects">View all {totalProjects} repositories →</Link>
+              <Link className="mono" to="/projects">
+                View all {totalProjects} repositories <span aria-hidden="true">→</span>
+              </Link>
             </div>
           </>
         )}
