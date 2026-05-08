@@ -130,6 +130,12 @@ func (c *Client) GetReleases(ctx context.Context, owner, repo string) ([]Release
 	return data, err
 }
 
+func (c *Client) GetLatestReleases(ctx context.Context, owner, repo string) ([]Release, error) {
+	var data []Release
+	err := c.getJSON(ctx, fmt.Sprintf("/repos/%s/%s/releases?per_page=1", owner, repo), &data)
+	return data, err
+}
+
 func (c *Client) GetTags(ctx context.Context, owner, repo string) ([]Tag, error) {
 	var data []Tag
 	err := c.getJSON(ctx, fmt.Sprintf("/repos/%s/%s/tags?per_page=20", owner, repo), &data)

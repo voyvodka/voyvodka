@@ -632,7 +632,7 @@ func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []gith
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			rels, err := s.githubClient.GetReleases(ctx, owner, name)
+			rels, err := s.githubClient.GetLatestReleases(ctx, owner, name)
 			if err != nil || len(rels) == 0 {
 				return
 			}
