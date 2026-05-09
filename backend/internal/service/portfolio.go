@@ -208,7 +208,7 @@ func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo s
 	go func() {
 		defer wg.Done()
 		var err error
-		releases, err = s.githubClient.GetReleases(fetchCtx, owner, repo)
+		releases, err = s.githubClient.GetReleases(fetchCtx, owner, repo, 20)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			releases = []github.Release{}
 		}
@@ -632,7 +632,7 @@ func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []gith
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			rels, err := s.githubClient.GetReleases(ctx, owner, name)
+			rels, err := s.githubClient.GetReleases(ctx, owner, name, 1)
 			if err != nil || len(rels) == 0 {
 				return
 			}
