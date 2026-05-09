@@ -124,9 +124,9 @@ func (c *Client) GetEvents(ctx context.Context, username string) ([]Event, error
 	return data, err
 }
 
-func (c *Client) GetReleases(ctx context.Context, owner, repo string) ([]Release, error) {
+func (c *Client) GetReleases(ctx context.Context, owner, repo string, perPage int) ([]Release, error) {
 	var data []Release
-	err := c.getJSON(ctx, fmt.Sprintf("/repos/%s/%s/releases?per_page=20", owner, repo), &data)
+	err := c.getJSON(ctx, fmt.Sprintf("/repos/%s/%s/releases?per_page=%d", owner, repo, perPage), &data)
 	return data, err
 }
 
