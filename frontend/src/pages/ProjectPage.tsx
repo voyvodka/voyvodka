@@ -47,7 +47,7 @@ function ReadmeFallback({ data, topics, license }: { data: ProjectDetail; topics
         for what the project does and how to run it.
       </p>
       <p>
-        <a href={data.repoUrl} target="_blank" rel="noreferrer">Browse the repository on GitHub →</a>
+        <a href={data.repoUrl} target="_blank" rel="noreferrer">Browse the repository on GitHub <span aria-hidden="true">→</span></a>
       </p>
     </div>
   );
@@ -67,7 +67,7 @@ function ChangelogFallback({ repoUrl, defaultBranch }: { repoUrl: string; defaul
         <code> {branch} </code> branch is the source of truth.
       </p>
       <p>
-        <a href={commitsUrl} target="_blank" rel="noreferrer">View commit history on GitHub →</a>
+        <a href={commitsUrl} target="_blank" rel="noreferrer">View commit history on GitHub <span aria-hidden="true">→</span></a>
       </p>
     </div>
   );
@@ -84,7 +84,7 @@ function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: strin
         <code> {branch} </code> branch{pushed ? `, last pushed ${pushed}` : ""}.
       </p>
       <p>
-        <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub →</a>
+        <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub <span aria-hidden="true">→</span></a>
       </p>
     </div>
   );
