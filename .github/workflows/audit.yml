@@ -127,7 +127,7 @@ jobs:
         working-directory: backend
         run: cyclonedx-gomod mod -json -licenses -output sbom.backend.cdx.json
       - name: Upload SBOMs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-cyclonedx
           path: |
