@@ -925,8 +925,8 @@ ${projectUrls}
       return;
     }
 
-    const target = `${API_BASE_URL}/api${req.url}`;
-    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(req.url);
+    const target = `${API_BASE_URL}${checkUrl.pathname}${checkUrl.search}`;
+    const isProjectDetail = /^\/api\/project\/[^/]+\/[^/]+$/.test(checkUrl.pathname);
     try {
       const upstream = await fetch(target, {
         method: req.method,
