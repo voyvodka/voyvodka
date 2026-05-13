@@ -18,17 +18,19 @@ const FONT_SPECS: FontSpec[] = [
 ];
 
 type LoadedFont = { name: string; data: Buffer; weight: 400 | 500 | 600 | 700; style: "normal" };
-let cachedFonts: LoadedFont[] | null = null;
+let cachedFontsPromise: Promise<LoadedFont[]> | null = null;
 
-function loadFonts(): LoadedFont[] {
-  if (cachedFonts) return cachedFonts;
-  cachedFonts = FONT_SPECS.map<LoadedFont>((spec) => ({
-    name: spec.name,
-    data: fs.readFileSync(path.join(fontsDir, spec.file)),
-    weight: spec.weight,
-    style: spec.style,
-  }));
-  return cachedFonts;
+function loadFonts(): Promise<LoadedFont[]> {
+  if (cachedFontsPromise) return cachedFontsPromise;
+  cachedFontsPromise = Promise.all(
+    FONT_SPECS.map(async (spec): Promise<LoadedFont> => ({
+      name: spec.name,
+      data: await fs.promises.readFile(path.join(fontsDir, spec.file)),
+      weight: spec.weight,
+      style: spec.style,
+    }))
+  );
+  return cachedFontsPromise;
 }
 
 const COLORS = {
@@ -213,7 +215,7 @@ function buildTree(input: OgTemplateInput) {
 }
 
 export async function renderOg(input: OgTemplateInput): Promise<Buffer> {
-  const fonts = loadFonts();
+  const fonts = await loadFonts();
   const tree = buildTree(input);
   const svg = await satori(tree as never, { width: 1200, height: 630, fonts });
   const png = new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render().asPng();
