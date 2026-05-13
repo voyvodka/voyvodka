@@ -64,7 +64,7 @@ export function ProjectsPage() {
         <div className="mono">{project.language || "—"}</div>
         <div className="mono updated-col">{githubDate(project.updatedAt, nowMs, currentYear)}</div>
         <span className={badgeClass(project.category, project.isFork)}>
-          <Link to={toProjectPath(project.repository)}>{badgeLabel(project.category, project.isFork)}</Link>
+          <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
         </span>
       </li>
     ));

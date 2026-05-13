@@ -30,3 +30,6 @@
 ## 2024-05-15 - Improve accessibility of generic links and decorative characters
 **Learning:** Screen readers read link text out of context (e.g. from a links list). Repeated generic links like "view all", "profile", "Open on GitHub", or "Repository" lack context. Additionally, decorative text characters like "→" or "↗" are often read aloud, creating noise.
 **Action:** Always add descriptive `aria-label`s to generic links (e.g., `aria-label="View all latest repositories"`) and hide decorative text characters from screen readers using `<span aria-hidden="true">`.
+## 2025-02-20 - Screen Reader Accessibility for Links and Arrows
+**Learning:** Decorative characters (like `→`) in links are often read aloud by screen readers, creating noise, and generic text links (like "CORE" or "CONTRIB" badges) lack context for visually impaired users.
+**Action:** Always wrap decorative text characters in `<span aria-hidden="true">` inside links or buttons. Add descriptive `aria-label`s to generic links that rely on visual context (such as placement near a project title) to be understood.
