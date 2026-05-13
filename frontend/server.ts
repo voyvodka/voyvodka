@@ -925,8 +925,9 @@ ${projectUrls}
       return;
     }
 
-    const target = `${API_BASE_URL}/api${req.url}`;
-    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(req.url);
+    const normalizedPath = checkUrl.pathname.replace(/^\/api/, "");
+    const target = `${API_BASE_URL}/api${normalizedPath}${checkUrl.search}`;
+    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(normalizedPath);
     try {
       const upstream = await fetch(target, {
         method: req.method,
