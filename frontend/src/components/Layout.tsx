@@ -1,6 +1,6 @@
-import type { PropsWithChildren } from "react";
+import type { ReactNode } from "react";
 
-export function Layout({ children }: PropsWithChildren) {
+export function Layout({ children }: { children: ReactNode }) {
   return (
     <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
