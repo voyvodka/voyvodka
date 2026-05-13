@@ -65,8 +65,8 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   );
 }
 
-function ago(isoDate: string) {
-  const ms = Date.now() - new Date(isoDate).getTime();
+function ago(isoDate: string, nowMs: number) {
+  const ms = nowMs - new Date(isoDate).getTime();
   const day = 1000 * 60 * 60 * 24;
   const hour = 1000 * 60 * 60;
   if (ms < day) return `${Math.max(1, Math.floor(ms / hour))}h ago`;
@@ -194,6 +194,47 @@ export function HomePage() {
     topLangName,
   } = derivedData;
 
+  const renderedLatestRepos = useMemo(() => {
+    const nowMs = Date.now();
+    return latestRepos.map((repo) => (
+      <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
+        <strong>
+          <Link className="repo-link" to={toProjectPath(repo.repository)}>
+            {repo.repository}
+          </Link>
+        </strong>
+        <span className="mono">{repo.description || "No description provided."}</span>
+        <span className="mono">
+          {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | {ago(repo.updatedAt, nowMs)}
+        </span>
+      </li>
+    ));
+  }, [latestRepos]);
+
+  const renderedEvents = useMemo(() => {
+    const nowMs = Date.now();
+    return (data?.events ?? []).slice(0, 30).map((event, idx) => {
+      const isOwnProject = projectRepoSet.has(event.repository);
+      return (
+        <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
+          <strong>
+            {isOwnProject ? (
+              <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
+                {event.repository}
+              </Link>
+            ) : (
+              <a className="repo-link" href={`https://github.com/${event.repository}`} target="_blank" rel="noreferrer">
+                {event.repository}
+              </a>
+            )}
+          </strong>
+          <span className="mono">{eventLabel(event.type)}</span>
+          <span className="mono">{ago(event.createdAt, nowMs)}</span>
+        </li>
+      );
+    });
+  }, [data?.events, projectRepoSet]);
+
   const dataUnavailable = !loading && (error != null || data == null);
 
   if (loading) {
@@ -238,7 +279,7 @@ export function HomePage() {
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
             <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
             <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
-            <div className="kpi"><b>{latest ? ago(latest) : "--"}</b><span className="mono">last push age</span></div>
+            <div className="kpi"><b>{latest ? ago(latest, Date.now()) : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
 
@@ -296,19 +337,7 @@ export function HomePage() {
                 <Link className="mono" to="/projects" aria-label="View all latest repositories">view all</Link>
               </div>
               <ul className="live-list">
-                {latestRepos.map((repo) => (
-                  <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
-                    <strong>
-                      <Link className="repo-link" to={toProjectPath(repo.repository)}>
-                        {repo.repository}
-                      </Link>
-                    </strong>
-                    <span className="mono">{repo.description || "No description provided."}</span>
-                    <span className="mono">
-                      {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | {ago(repo.updatedAt)}
-                    </span>
-                  </li>
-                ))}
+                {renderedLatestRepos}
               </ul>
               <ul className="lang-bars">
                 {topLanguages.map(([lang, count]) => {
@@ -330,26 +359,7 @@ export function HomePage() {
                 <a className="mono" href={githubUrl} target="_blank" rel="noreferrer" aria-label="View GitHub profile">profile</a>
               </div>
               <ul className="live-list">
-                {(data?.events ?? []).slice(0, 30).map((event, idx) => {
-                  const isOwnProject = projectRepoSet.has(event.repository);
-                  return (
-                    <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
-                      <strong>
-                        {isOwnProject ? (
-                          <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
-                            {event.repository}
-                          </Link>
-                        ) : (
-                          <a className="repo-link" href={`https://github.com/${event.repository}`} target="_blank" rel="noreferrer">
-                            {event.repository}
-                          </a>
-                        )}
-                      </strong>
-                      <span className="mono">{eventLabel(event.type)}</span>
-                      <span className="mono">{ago(event.createdAt)}</span>
-                    </li>
-                  );
-                })}
+                {renderedEvents}
               </ul>
             </article>
           </div>

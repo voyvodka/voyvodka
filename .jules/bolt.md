@@ -25,3 +25,7 @@
 ## 2025-02-14 - Asynchronous Font Loading and Promise Caching
 **Learning:** In Node.js server environments, synchronous file I/O operations (like `fs.readFileSync`) can block the event loop, especially when reading multiple large files concurrently. In the context of generating Open Graph (OG) images where assets like fonts need to be loaded, this blocking behavior causes noticeable latency and can impact server responsiveness. Furthermore, caching the resolved values directly after sequential reads doesn't prevent redundant reads when concurrent requests hit an unpopulated cache.
 **Action:** When loading static assets like fonts for OG image generation, always use asynchronous file I/O (`fs.promises.readFile`) and implement a Promise-based cache (`let cachedPromise: Promise<T> | null = null`). By caching the promise rather than the final result, concurrent initial requests wait on the same Promise without triggering redundant file system operations or blocking the event loop.
+
+## 2024-05-27 - Hoisting Date.now() and Memoizing Lists
+**Learning:** Calling `Date.now()` inside array mapping functions (e.g., inside `.map()`) recalculates the timestamp for every element on every re-render, creating unnecessary O(n) operations.
+**Action:** Always hoist `Date.now()` (and similar deterministic calculations) outside loops. Wrap expensive list transformations in `useMemo` to ensure O(1) calculate-once logic per render cycle.
