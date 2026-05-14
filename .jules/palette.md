@@ -36,3 +36,7 @@
 ## 2025-02-20 - Screen Reader Accessibility for Links and Arrows
 **Learning:** Decorative characters (like `→`) in links are often read aloud by screen readers, creating noise, and generic text links (like "CORE" or "CONTRIB" badges) lack context for visually impaired users.
 **Action:** Always wrap decorative text characters in `<span aria-hidden="true">` inside links or buttons. Add descriptive `aria-label`s to generic links that rely on visual context (such as placement near a project title) to be understood.
+
+## 2025-02-21 - Scroll Position Retention in SPAs
+**Learning:** Single-page applications built with React Router often retain scroll position across route changes. This creates a confusing experience when navigating from the bottom of one page to another page, leaving the user scrolled halfway down the new page content.
+**Action:** Always include a `ScrollToTop` component that listens to `useLocation().pathname` and calls `window.scrollTo(0, 0)` on route transitions in the root Layout of SPAs.
