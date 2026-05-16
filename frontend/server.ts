@@ -716,7 +716,8 @@ async function createServer() {
   app.use((req, res, next) => {
     if (req.path.length > 1 && req.path.endsWith("/")) {
       const query = req.url.slice(req.path.length);
-      res.redirect(301, req.path.slice(0, -1) + query);
+      const safePath = req.path.slice(0, -1).replace(/^\/+/, '/');
+      res.redirect(301, safePath + query);
       return;
     }
     next();
