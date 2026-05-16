@@ -40,3 +40,7 @@
 ## 2025-02-21 - Scroll Position Retention in SPAs
 **Learning:** Single-page applications built with React Router often retain scroll position across route changes. This creates a confusing experience when navigating from the bottom of one page to another page, leaving the user scrolled halfway down the new page content.
 **Action:** Always include a `ScrollToTop` component that listens to `useLocation().pathname` and calls `window.scrollTo(0, 0)` on route transitions in the root Layout of SPAs.
+
+## 2024-05-16 - Focus management during SPA navigation
+**Learning:** In React SPAs, screen readers often lose context on navigation because the page doesn't do a full refresh. While `window.scrollTo` visually resets the view, assistive technologies need programmatic focus to announce the new page content.
+**Action:** Implemented a component that listens to `useLocation().pathname`, scrolls to top, and programmatically applies `.focus({ preventScroll: true })` to the structural `#main-content` container. Combined this with `#main-content:focus { outline: none; }` to hide the focus ring for mouse users, ensuring a smooth experience for both visual and screen reader users.
