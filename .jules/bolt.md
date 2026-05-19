@@ -29,3 +29,6 @@
 ## 2024-05-27 - Hoisting Date.now() and Memoizing Lists
 **Learning:** Calling `Date.now()` inside array mapping functions (e.g., inside `.map()`) recalculates the timestamp for every element on every re-render, creating unnecessary O(n) operations.
 **Action:** Always hoist `Date.now()` (and similar deterministic calculations) outside loops. Wrap expensive list transformations in `useMemo` to ensure O(1) calculate-once logic per render cycle.
+## 2025-05-19 - String Comparison for ISO Date Filtering
+**Learning:** String comparisons of ISO 8601 timestamps (e.g., `p.updatedAt > ninetyDaysAgoIso`) are significantly faster than instantiating `Date` objects inside loops (`new Date(p.updatedAt).getTime() > ninetyDaysAgo`), drastically reducing date parsing overhead in large array traversals.
+**Action:** When filtering or comparing arrays based on ISO formatted date strings, pre-calculate the reference threshold as an ISO string and use standard string comparison rather than parsing every element into a `Date` object during the iteration loop.
