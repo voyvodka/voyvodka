@@ -137,10 +137,10 @@ export function HomePage() {
       .slice(0, 5);
     const maxLangCount = topLanguages[0]?.[1] || 1;
 
-    const ninetyDaysAgo = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    const ninetyDaysAgoIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
     const totalProjects = projects.length;
     const activeThisQuarter = projects.filter(
-      (p) => new Date(p.updatedAt).getTime() > ninetyDaysAgo
+      (p) => p.updatedAt > ninetyDaysAgoIso
     ).length;
     const ownedCount = projects.filter((p) => !p.isFork).length;
     const coreCount = projects.filter((p) => p.category === "core").length;
