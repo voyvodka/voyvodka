@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 import { usePortfolioData } from "@/hooks/usePortfolioData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { toProjectPath } from "@/lib/projectRoutes";
 
 function badgeLabel(projectCategory: string, isFork: boolean) {
@@ -38,6 +39,7 @@ function githubDate(isoDate: string, nowMs: number, currentYear: number) {
 
 export function ProjectsPage() {
   const { data, loading, error } = usePortfolioData();
+  useDocumentTitle("All Repositories — Samet Özkan | Projects & Contributions");
 
   const renderedProjects = useMemo(() => {
     if (!data?.projects) return null;

@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 
 import { useProjectDetail } from "@/hooks/useProjectDetail";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { findProjectBySlug } from "@/lib/projectRoutes";
 import type { ProjectDetail } from "@/types/api";
 
@@ -106,12 +107,17 @@ function buildReleaseChangelog(releases: { name: string; tagName: string; publis
 export function ProjectPage() {
   const { slug = "" } = useParams();
   const { data: portfolio, loading: portfolioLoading, error: portfolioError } = usePortfolioData();
+
   const normalizedSlug = slug.trim().toLowerCase();
   const matchedProject = portfolio ? findProjectBySlug(portfolio.projects, normalizedSlug) : null;
   const owner = matchedProject?.owner ?? "";
   const repo = matchedProject?.repository ?? "";
 
   const { data, loading, error } = useProjectDetail(owner, repo);
+
+  const titleBase = `${owner}/${repo} — Samet Özkan`;
+  const title = data ? (titleBase.length < 50 ? `${titleBase} | Project Detail` : titleBase) : "Project Detail — Samet Özkan";
+  useDocumentTitle(title);
 
   if (portfolioLoading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading project details...</p></main>;
   if (portfolioError) return (

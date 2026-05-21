@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { extractRepositoryName, toProjectPath } from "@/lib/projectRoutes";
 import type { ContributionDay, ProjectSummary } from "@/types/api";
 
@@ -106,6 +107,7 @@ function caseApproach(p: ProjectSummary) {
 
 export function HomePage() {
   const { data, loading, error } = usePortfolioData();
+  useDocumentTitle("Samet Özkan — Software Engineer Portfolio & Projects");
 
   const displayName = data?.profile.name || data?.profile.username || "Portfolio";
   const githubUrl = data?.profile.username ? `https://github.com/${data.profile.username}` : "https://github.com";
