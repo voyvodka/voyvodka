@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
@@ -108,6 +108,13 @@ export function HomePage() {
   const { data, loading, error } = usePortfolioData();
 
   const displayName = data?.profile.name || data?.profile.username || "Portfolio";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.title = `${displayName} — Backend Engineer Portfolio`;
+    }
+  }, [displayName]);
+
   const githubUrl = data?.profile.username ? `https://github.com/${data.profile.username}` : "https://github.com";
 
   // Memoize expensive derived calculations to prevent redundant
