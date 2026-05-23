@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { Logo } from "@/components/Logo";
@@ -109,6 +109,12 @@ export function HomePage() {
 
   const displayName = data?.profile.name || data?.profile.username || "Portfolio";
   const githubUrl = data?.profile.username ? `https://github.com/${data.profile.username}` : "https://github.com";
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.title = `${displayName} — Backend Engineer Portfolio`;
+    }
+  }, [displayName]);
 
   // Memoize expensive derived calculations to prevent redundant
   // array traversals, sorting, and mapping on every render.
