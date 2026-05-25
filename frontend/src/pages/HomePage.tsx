@@ -66,7 +66,8 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
 }
 
 function ago(isoDate: string, nowMs: number) {
-  const ms = nowMs - new Date(isoDate).getTime();
+  // ⚡ Bolt: Use Date.parse() instead of new Date().getTime() to avoid object allocation in loop
+  const ms = nowMs - Date.parse(isoDate);
   const day = 1000 * 60 * 60 * 24;
   const hour = 1000 * 60 * 60;
   if (ms < day) return `${Math.max(1, Math.floor(ms / hour))}h ago`;
@@ -74,9 +75,11 @@ function ago(isoDate: string, nowMs: number) {
 }
 
 function toQuarter(isoDate: string) {
-  const d = new Date(isoDate);
-  const q = Math.ceil((d.getMonth() + 1) / 3);
-  return `${d.getFullYear()} Q${q}`;
+  // ⚡ Bolt: Extract year and month via string slice to avoid Date instantiation overhead in map loop
+  const year = isoDate.substring(0, 4);
+  const month = parseInt(isoDate.substring(5, 7), 10);
+  const q = Math.ceil(month / 3);
+  return `${year} Q${q}`;
 }
 
 function statusClass(category: string, isFork: boolean) {

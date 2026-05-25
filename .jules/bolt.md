@@ -32,3 +32,10 @@
 ## 2025-05-19 - String Comparison for ISO Date Filtering
 **Learning:** String comparisons of ISO 8601 timestamps (e.g., `p.updatedAt > ninetyDaysAgoIso`) are significantly faster than instantiating `Date` objects inside loops (`new Date(p.updatedAt).getTime() > ninetyDaysAgo`), drastically reducing date parsing overhead in large array traversals.
 **Action:** When filtering or comparing arrays based on ISO formatted date strings, pre-calculate the reference threshold as an ISO string and use standard string comparison rather than parsing every element into a `Date` object during the iteration loop.
+## 2024-06-25 - Avoid Date Object Allocations in Loops
+**Learning:** In JavaScript/TypeScript loops or render cycles, instantiating full `Date` objects repeatedly (e.g., `new Date(isoDate).getTime()`) adds significant parsing and memory allocation overhead. For large arrays, this causes performance lag.
+**Action:** When only a timestamp is needed, prefer `Date.parse(isoDate)` over `new Date(isoDate).getTime()` to avoid unnecessary object allocation and garbage collection overhead.
+
+## 2024-06-25 - Fast Date Component Extraction
+**Learning:** Instantiating a `Date` object just to extract a year or month from a strict ISO 8601 string (e.g., `YYYY-MM-DD...`) is computationally expensive inside a loop.
+**Action:** When extracting simple date components from well-formed ISO 8601 strings, use string slicing (`substring(0, 4)` for year, `substring(5, 7)` for month) rather than instantiating a `Date` object to significantly reduce performance overhead.
