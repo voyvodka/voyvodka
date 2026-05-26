@@ -32,3 +32,7 @@
 ## 2025-05-19 - String Comparison for ISO Date Filtering
 **Learning:** String comparisons of ISO 8601 timestamps (e.g., `p.updatedAt > ninetyDaysAgoIso`) are significantly faster than instantiating `Date` objects inside loops (`new Date(p.updatedAt).getTime() > ninetyDaysAgo`), drastically reducing date parsing overhead in large array traversals.
 **Action:** When filtering or comparing arrays based on ISO formatted date strings, pre-calculate the reference threshold as an ISO string and use standard string comparison rather than parsing every element into a `Date` object during the iteration loop.
+
+## 2023-10-26 - Timezone Safe Date Object Avoidance
+**Learning:** In JS/React, while replacing `new Date(dateString)` with `Date.parse(dateString)` is a safe micro-optimization for simple timestamps and `Intl.DateTimeFormat`, using string slicing (`isoDate.substring(0, 4)`) to extract year/month/date to avoid `Date` allocations causes critical functional regressions. Slicing operates on the UTC string, whereas methods like `d.getFullYear()` account for the user's local timezone.
+**Action:** Do not attempt to optimize `getFullYear()`, `getMonth()`, or `getDate()` calls by slicing UTC strings when the UI relies on local time presentation. Fallback to `new Date()` allocation where timezone-aware part extraction is strictly required.
