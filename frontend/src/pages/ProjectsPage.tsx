@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 import { usePortfolioData } from "@/hooks/usePortfolioData";
@@ -38,6 +38,10 @@ function githubDate(isoDate: string, nowMs: number, currentYear: number) {
 
 export function ProjectsPage() {
   const { data, loading, error } = usePortfolioData();
+
+  useEffect(() => {
+    document.title = "All Repositories — Portfolio";
+  }, []);
 
   const renderedProjects = useMemo(() => {
     if (!data?.projects) return null;

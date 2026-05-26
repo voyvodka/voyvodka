@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { useProjectDetail } from "@/hooks/useProjectDetail";
@@ -112,6 +113,10 @@ export function ProjectPage() {
   const repo = matchedProject?.repository ?? "";
 
   const { data, loading, error } = useProjectDetail(owner, repo);
+
+  useEffect(() => {
+    document.title = repo ? `${repo} — Project Details` : "Project Details";
+  }, [repo]);
 
   if (portfolioLoading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading project details...</p></main>;
   if (portfolioError) return (

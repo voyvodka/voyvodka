@@ -44,3 +44,7 @@
 ## 2024-05-16 - Focus management during SPA navigation
 **Learning:** In React SPAs, screen readers often lose context on navigation because the page doesn't do a full refresh. While `window.scrollTo` visually resets the view, assistive technologies need programmatic focus to announce the new page content.
 **Action:** Implemented a component that listens to `useLocation().pathname`, scrolls to top, and programmatically applies `.focus({ preventScroll: true })` to the structural `#main-content` container. Combined this with `#main-content:focus { outline: none; }` to hide the focus ring for mouse users, ensuring a smooth experience for both visual and screen reader users.
+
+## 2024-05-29 - Dynamic document.title in React SPAs
+**Learning:** In React Single Page Applications (SPAs), page navigations handled purely via client-side routing do not automatically update `document.title`. Consequently, screen readers remain silent regarding the context shift or announce the stale title, causing disorientation.
+**Action:** Always employ an effect hook (e.g., `useEffect`) in page-level components or a central route listener to dynamically update `document.title` corresponding to the current route or data content, ensuring immediate feedback for assistive technologies.
