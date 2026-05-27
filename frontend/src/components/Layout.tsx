@@ -2,12 +2,19 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 
+import { useSSRData } from "@/context/DataContext";
+import { getPageMeta } from "@/lib/meta";
+
 function RouteChangeHandler() {
   const { pathname } = useLocation();
+  const { portfolioData, projectDetail } = useSSRData();
 
   useEffect(() => {
     // Only execute if window is defined (avoiding SSR errors)
     if (typeof window !== "undefined") {
+      const meta = getPageMeta(pathname, portfolioData, projectDetail);
+      document.title = meta.title;
+
       window.scrollTo({ top: 0, left: 0, behavior: "instant" });
       const mainContent = document.getElementById("main-content");
       if (mainContent) {
