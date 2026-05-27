@@ -32,3 +32,6 @@
 ## 2025-05-19 - String Comparison for ISO Date Filtering
 **Learning:** String comparisons of ISO 8601 timestamps (e.g., `p.updatedAt > ninetyDaysAgoIso`) are significantly faster than instantiating `Date` objects inside loops (`new Date(p.updatedAt).getTime() > ninetyDaysAgo`), drastically reducing date parsing overhead in large array traversals.
 **Action:** When filtering or comparing arrays based on ISO formatted date strings, pre-calculate the reference threshold as an ISO string and use standard string comparison rather than parsing every element into a `Date` object during the iteration loop.
+## 2024-05-27 - Date.parse Performance Benefit
+**Learning:** Instantiating `new Date()` multiple times in render loops (like when mapping over arrays of contributions or projects) causes significant object allocation overhead. `Intl.DateTimeFormat.format()` accepts numeric timestamps directly.
+**Action:** Use `Date.parse(isoString)` to get the timestamp number instead of `new Date(isoString).getTime()` or passing a full Date object to formatters when only the timestamp value is needed.

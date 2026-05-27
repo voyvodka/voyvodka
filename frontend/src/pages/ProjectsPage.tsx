@@ -17,8 +17,10 @@ function badgeClass(projectCategory: string, isFork: boolean) {
 }
 
 function githubDate(isoDate: string, nowMs: number, currentYear: number) {
-  const d = new Date(isoDate);
-  const ms = nowMs - d.getTime();
+  // Use Date.parse() to get the timestamp and defer new Date() instantiation
+  // to avoid object allocation overhead for recent dates.
+  const timeMs = Date.parse(isoDate);
+  const ms = nowMs - timeMs;
   const min = 60 * 1000;
   const hour = 60 * min;
   const day = 24 * hour;
@@ -28,6 +30,7 @@ function githubDate(isoDate: string, nowMs: number, currentYear: number) {
   if (ms < day) return `${Math.floor(ms / hour)} hours ago`;
   if (ms < 30 * day) return `${Math.floor(ms / day)} days ago`;
 
+  const d = new Date(timeMs);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
                   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   if (d.getFullYear() === currentYear) {

@@ -18,9 +18,10 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 
 function fmtDate(iso: string) {
   if (!iso) return "-";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "-";
-  return dateFormatter.format(date);
+  // Use Date.parse() instead of new Date() to optimize performance by reducing object allocation overhead
+  const time = Date.parse(iso);
+  if (Number.isNaN(time)) return "-";
+  return dateFormatter.format(time);
 }
 
 function statusLabel(category: string, isFork: boolean) {

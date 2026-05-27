@@ -29,7 +29,8 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
 
     const level = (n: number) => n === 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4;
     const fmt = (date: string, count: number) => {
-      const label = heatmapDateFormatter.format(new Date(date));
+      // Use Date.parse() instead of new Date() to optimize performance by reducing object allocation overhead
+      const label = heatmapDateFormatter.format(Date.parse(date));
       return count === 0 ? `No contributions · ${label}` : `${count} contribution${count !== 1 ? "s" : ""} · ${label}`;
     };
 
@@ -66,7 +67,8 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
 }
 
 function ago(isoDate: string, nowMs: number) {
-  const ms = nowMs - new Date(isoDate).getTime();
+  // Use Date.parse() instead of new Date() to optimize performance by reducing object allocation overhead
+  const ms = nowMs - Date.parse(isoDate);
   const day = 1000 * 60 * 60 * 24;
   const hour = 1000 * 60 * 60;
   if (ms < day) return `${Math.max(1, Math.floor(ms / hour))}h ago`;
