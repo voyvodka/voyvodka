@@ -223,7 +223,7 @@ export function HomePage() {
                 {event.repository}
               </Link>
             ) : (
-              <a className="repo-link" href={`https://github.com/${event.repository}`} target="_blank" rel="noreferrer">
+              <a className="repo-link" href={`https://github.com/${event.repository}`} target="_blank" rel="noreferrer" aria-label={`View ${event.repository} on GitHub`}>
                 {event.repository}
               </a>
             )}

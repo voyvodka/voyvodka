@@ -48,3 +48,7 @@
 ## 2024-05-25 - Dynamic Document Title in React SPAs
 **Learning:** Client-side routing in React SPAs does not automatically update `document.title` on route changes. This breaks context for screen reader users who rely on the document title to understand what page they are currently on after navigation.
 **Action:** Always implement a programmatic `document.title` update (e.g., in a `useEffect` tied to the location `pathname`) alongside focus management (like `.focus()` on `#main-content`) when building accessible client-side routing.
+
+## 2024-05-29 - Contextual aria-labels for generic links
+**Learning:** Screen readers read link text out of context, meaning generic generic text links like `username/repo` lack context.
+**Action:** Added a descriptive `aria-label` to generic links, e.g., `<a aria-label="View username/repo on GitHub">`.
