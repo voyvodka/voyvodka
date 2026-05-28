@@ -36,3 +36,6 @@
 ## 2023-10-26 - Timezone Safe Date Object Avoidance
 **Learning:** In JS/React, while replacing `new Date(dateString)` with `Date.parse(dateString)` is a safe micro-optimization for simple timestamps and `Intl.DateTimeFormat`, using string slicing (`isoDate.substring(0, 4)`) to extract year/month/date to avoid `Date` allocations causes critical functional regressions. Slicing operates on the UTC string, whereas methods like `d.getFullYear()` account for the user's local timezone.
 **Action:** Do not attempt to optimize `getFullYear()`, `getMonth()`, or `getDate()` calls by slicing UTC strings when the UI relies on local time presentation. Fallback to `new Date()` allocation where timezone-aware part extraction is strictly required.
+## 2025-05-19 - Pre-calculating Numeric Timestamps for Loop Conditions
+**Learning:** Checking date conditions inside a large `map` loop (e.g., verifying if a date falls within the current year) by instantiating `new Date(isoDate)` and calling `.getFullYear()` on every iteration is inefficient due to object allocation overhead.
+**Action:** To optimize date condition checks inside map loops, pre-calculate boundary timestamps (e.g., start and end of the year in milliseconds) outside the loop. This enables fast numeric comparisons against `Date.parse()` and prevents costly `new Date()` object allocations on every iteration.

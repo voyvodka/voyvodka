@@ -16,7 +16,12 @@ function badgeClass(projectCategory: string, isFork: boolean) {
   return "status online";
 }
 
-function githubDate(isoDate: string, nowMs: number, currentYear: number) {
+// ⚡ Bolt: Cache Intl.DateTimeFormat objects outside component to avoid
+// expensive parser/formatter setup overhead in JS engines during map loops.
+const thisYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+const otherYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+function githubDate(isoDate: string, nowMs: number, currentYearStart: number, currentYearEnd: number) {
   const time = Date.parse(isoDate);
   const ms = nowMs - time;
   const min = 60 * 1000;
@@ -28,14 +33,12 @@ function githubDate(isoDate: string, nowMs: number, currentYear: number) {
   if (ms < day) return `${Math.floor(ms / hour)} hours ago`;
   if (ms < 30 * day) return `${Math.floor(ms / day)} days ago`;
 
-  // Fallback to local timezone-aware Date object for exact calendar dates
-  const d = new Date(isoDate);
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  if (d.getFullYear() === currentYear) {
-    return `on ${months[d.getMonth()]} ${d.getDate()}`;
+  // ⚡ Bolt: Use pre-instantiated formatter with pure numeric timestamp `time`
+  // instead of allocating `new Date()` and array inside the loop for O(1) rendering time.
+  if (time >= currentYearStart && time <= currentYearEnd) {
+    return `on ${thisYearFormatter.format(time)}`;
   }
-  return `on ${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  return `on ${otherYearFormatter.format(time)}`;
 }
 
 export function ProjectsPage() {
@@ -44,7 +47,12 @@ export function ProjectsPage() {
   const renderedProjects = useMemo(() => {
     if (!data?.projects) return null;
     const nowMs = Date.now();
+
+    // ⚡ Bolt: Pre-calculate current year boundaries as pure timestamps
+    // to pass down, avoiding repetitive `.getFullYear()` calculations.
     const currentYear = new Date().getFullYear();
+    const currentYearStart = new Date(currentYear, 0, 1).getTime();
+    const currentYearEnd = new Date(currentYear + 1, 0, 1).getTime() - 1;
 
     return data.projects.map((project, idx) => (
       <li className="row row--full" key={`${project.owner}/${project.repository}`}>
@@ -64,7 +72,7 @@ export function ProjectsPage() {
         </div>
         <div className="mono">{project.description || "—"}</div>
         <div className="mono">{project.language || "—"}</div>
-        <div className="mono updated-col">{githubDate(project.updatedAt, nowMs, currentYear)}</div>
+        <div className="mono updated-col">{githubDate(project.updatedAt, nowMs, currentYearStart, currentYearEnd)}</div>
         <span className={badgeClass(project.category, project.isFork)}>
           <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
         </span>
