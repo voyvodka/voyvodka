@@ -4,6 +4,14 @@ import { Link } from "react-router-dom";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { toProjectPath } from "@/lib/projectRoutes";
 
+const exactDateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+});
+
 function badgeLabel(projectCategory: string, isFork: boolean) {
   if (isFork || projectCategory === "contrib") return "CONTRIB";
   if (projectCategory === "explore") return "EXPLORE";
@@ -72,7 +80,7 @@ export function ProjectsPage() {
         </div>
         <div className="mono">{project.description || "—"}</div>
         <div className="mono">{project.language || "—"}</div>
-        <div className="mono updated-col">{githubDate(project.updatedAt, nowMs, currentYearStart, currentYearEnd)}</div>
+        <div className="mono updated-col"><time dateTime={project.updatedAt} title={exactDateFormatter.format(Date.parse(project.updatedAt))}>{githubDate(project.updatedAt, nowMs, currentYearStart, currentYearEnd)}</time></div>
         <span className={badgeClass(project.category, project.isFork)}>
           <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
         </span>
