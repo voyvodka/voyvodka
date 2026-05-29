@@ -16,6 +16,14 @@ const heatmapDateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric"
 });
 
+const exactDateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+});
+
 function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   const [hovered, setHovered] = useState<string | null>(null);
 
@@ -205,7 +213,7 @@ export function HomePage() {
         </strong>
         <span className="mono">{repo.description || "No description provided."}</span>
         <span className="mono">
-          {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | {ago(repo.updatedAt, nowMs)}
+          {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | <time dateTime={repo.updatedAt} title={exactDateFormatter.format(Date.parse(repo.updatedAt))}>{ago(repo.updatedAt, nowMs)}</time>
         </span>
       </li>
     ));
@@ -229,7 +237,7 @@ export function HomePage() {
             )}
           </strong>
           <span className="mono">{eventLabel(event.type)}</span>
-          <span className="mono">{ago(event.createdAt, nowMs)}</span>
+          <span className="mono"><time dateTime={event.createdAt} title={exactDateFormatter.format(Date.parse(event.createdAt))}>{ago(event.createdAt, nowMs)}</time></span>
         </li>
       );
     });
@@ -279,7 +287,7 @@ export function HomePage() {
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
             <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
             <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
-            <div className="kpi"><b>{latest ? ago(latest, Date.now()) : "--"}</b><span className="mono">last push age</span></div>
+            <div className="kpi"><b>{latest ? <time dateTime={latest} title={exactDateFormatter.format(Date.parse(latest))}>{ago(latest, Date.now())}</time> : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
 
