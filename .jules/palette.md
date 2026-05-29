@@ -52,3 +52,7 @@
 ## 2024-05-29 - Contextual aria-labels for generic links
 **Learning:** Screen readers read link text out of context, meaning generic generic text links like `username/repo` lack context.
 **Action:** Added a descriptive `aria-label` to generic links, e.g., `<a aria-label="View username/repo on GitHub">`.
+
+## 2025-03-05 - Semantic time elements and relative date tooltips
+**Learning:** Displaying relative dates (like "2 days ago") is great for quick reading, but lacks precision for users who need exact timelines, and lacks machine-readable semantics for assistive technologies.
+**Action:** Always wrap relative date strings in a semantic `<time dateTime={isoString}>` element, and provide the exact formatted date as a `title` attribute so sighted users can view it on hover while screen readers get the semantic context.
