@@ -237,11 +237,11 @@ export function ProjectPage() {
         ) : null}
         <div className="actions">
           <a href={data.repoUrl} target="_blank" rel="noreferrer" aria-label="Open repository on GitHub">
-            Repository
+            Repository <span aria-hidden="true">↗</span>
           </a>
           {hasDistinctLiveURL ? (
             <a href={data.liveUrl} target="_blank" rel="noreferrer" aria-label="Open live project">
-              Live
+              Live <span aria-hidden="true">↗</span>
             </a>
           ) : null}
         </div>
@@ -297,7 +297,7 @@ export function ProjectPage() {
                   <p>{release.body || "No release notes"}</p>
                 )}
                 <a href={release.url} target="_blank" rel="noreferrer" aria-label={`Open release ${release.tagName} on GitHub`}>
-                  Open on GitHub
+                  Open on GitHub <span aria-hidden="true">↗</span>
                 </a>
               </li>
             ))}
