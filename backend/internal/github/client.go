@@ -118,9 +118,10 @@ func (c *Client) GetRepositories(ctx context.Context, username string) ([]Reposi
 	return data, err
 }
 
-func (c *Client) GetEvents(ctx context.Context, username string) ([]Event, error) {
+// ⚡ Bolt: Use explicit perPage to minimize JSON parsing and memory allocation overhead
+func (c *Client) GetEvents(ctx context.Context, username string, perPage int) ([]Event, error) {
 	var data []Event
-	err := c.getJSON(ctx, fmt.Sprintf("/users/%s/events/public?per_page=20", username), &data)
+	err := c.getJSON(ctx, fmt.Sprintf("/users/%s/events/public?per_page=%d", username, perPage), &data)
 	return data, err
 }
 
