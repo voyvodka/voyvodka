@@ -39,3 +39,7 @@
 ## 2025-05-19 - Pre-calculating Numeric Timestamps for Loop Conditions
 **Learning:** Checking date conditions inside a large `map` loop (e.g., verifying if a date falls within the current year) by instantiating `new Date(isoDate)` and calling `.getFullYear()` on every iteration is inefficient due to object allocation overhead.
 **Action:** To optimize date condition checks inside map loops, pre-calculate boundary timestamps (e.g., start and end of the year in milliseconds) outside the loop. This enables fast numeric comparisons against `Date.parse()` and prevents costly `new Date()` object allocations on every iteration.
+
+## 2025-05-19 - GitHub API Overfetching
+**Learning:** Fetching `per_page=20` events when the UI only requires and processes the first 8 events results in unnecessary JSON parsing, memory allocation, and bandwidth usage.
+**Action:** When a service only uses a small, fixed number of items from a GitHub API list endpoint (like events or PRs), always explicitly pass a `perPage` argument to the client matching the required count to avoid overfetching and optimize memory.

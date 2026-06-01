@@ -460,7 +460,8 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	go func() {
 		defer wg.Done()
 		var err error
-		events, err = s.githubClient.GetEvents(refreshCtx, s.username)
+		// ⚡ Bolt: Fetch only the 8 events needed for the portfolio UI to minimize payload size and memory overhead
+		events, err = s.githubClient.GetEvents(refreshCtx, s.username, 8)
 		if err != nil && !errors.Is(err, context.Canceled) {
 			events = []github.Event{}
 		}
