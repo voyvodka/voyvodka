@@ -60,3 +60,7 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+
+## 2025-06-01 - Fix WCAG 2.5.3 Label in Name sync for status badges and links
+**Learning:** Adding a descriptive `aria-label` like "View details for [repo]" to a status badge that visually reads "CORE" or "CONTRIB" breaks WCAG 2.5.3 ('Label in Name'). Voice control users trying to click the badge by saying "Click CORE" will fail because the accessible name doesn't contain the visible string. The same issue occurs for generic text like "Open on GitHub" if the `aria-label` is "Open release v1 on GitHub" instead of "Open on GitHub: release v1".
+**Action:** Always ensure the exact visible text of a link is a continuous substring within its `aria-label` to keep screen readers and voice navigation in sync.
