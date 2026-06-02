@@ -207,7 +207,7 @@ export function HomePage() {
     return latestRepos.map((repo) => (
       <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
         <strong>
-          <Link className="repo-link" to={toProjectPath(repo.repository)}>
+          <Link className="repo-link" to={toProjectPath(repo.repository)} aria-label={`View project details for ${repo.repository}`}>
             {repo.repository}
           </Link>
         </strong>
@@ -227,7 +227,7 @@ export function HomePage() {
         <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
           <strong>
             {isOwnProject ? (
-              <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
+              <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))} aria-label={`View project details for ${event.repository}`}>
                 {event.repository}
               </Link>
             ) : (
@@ -392,7 +392,7 @@ export function HomePage() {
                   <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
                   <div>
                     <b>
-                      <Link className="repo-link" to={toProjectPath(project.repository)}>
+                      <Link className="repo-link" to={toProjectPath(project.repository)} aria-label={`View project details for ${project.repository}`}>
                         {project.repository}
                       </Link>
                       {project.latestRelease ? (
@@ -434,7 +434,7 @@ export function HomePage() {
           ) : caseProjects.length > 0 ? caseProjects.map((p) => (
             <article className="case" key={p.repository}>
               <h3>
-                <Link to={toProjectPath(p.repository)} style={{ color: "inherit", textDecoration: "none" }}>
+                <Link to={toProjectPath(p.repository)} style={{ color: "inherit", textDecoration: "none" }} aria-label={`View project details for ${p.repository}`}>
                   {p.repository}
                 </Link>
                 {p.latestRelease ? (
@@ -466,10 +466,10 @@ export function HomePage() {
             <p className="mono" style={{ opacity: 0.5 }}>Timeline unavailable.</p>
           ) : timelineProjects.map((p) => (
             <div className="time-item" key={p.repository}>
-              <span className="mono">{toQuarter(p.updatedAt)}</span>
+              <span className="mono"><time dateTime={p.updatedAt} title={exactDateFormatter.format(Date.parse(p.updatedAt))}>{toQuarter(p.updatedAt)}</time></span>
               <div>
                 <strong>
-                  <Link className="repo-link" to={toProjectPath(p.repository)}>{p.repository}</Link>
+                  <Link className="repo-link" to={toProjectPath(p.repository)} aria-label={`View project details for ${p.repository}`}>{p.repository}</Link>
                 </strong>
                 <div className="mono">{p.description || "Active development."}</div>
               </div>

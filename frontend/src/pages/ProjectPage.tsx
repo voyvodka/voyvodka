@@ -204,7 +204,7 @@ export function ProjectPage() {
           <p className="fork-origin mono">
             forked from{" "}
             {parentRepoUrl ? (
-              <a href={parentRepoUrl} target="_blank" rel="noreferrer">
+              <a href={parentRepoUrl} target="_blank" rel="noreferrer" aria-label={`View parent repository ${parentRepo} on GitHub`}>
                 {parentRepo} <span aria-hidden="true">↗</span>
               </a>
             ) : (
@@ -225,8 +225,8 @@ export function ProjectPage() {
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
           <span className="mono">license: {license || "No license"}</span>
-          <span className="mono">updated: {fmtDate(updatedAt)}</span>
-          <span className="mono">last push: {fmtDate(pushedAt)}</span>
+          <span className="mono">updated: <time dateTime={updatedAt}>{fmtDate(updatedAt)}</time></span>
+          <span className="mono">last push: <time dateTime={pushedAt}>{fmtDate(pushedAt)}</time></span>
         </div>
         {topics.length > 0 ? (
           <div className="chips">

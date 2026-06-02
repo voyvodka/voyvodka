@@ -60,3 +60,11 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+
+## 2025-03-06 - Contextual aria-labels for internal generic links
+**Learning:** Screen readers read link text out of context, meaning internal generic text links like repository names lack context (e.g. they don't say "View project details for ...").
+**Action:** Added a descriptive `aria-label` to generic links, ensuring the visible text remains a substring of the `aria-label` to comply with WCAG 2.5.3 (Label in Name).
+
+## 2025-03-06 - Semantic time elements for abstract timeline categories
+**Learning:** Displaying abstract time categories (like quarters, "2024 Q2") is great for quick reading, but lacks precision for users who need exact timelines, and lacks machine-readable semantics for assistive technologies.
+**Action:** Always wrap abstract time category strings in a semantic `<time dateTime={isoString}>` element, and provide the exact formatted date as a `title` attribute so sighted users can view it on hover while screen readers get the semantic context.

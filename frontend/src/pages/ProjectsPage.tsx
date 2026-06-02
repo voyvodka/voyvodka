@@ -67,7 +67,7 @@ export function ProjectsPage() {
         <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
         <div>
           <b>
-            <Link className="repo-link" to={toProjectPath(project.repository)}>
+            <Link className="repo-link" to={toProjectPath(project.repository)} aria-label={`View project details for ${project.repository}`}>
               {project.repository}
             </Link>
             {project.latestRelease ? (
