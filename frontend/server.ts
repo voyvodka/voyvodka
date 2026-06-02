@@ -913,22 +913,24 @@ ${projectUrls}
   app.get("/projects/samples/README.md", (_req, res) => send410(res));
 
   app.use("/api", async (req, res) => {
-    let decoded = req.url;
+    // Parse the raw req.url to prevent SSRF and path traversal via URL-encoded sequences
+    let safeUrl: URL;
     try {
-      decoded = decodeURIComponent(req.url);
+      safeUrl = new URL(req.url, "http://localhost");
     } catch {
       res.status(400).json({ error: "bad request" });
       return;
     }
-    const checkUrl = new URL(`/api${decoded}`, "http://localhost");
-    if (!checkUrl.pathname.startsWith("/api/") && checkUrl.pathname !== "/api") {
+
+    // Explicitly construct a path from safeUrl to check routing
+    const checkPath = `/api${safeUrl.pathname}`;
+    if (!checkPath.startsWith("/api/") && checkPath !== "/api") {
       res.status(403).json({ error: "forbidden" });
       return;
     }
 
-    const normalizedPath = checkUrl.pathname.replace(/^\/api/, "");
-    const target = `${API_BASE_URL}/api${normalizedPath}${checkUrl.search}`;
-    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(normalizedPath);
+    const target = `${API_BASE_URL}/api${safeUrl.pathname}${safeUrl.search}`;
+    const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(safeUrl.pathname);
     try {
       const upstream = await fetch(target, {
         method: req.method,
