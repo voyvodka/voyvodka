@@ -43,3 +43,9 @@
 ## 2025-05-19 - GitHub API Overfetching
 **Learning:** Fetching `per_page=20` events when the UI only requires and processes the first 8 events results in unnecessary JSON parsing, memory allocation, and bandwidth usage.
 **Action:** When a service only uses a small, fixed number of items from a GitHub API list endpoint (like events or PRs), always explicitly pass a `perPage` argument to the client matching the required count to avoid overfetching and optimize memory.
+## 2026-06-02 - Pre-calculate Date.parse() to avoid redundant string parsing
+**Learning:** When relative date formatters (like `ago`) and exact date formatters both operate on the same ISO string within a  loop, invoking `Date.parse()` redundantly creates measurable CPU overhead across dozens of UI elements.
+**Action:** Refactor helper functions to accept pure numeric timestamps instead of strings, and hoist the `Date.parse()` call into the map loop body so it's only executed once per element.
+## 2024-05-24 - Pre-calculate Date.parse() to avoid redundant string parsing
+**Learning:** When relative date formatters and exact date formatters both operate on the same ISO string within a `.map()` loop, invoking `Date.parse()` redundantly creates measurable CPU overhead.
+**Action:** Refactor helper functions to accept pure numeric timestamps instead of strings, and hoist the `Date.parse()` call into the map loop body.
