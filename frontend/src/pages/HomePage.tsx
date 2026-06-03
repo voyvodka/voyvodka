@@ -466,7 +466,11 @@ export function HomePage() {
             <p className="mono" style={{ opacity: 0.5 }}>Timeline unavailable.</p>
           ) : timelineProjects.map((p) => (
             <div className="time-item" key={p.repository}>
-              <span className="mono">{toQuarter(p.updatedAt)}</span>
+              <span className="mono">
+                <time dateTime={p.updatedAt} title={exactDateFormatter.format(Date.parse(p.updatedAt))}>
+                  {toQuarter(p.updatedAt)}
+                </time>
+              </span>
               <div>
                 <strong>
                   <Link className="repo-link" to={toProjectPath(p.repository)}>{p.repository}</Link>

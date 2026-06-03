@@ -76,12 +76,17 @@ function ChangelogFallback({ repoUrl, defaultBranch }: { repoUrl: string; defaul
 function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: string; defaultBranch: string; pushedAt: string }) {
   const branch = defaultBranch || "main";
   const branchUrl = `${repoUrl.replace(/\/$/, "")}/tree/${branch}`;
-  const pushed = pushedAt ? fmtDate(pushedAt) : null;
   return (
     <div className="readme-block">
       <p>
         No tagged releases yet. The current state of the project lives on the
-        <code> {branch} </code> branch{pushed ? `, last pushed ${pushed}` : ""}.
+        <code> {branch} </code> branch
+        {pushedAt ? (
+          <>
+            , last pushed <time dateTime={pushedAt}>{fmtDate(pushedAt)}</time>
+          </>
+        ) : ""}
+        .
       </p>
       <p>
         <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub <span aria-hidden="true">→</span></a>
@@ -225,8 +230,8 @@ export function ProjectPage() {
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
           <span className="mono">license: {license || "No license"}</span>
-          <span className="mono">updated: {fmtDate(updatedAt)}</span>
-          <span className="mono">last push: {fmtDate(pushedAt)}</span>
+          <span className="mono">updated: {updatedAt ? <time dateTime={updatedAt}>{fmtDate(updatedAt)}</time> : "-"}</span>
+          <span className="mono">last push: {pushedAt ? <time dateTime={pushedAt}>{fmtDate(pushedAt)}</time> : "-"}</span>
         </div>
         {topics.length > 0 ? (
           <div className="chips">

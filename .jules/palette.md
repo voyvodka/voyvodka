@@ -60,3 +60,7 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+
+## 2024-06-03 - Semantic wrappers and JSX string interpolation
+**Learning:** Interpolating JSX elements directly into template strings (e.g. `last pushed ${<time>...</time>}`) renders as `[object Object]`. Additionally, abstract time categories (like "2024 Q2") lack precision for assistive tech and hover states.
+**Action:** Use standard JSX fragments to mix text and components, and always wrap abstract time strings with semantic `<time dateTime={isoString}>` elements with a precise `title` attribute.
