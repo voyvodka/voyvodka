@@ -43,3 +43,6 @@
 ## 2025-05-19 - GitHub API Overfetching
 **Learning:** Fetching `per_page=20` events when the UI only requires and processes the first 8 events results in unnecessary JSON parsing, memory allocation, and bandwidth usage.
 **Action:** When a service only uses a small, fixed number of items from a GitHub API list endpoint (like events or PRs), always explicitly pass a `perPage` argument to the client matching the required count to avoid overfetching and optimize memory.
+## 2025-05-19 - Redundant Date.parse within Template Formats
+**Learning:** In React components like `HomePage`, if a date formatted value relies on both `ago` (a relative function) and `exactDateFormatter` (an exact formatting function) within the same map loop, calling `Date.parse()` twice (once in the caller, once in the inner function) leads to unneeded string parsing overhead.
+**Action:** When multiple date formatting functions process the same ISO string within a render loop, extract `Date.parse()` to a shared variable to eliminate redundant parsing. Modify dependent helper functions like `ago()` to accept the numeric timestamp rather than the ISO string.
