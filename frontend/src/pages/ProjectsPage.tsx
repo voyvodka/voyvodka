@@ -29,8 +29,7 @@ function badgeClass(projectCategory: string, isFork: boolean) {
 const thisYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 const otherYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 
-function githubDate(isoDate: string, nowMs: number, currentYearStart: number, currentYearEnd: number) {
-  const time = Date.parse(isoDate);
+function githubDate(time: number, nowMs: number, currentYearStart: number, currentYearEnd: number) {
   const ms = nowMs - time;
   const min = 60 * 1000;
   const hour = 60 * min;
@@ -62,30 +61,34 @@ export function ProjectsPage() {
     const currentYearStart = new Date(currentYear, 0, 1).getTime();
     const currentYearEnd = new Date(currentYear + 1, 0, 1).getTime() - 1;
 
-    return data.projects.map((project, idx) => (
-      <li className="row row--full" key={`${project.owner}/${project.repository}`}>
-        <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
-        <div>
-          <b>
-            <Link className="repo-link" to={toProjectPath(project.repository)}>
-              {project.repository}
-            </Link>
-            {project.latestRelease ? (
-              <span className="repo-version mono">{project.latestRelease}</span>
-            ) : null}
-          </b>
-          {project.isFork && (
-            <div className="mono">{project.owner}</div>
-          )}
-        </div>
-        <div className="mono">{project.description || "—"}</div>
-        <div className="mono">{project.language || "—"}</div>
-        <div className="mono updated-col"><time dateTime={project.updatedAt} title={exactDateFormatter.format(Date.parse(project.updatedAt))}>{githubDate(project.updatedAt, nowMs, currentYearStart, currentYearEnd)}</time></div>
-        <span className={badgeClass(project.category, project.isFork)}>
-          <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
-        </span>
-      </li>
-    ));
+    return data.projects.map((project, idx) => {
+      // ⚡ Bolt: Extract Date.parse() to avoid redundant parsing for both relative and exact date formatting.
+      const projectUpdatedAtTime = Date.parse(project.updatedAt);
+      return (
+        <li className="row row--full" key={`${project.owner}/${project.repository}`}>
+          <span className="mono">{String(idx + 1).padStart(2, "0")}</span>
+          <div>
+            <b>
+              <Link className="repo-link" to={toProjectPath(project.repository)}>
+                {project.repository}
+              </Link>
+              {project.latestRelease ? (
+                <span className="repo-version mono">{project.latestRelease}</span>
+              ) : null}
+            </b>
+            {project.isFork && (
+              <div className="mono">{project.owner}</div>
+            )}
+          </div>
+          <div className="mono">{project.description || "—"}</div>
+          <div className="mono">{project.language || "—"}</div>
+          <div className="mono updated-col"><time dateTime={project.updatedAt} title={exactDateFormatter.format(projectUpdatedAtTime)}>{githubDate(projectUpdatedAtTime, nowMs, currentYearStart, currentYearEnd)}</time></div>
+          <span className={badgeClass(project.category, project.isFork)}>
+            <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
+          </span>
+        </li>
+      );
+    });
   }, [data?.projects]);
 
   if (loading) return <main id="main-content" className="console" tabIndex={-1}><p className="mono" role="status" aria-live="polite">Loading repositories...</p></main>;
