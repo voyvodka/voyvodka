@@ -60,3 +60,7 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+
+## 2024-06-03 - Wrap abstract time categories in semantic time tags
+**Learning:** Abstract time categories (like "2024 Q2") are useful for quick skimming, but lack precision for users who need exact timelines, and lack machine-readable semantics for assistive technologies.
+**Action:** Always wrap abstract time categories in a semantic `<time dateTime={isoString}>` element, and provide the exact formatted date as a `title` attribute so sighted users can view it on hover while screen readers get the semantic context.
