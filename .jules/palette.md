@@ -60,3 +60,6 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+## 2024-06-06 - Semantic HTML for abstract and relative dates
+**Learning:** Abstract time categories (like "2024 Q2") and relative dates provide a better UX when wrapped in a semantic `<time dateTime={isoString}>` element with a `title` containing the exact formatted date. In React, when mixing these components with text, they must be rendered via standard JSX expressions rather than interpolated directly into template literal strings to prevent `[object Object]` output.
+**Action:** Always use `<time>` for any date representation, provide precise `title` attributes for sighted users and screen readers (unless the text is already exact), and construct complex text-component mixtures with standard JSX.
