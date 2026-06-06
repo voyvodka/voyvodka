@@ -73,8 +73,10 @@ function ContribHeatmap({ calendar }: { calendar: ContributionDay[] }) {
   );
 }
 
-function ago(isoDate: string, nowMs: number) {
-  const ms = nowMs - Date.parse(isoDate);
+// ⚡ Bolt: Accept pre-parsed numeric timestamp instead of ISO string
+// to eliminate redundant string parsing overhead when combined with exact formattings.
+function ago(timeMs: number, nowMs: number) {
+  const ms = nowMs - timeMs;
   const day = 1000 * 60 * 60 * 24;
   const hour = 1000 * 60 * 60;
   if (ms < day) return `${Math.max(1, Math.floor(ms / hour))}h ago`;
@@ -204,25 +206,33 @@ export function HomePage() {
 
   const renderedLatestRepos = useMemo(() => {
     const nowMs = Date.now();
-    return latestRepos.map((repo) => (
-      <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
-        <strong>
-          <Link className="repo-link" to={toProjectPath(repo.repository)}>
-            {repo.repository}
-          </Link>
-        </strong>
-        <span className="mono">{repo.description || "No description provided."}</span>
-        <span className="mono">
-          {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | <time dateTime={repo.updatedAt} title={exactDateFormatter.format(Date.parse(repo.updatedAt))}>{ago(repo.updatedAt, nowMs)}</time>
-        </span>
-      </li>
-    ));
+    return latestRepos.map((repo) => {
+      // ⚡ Bolt: Extract Date.parse() to eliminate redundant parsing
+      // overhead for exactFormatter and ago() calculations in loop.
+      const updatedAtTime = Date.parse(repo.updatedAt);
+      return (
+        <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
+          <strong>
+            <Link className="repo-link" to={toProjectPath(repo.repository)}>
+              {repo.repository}
+            </Link>
+          </strong>
+          <span className="mono">{repo.description || "No description provided."}</span>
+          <span className="mono">
+            {repo.isFork ? "FORK / CONTRIBUTION" : "OWNED PROJECT"} | {repo.language || "Unknown"} | {repo.stars} stars | <time dateTime={repo.updatedAt} title={exactDateFormatter.format(updatedAtTime)}>{ago(updatedAtTime, nowMs)}</time>
+          </span>
+        </li>
+      );
+    });
   }, [latestRepos]);
 
   const renderedEvents = useMemo(() => {
     const nowMs = Date.now();
     return (data?.events ?? []).slice(0, 30).map((event, idx) => {
       const isOwnProject = projectRepoSet.has(event.repository);
+      // ⚡ Bolt: Extract Date.parse() to eliminate redundant parsing
+      // overhead for exactFormatter and ago() calculations in loop.
+      const createdAtTime = Date.parse(event.createdAt);
       return (
         <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
           <strong>
@@ -237,7 +247,7 @@ export function HomePage() {
             )}
           </strong>
           <span className="mono">{eventLabel(event.type)}</span>
-          <span className="mono"><time dateTime={event.createdAt} title={exactDateFormatter.format(Date.parse(event.createdAt))}>{ago(event.createdAt, nowMs)}</time></span>
+          <span className="mono"><time dateTime={event.createdAt} title={exactDateFormatter.format(createdAtTime)}>{ago(createdAtTime, nowMs)}</time></span>
         </li>
       );
     });
@@ -287,7 +297,11 @@ export function HomePage() {
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
             <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
             <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
-            <div className="kpi"><b>{latest ? <time dateTime={latest} title={exactDateFormatter.format(Date.parse(latest))}>{ago(latest, Date.now())}</time> : "--"}</b><span className="mono">last push age</span></div>
+            <div className="kpi"><b>{latest ? (() => {
+              // ⚡ Bolt: Extract Date.parse() for last push age.
+              const latestTime = Date.parse(latest);
+              return <time dateTime={latest} title={exactDateFormatter.format(latestTime)}>{ago(latestTime, Date.now())}</time>;
+            })() : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
 
