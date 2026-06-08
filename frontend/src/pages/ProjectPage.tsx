@@ -16,6 +16,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   second: 'numeric'
 });
 
+const exactDateFormatter = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+});
+
 function fmtDate(iso: string) {
   if (!iso) return "-";
   const time = Date.parse(iso);
@@ -81,7 +89,7 @@ function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: strin
     <div className="readme-block">
       <p>
         No tagged releases yet. The current state of the project lives on the
-        <code> {branch} </code> branch{pushed ? `, last pushed ${pushed}` : ""}.
+        <code> {branch} </code> branch{pushed ? <>, last pushed <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{pushed}</time></> : ""}.
       </p>
       <p>
         <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub <span aria-hidden="true">→</span></a>
@@ -225,8 +233,8 @@ export function ProjectPage() {
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
           <span className="mono">license: {license || "No license"}</span>
-          <span className="mono">updated: {fmtDate(updatedAt)}</span>
-          <span className="mono">last push: {fmtDate(pushedAt)}</span>
+          <span className="mono">updated: {updatedAt ? <time dateTime={updatedAt} title={exactDateFormatter.format(Date.parse(updatedAt))}>{fmtDate(updatedAt)}</time> : "-"}</span>
+          <span className="mono">last push: {pushedAt ? <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{fmtDate(pushedAt)}</time> : "-"}</span>
         </div>
         {topics.length > 0 ? (
           <div className="chips">
