@@ -60,6 +60,9 @@
 ## 2023-10-24 - Typographic Wayfinding Patterns
 **Learning:** Relying on basic unicode arrows (`↗` for external, `→` for internal navigation, `↓` for in-page scrolls) creates a cohesive, highly performant UX pattern across the system without requiring heavy SVG icon dependencies.
 **Action:** Standardize appending `<span aria-hidden="true"> [arrow] </span>` to contextual links to provide visual predictability without polluting screen reader text.
+## 2024-06-04 - Semantic Time Wrappers for Accessibility
+**Learning:** Abstract time categories (e.g., "2024 Q2") and relative dates lack precision for sighted users and context for screen readers. Interpolating React components (like semantic `<time>` wrappers) directly into template strings causes them to render as `[object Object]`.
+**Action:** Always wrap abstract and relative dates in a `<time dateTime={isoString}>` element with a `title` attribute for exact date presentation. Use proper JSX fragments when mixing text and components.
 
 ## 2025-06-01 - Fix WCAG 2.5.3 Label in Name sync for status badges and links
 **Learning:** Adding a descriptive `aria-label` like "View details for [repo]" to a status badge that visually reads "CORE" or "CONTRIB" breaks WCAG 2.5.3 ('Label in Name'). Voice control users trying to click the badge by saying "Click CORE" will fail because the accessible name doesn't contain the visible string. The same issue occurs for generic text like "Open on GitHub" if the `aria-label` is "Open release v1 on GitHub" instead of "Open on GitHub: release v1".
