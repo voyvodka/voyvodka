@@ -304,7 +304,7 @@ export function ProjectPage() {
                 ) : (
                   <p>{release.body || "No release notes"}</p>
                 )}
-                <a href={release.url} target="_blank" rel="noreferrer" aria-label={`Open release ${release.tagName} on GitHub`}>
+                <a href={release.url} target="_blank" rel="noreferrer" aria-label={`Open on GitHub: release ${release.tagName}`}>
                   Open on GitHub <span aria-hidden="true">↗</span>
                 </a>
               </li>

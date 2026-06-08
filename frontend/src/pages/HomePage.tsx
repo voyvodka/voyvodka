@@ -406,7 +406,7 @@ export function HomePage() {
                   </div>
                   <div className="mono">{project.language || "Unknown"}</div>
                   <span className={statusClass(project.category, project.isFork)}>
-                    <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{statusLabel(project.category, project.isFork)}</Link>
+                    <Link to={toProjectPath(project.repository)} aria-label={`${statusLabel(project.category, project.isFork)}: View details for ${project.repository}`}>{statusLabel(project.category, project.isFork)}</Link>
                   </span>
                 </li>
               ))}
