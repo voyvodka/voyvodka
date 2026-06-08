@@ -82,7 +82,7 @@ export function ProjectsPage() {
         <div className="mono">{project.language || "—"}</div>
         <div className="mono updated-col"><time dateTime={project.updatedAt} title={exactDateFormatter.format(Date.parse(project.updatedAt))}>{githubDate(project.updatedAt, nowMs, currentYearStart, currentYearEnd)}</time></div>
         <span className={badgeClass(project.category, project.isFork)}>
-          <Link to={toProjectPath(project.repository)} aria-label={`View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
+          <Link to={toProjectPath(project.repository)} aria-label={`${badgeLabel(project.category, project.isFork)}: View details for ${project.repository}`}>{badgeLabel(project.category, project.isFork)}</Link>
         </span>
       </li>
     ));
@@ -119,7 +119,7 @@ export function ProjectsPage() {
         </div>
         <div className="hero-actions">
           <Link className="btn" to="/">Back Home</Link>
-          <a className="btn" href={`https://github.com/${data.profile.username}?tab=repositories`} target="_blank" rel="noreferrer" aria-label="Open repositories list on GitHub">
+          <a className="btn" href={`https://github.com/${data.profile.username}?tab=repositories`} target="_blank" rel="noreferrer" aria-label="Open on GitHub: repositories list">
             Open on GitHub <span aria-hidden="true">↗</span>
           </a>
         </div>
