@@ -192,7 +192,7 @@ export function ProjectPage() {
           <Link to="/" className="back-link" aria-label="Return Home">
             <span aria-hidden="true">&larr;</span> Home
           </Link>
-          <Link to="/projects" className="back-link" aria-label="View all repositories">
+          <Link to="/projects" className="back-link">
             All Repositories
           </Link>
         </div>
@@ -244,11 +244,11 @@ export function ProjectPage() {
           </div>
         ) : null}
         <div className="actions">
-          <a href={data.repoUrl} target="_blank" rel="noreferrer" aria-label="Open repository on GitHub">
+          <a href={data.repoUrl} target="_blank" rel="noreferrer" aria-label="Repository: Open on GitHub">
             Repository <span aria-hidden="true">↗</span>
           </a>
           {hasDistinctLiveURL ? (
-            <a href={data.liveUrl} target="_blank" rel="noreferrer" aria-label="Open live project">
+            <a href={data.liveUrl} target="_blank" rel="noreferrer" aria-label="Live: Open project">
               Live <span aria-hidden="true">↗</span>
             </a>
           ) : null}
