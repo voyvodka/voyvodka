@@ -24,8 +24,6 @@ function badgeClass(projectCategory: string, isFork: boolean) {
   return "status online";
 }
 
-// ⚡ Bolt: Cache Intl.DateTimeFormat objects outside component to avoid
-// expensive parser/formatter setup overhead in JS engines during map loops.
 const thisYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
 const otherYearFormatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" });
 
@@ -40,8 +38,6 @@ function githubDate(time: number, nowMs: number, currentYearStart: number, curre
   if (ms < day) return `${Math.floor(ms / hour)} hours ago`;
   if (ms < 30 * day) return `${Math.floor(ms / day)} days ago`;
 
-  // ⚡ Bolt: Use pre-instantiated formatter with pure numeric timestamp `time`
-  // instead of allocating `new Date()` and array inside the loop for O(1) rendering time.
   if (time >= currentYearStart && time <= currentYearEnd) {
     return `on ${thisYearFormatter.format(time)}`;
   }
@@ -55,14 +51,11 @@ export function ProjectsPage() {
     if (!data?.projects) return null;
     const nowMs = Date.now();
 
-    // ⚡ Bolt: Pre-calculate current year boundaries as pure timestamps
-    // to pass down, avoiding repetitive `.getFullYear()` calculations.
     const currentYear = new Date().getFullYear();
     const currentYearStart = new Date(currentYear, 0, 1).getTime();
     const currentYearEnd = new Date(currentYear + 1, 0, 1).getTime() - 1;
 
     return data.projects.map((project, idx) => {
-      // ⚡ Bolt: Extract Date.parse() to a single shared variable within the loop block to eliminate redundant string parsing overhead.
       const time = Date.parse(project.updatedAt);
       return (
         <li className="row row--full" key={`${project.owner}/${project.repository}`}>

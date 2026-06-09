@@ -205,7 +205,6 @@ export function HomePage() {
   const renderedLatestRepos = useMemo(() => {
     const nowMs = Date.now();
     return latestRepos.map((repo) => {
-      // ⚡ Bolt: Extract Date.parse() to a single shared variable within the loop block to eliminate redundant string parsing overhead.
       const time = Date.parse(repo.updatedAt);
       return (
         <li className="live-item" key={`${repo.owner}/${repo.repository}`}>
@@ -227,7 +226,6 @@ export function HomePage() {
     const nowMs = Date.now();
     return (data?.events ?? []).slice(0, 30).map((event, idx) => {
       const isOwnProject = projectRepoSet.has(event.repository);
-      // ⚡ Bolt: Extract Date.parse() to a single shared variable within the loop block to eliminate redundant string parsing overhead.
       const time = Date.parse(event.createdAt);
       return (
         <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
