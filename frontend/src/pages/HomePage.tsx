@@ -342,7 +342,7 @@ export function HomePage() {
             <article className="live-box">
               <div className="section-head">
                 <span className="mono">Latest repositories</span>
-                <Link className="mono" to="/projects" aria-label="View all latest repositories">view all</Link>
+                <Link className="mono" to="/projects" aria-label="view all: latest repositories">view all</Link>
               </div>
               <ul className="live-list">
                 {renderedLatestRepos}
@@ -364,7 +364,7 @@ export function HomePage() {
             <article className="live-box">
               <div className="section-head">
                 <span className="mono">Recent activity events</span>
-                <a className="mono" href={githubUrl} target="_blank" rel="noreferrer" aria-label="View GitHub profile">profile <span aria-hidden="true">↗</span></a>
+                <a className="mono" href={githubUrl} target="_blank" rel="noreferrer" aria-label="profile: View on GitHub">profile <span aria-hidden="true">↗</span></a>
               </div>
               <ul className="live-list">
                 {renderedEvents}
