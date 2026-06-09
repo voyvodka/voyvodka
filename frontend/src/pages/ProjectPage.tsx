@@ -192,7 +192,7 @@ export function ProjectPage() {
           <Link to="/" className="back-link" aria-label="Return Home">
             <span aria-hidden="true">&larr;</span> Home
           </Link>
-          <Link to="/projects" className="back-link" aria-label="View all repositories">
+          <Link to="/projects" className="back-link">
             All Repositories
           </Link>
         </div>
