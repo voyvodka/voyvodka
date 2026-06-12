@@ -81,8 +81,8 @@ function ago(time: number, nowMs: number) {
   return `${Math.max(1, Math.floor(ms / day))}d ago`;
 }
 
-function toQuarter(isoDate: string) {
-  const d = new Date(isoDate);
+function toQuarter(time: number) {
+  const d = new Date(time);
   const q = Math.ceil((d.getMonth() + 1) / 3);
   return `${d.getFullYear()} Q${q}`;
 }
@@ -247,6 +247,8 @@ export function HomePage() {
     });
   }, [data?.events, projectRepoSet]);
 
+  const latestTime = useMemo(() => latest ? Date.parse(latest) : null, [latest]);
+
   const dataUnavailable = !loading && (error != null || data == null);
 
   if (loading) {
@@ -291,7 +293,8 @@ export function HomePage() {
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
             <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
             <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
-            <div className="kpi"><b>{latest ? <time dateTime={latest} title={exactDateFormatter.format(Date.parse(latest))}>{ago(Date.parse(latest), Date.now())}</time> : "--"}</b><span className="mono">last push age</span></div>
+            {/* ⚡ Bolt: Prevent double parsing of 'latest' string on render by using pre-calculated latestTime */}
+            <div className="kpi"><b>{latest && latestTime ? <time dateTime={latest} title={exactDateFormatter.format(latestTime)}>{ago(latestTime, Date.now())}</time> : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
 
@@ -468,9 +471,12 @@ export function HomePage() {
           </div>
           {dataUnavailable ? (
             <p className="mono" style={{ opacity: 0.5 }}>Timeline unavailable.</p>
-          ) : timelineProjects.map((p) => (
+          ) : timelineProjects.map((p) => {
+            // ⚡ Bolt: Eliminate redundant Date parsing in the render loop by extracting it into a single variable.
+            const updatedTime = Date.parse(p.updatedAt);
+            return (
             <div className="time-item" key={p.repository}>
-              <span className="mono"><time dateTime={p.updatedAt} title={exactDateFormatter.format(Date.parse(p.updatedAt))}>{toQuarter(p.updatedAt)}</time></span>
+              <span className="mono"><time dateTime={p.updatedAt} title={exactDateFormatter.format(updatedTime)}>{toQuarter(updatedTime)}</time></span>
               <div>
                 <strong>
                   <Link className="repo-link" to={toProjectPath(p.repository)}>{p.repository}</Link>
@@ -478,7 +484,8 @@ export function HomePage() {
                 <div className="mono">{p.description || "Active development."}</div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </article>
 
         <article className="stack-matrix">
