@@ -504,7 +504,7 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = 
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${meta.title}</title>
+    <title>${escapeAttr(meta.title)}</title>
     <meta name="description" content="${escapeAttr(meta.description)}" />
     <meta name="robots" content="index, follow" />
     <meta name="author" content="Samet Özkan" />
