@@ -435,7 +435,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		user                 github.User
 		repos                []github.Repository
 		events               []github.Event
-		mergedPRs            []github.PullRequestItem
+		mergedPRsCount       int
 		contributionCalendar []domain.ContributionDay
 		userErr, reposErr    error
 	)
@@ -469,9 +469,9 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 	go func() {
 		defer wg.Done()
 		var err error
-		mergedPRs, err = s.githubClient.SearchMergedPRs(refreshCtx, s.username)
+		mergedPRsCount, err = s.githubClient.SearchMergedPRs(refreshCtx, s.username)
 		if err != nil && !errors.Is(err, context.Canceled) {
-			mergedPRs = []github.PullRequestItem{}
+			mergedPRsCount = 0
 		}
 	}()
 	go func() {
@@ -526,22 +526,6 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		})
 	}
 
-	contributions := make([]domain.Contribution, 0, len(mergedPRs))
-	for _, pr := range mergedPRs {
-		owner, repo := parsePROwnerRepo(pr.HTMLURL)
-		if owner == "" || repo == "" {
-			continue
-		}
-		contributions = append(contributions, domain.Contribution{
-			Owner:      owner,
-			Repository: repo,
-			RepoURL:    "https://github.com/" + owner + "/" + repo,
-			Title:      pr.Title,
-			MergedAt:   pr.PullRequest.MergedAt,
-			PRURL:      pr.HTMLURL,
-		})
-	}
-
 	sort.Slice(projects, func(i, j int) bool {
 		return projects[i].UpdatedAt > projects[j].UpdatedAt
 	})
@@ -568,11 +552,13 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 		},
 		KPI: domain.KPI{
 			OwnedRepositories: ownedCount,
-			MergedPRs:         len(contributions),
+			MergedPRs:         mergedPRsCount,
 			TotalStars:        totalStars,
 		},
 		Projects:             projects,
-		Contributions:        contributions,
+		// ⚡ Bolt: Provide empty slice as contributions are unused by the frontend UI,
+		// eliminating unnecessary allocation and processing overhead.
+		Contributions:        []domain.Contribution{},
 		Events:               mappedEvents,
 		ContributionCalendar: contributionCalendar,
 		IsStale:              false,

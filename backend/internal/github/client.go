@@ -153,14 +153,15 @@ func (c *Client) GetFileContent(ctx context.Context, owner, repo, filePath strin
 	return c.getRaw(ctx, path)
 }
 
-func (c *Client) SearchMergedPRs(ctx context.Context, username string) ([]PullRequestItem, error) {
+// ⚡ Bolt: Fetch only 1 item to minimize JSON payload parsing overhead since we only need the TotalCount
+func (c *Client) SearchMergedPRs(ctx context.Context, username string) (int, error) {
 	q := url.QueryEscape("author:" + username + " type:pr is:merged -user:" + username)
 	var result PRSearchResult
-	err := c.getJSON(ctx, "/search/issues?q="+q+"&per_page=30&sort=updated", &result)
+	err := c.getJSON(ctx, "/search/issues?q="+q+"&per_page=1&sort=updated", &result)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return result.Items, nil
+	return result.TotalCount, nil
 }
 
 func (c *Client) GetContributionCalendar(ctx context.Context, login string) ([]domain.ContributionDay, error) {
