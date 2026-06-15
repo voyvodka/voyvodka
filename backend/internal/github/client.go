@@ -153,7 +153,6 @@ func (c *Client) GetFileContent(ctx context.Context, owner, repo, filePath strin
 	return c.getRaw(ctx, path)
 }
 
-// ⚡ Bolt: Fetch only 1 item to minimize JSON payload parsing overhead since we only need the TotalCount
 func (c *Client) SearchMergedPRs(ctx context.Context, username string) (int, error) {
 	q := url.QueryEscape("author:" + username + " type:pr is:merged -user:" + username)
 	var result PRSearchResult

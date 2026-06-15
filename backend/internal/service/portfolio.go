@@ -556,8 +556,6 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 			TotalStars:        totalStars,
 		},
 		Projects:             projects,
-		// ⚡ Bolt: Provide empty slice as contributions are unused by the frontend UI,
-		// eliminating unnecessary allocation and processing overhead.
 		Contributions:        []domain.Contribution{},
 		Events:               mappedEvents,
 		ContributionCalendar: contributionCalendar,
