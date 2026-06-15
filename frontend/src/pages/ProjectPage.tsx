@@ -127,7 +127,7 @@ export function ProjectPage() {
       <div className="panel">
         <p className="mono" role="alert">Failed to load project list: {portfolioError}</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
         </div>
       </div>
     </main>
@@ -137,8 +137,8 @@ export function ProjectPage() {
       <div className="panel">
         <p className="mono" role="alert">Project not found.</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
-          <Link to="/projects" className="btn">All Repositories</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
+          <Link to="/projects" className="btn"><span aria-hidden="true">&larr;</span> All Repositories</Link>
         </div>
       </div>
     </main>
@@ -149,8 +149,8 @@ export function ProjectPage() {
       <div className="panel">
         <p className="mono" role="alert">Failed to load project: {error}</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
-          <Link to="/projects" className="btn">All Repositories</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
+          <Link to="/projects" className="btn"><span aria-hidden="true">&larr;</span> All Repositories</Link>
         </div>
       </div>
     </main>
@@ -160,8 +160,8 @@ export function ProjectPage() {
       <div className="panel">
         <p className="mono" role="alert">Project not found.</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
-          <Link to="/projects" className="btn">All Repositories</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
+          <Link to="/projects" className="btn"><span aria-hidden="true">&larr;</span> All Repositories</Link>
         </div>
       </div>
     </main>
@@ -193,7 +193,7 @@ export function ProjectPage() {
             <span aria-hidden="true">&larr;</span> Home
           </Link>
           <Link to="/projects" className="back-link">
-            All Repositories
+            <span aria-hidden="true">&larr;</span> All Repositories
           </Link>
         </div>
         <div className="project-title-row">

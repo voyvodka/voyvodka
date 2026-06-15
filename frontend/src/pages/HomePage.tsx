@@ -346,7 +346,7 @@ export function HomePage() {
             <article className="live-box">
               <div className="section-head">
                 <span className="mono">Latest repositories</span>
-                <Link className="mono" to="/projects" aria-label="view all: latest repositories">view all</Link>
+                <Link className="mono" to="/projects" aria-label="view all: latest repositories">view all <span aria-hidden="true">→</span></Link>
               </div>
               <ul className="live-list">
                 {renderedLatestRepos}
