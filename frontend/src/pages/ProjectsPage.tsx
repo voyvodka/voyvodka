@@ -90,7 +90,7 @@ export function ProjectsPage() {
       <section className="panel">
         <p className="mono" role="alert">Failed to load repositories: {error}</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
         </div>
       </section>
     </main>
@@ -100,7 +100,7 @@ export function ProjectsPage() {
       <section className="panel">
         <p className="mono" role="alert">No repositories found.</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
-          <Link to="/" className="btn">Return Home</Link>
+          <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
         </div>
       </section>
     </main>
@@ -114,7 +114,7 @@ export function ProjectsPage() {
           <span className="mono">{data.projects.length} repositories</span>
         </div>
         <div className="hero-actions">
-          <Link className="btn" to="/">Back Home</Link>
+          <Link className="btn" to="/"><span aria-hidden="true">&larr;</span> Back Home</Link>
           <a className="btn" href={`https://github.com/${data.profile.username}?tab=repositories`} target="_blank" rel="noreferrer" aria-label="Open on GitHub: repositories list">
             Open on GitHub <span aria-hidden="true">↗</span>
           </a>
