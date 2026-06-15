@@ -293,7 +293,6 @@ export function HomePage() {
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
             <div className="kpi"><b>{data?.kpi.mergedPRs ?? "--"}</b><span className="mono">merged prs</span></div>
             <div className="kpi"><b>{data?.profile.followers ?? "--"}</b><span className="mono">github followers</span></div>
-            {/* ⚡ Bolt: Prevent double parsing of 'latest' string on render by using pre-calculated latestTime */}
             <div className="kpi"><b>{latest && latestTime ? <time dateTime={latest} title={exactDateFormatter.format(latestTime)}>{ago(latestTime, Date.now())}</time> : "--"}</b><span className="mono">last push age</span></div>
           </div>
         </article>
@@ -472,7 +471,6 @@ export function HomePage() {
           {dataUnavailable ? (
             <p className="mono" style={{ opacity: 0.5 }}>Timeline unavailable.</p>
           ) : timelineProjects.map((p) => {
-            // ⚡ Bolt: Eliminate redundant Date parsing in the render loop by extracting it into a single variable.
             const updatedTime = Date.parse(p.updatedAt);
             return (
             <div className="time-item" key={p.repository}>
