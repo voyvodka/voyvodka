@@ -46,3 +46,6 @@
 ## 2025-05-19 - Redundant Date Parsing in Render Loops
 **Learning:** When multiple date formatting functions (e.g., relative time calculators and exact date formattings) process the same ISO date string within a React render loop, parsing the string independently multiple times per iteration adds significant redundant overhead.
 **Action:** Extract the `Date.parse()` call to a single shared variable within the loop block to eliminate redundant string parsing overhead.
+## 2025-05-19 - GitHub API Overfetching and UI Dependencies
+**Learning:** Fetching full arrays of data (e.g., `per_page=30` for PRs) only to use the length of the array (`len(mergedPRs)`) for a UI count metric is extremely inefficient. It causes unnecessary network transfer overhead, heavy JSON payload parsing, and allocates memory for structs that are never used.
+**Action:** When the frontend UI only requires the total count of items from an API endpoint, update the Go backend to fetch `per_page=1` and directly read the `total_count` property from the JSON response object, completely eliminating the need to allocate or iterate over unused slice elements.
