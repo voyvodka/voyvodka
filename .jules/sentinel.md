@@ -35,3 +35,8 @@
 **Vulnerability:** The trailing slash normalization middleware in Express sliced `req.path` to remove the trailing slash and used it directly in `res.redirect(301, ...)`. If a user visited a URL with multiple leading slashes like `//evil.com/`, the path became `//evil.com`. Browsers interpret double leading slashes as a protocol-relative absolute URL (e.g., `https://evil.com`), resulting in an Open Redirect.
 **Learning:** `req.path` in Express retains multiple leading slashes (e.g., `//foo/` -> `//foo/`). Truncating a trailing slash does not make a path safe for redirection; the browser's interpretation of protocol-relative URLs (`//`) means internal path redirection can be hijacked to external domains.
 **Prevention:** Always normalize multiple leading slashes to a single slash (e.g., `.replace(/^\/+/, '/')`) before passing paths to redirect functions when intending to keep redirects relative/internal to the site.
+
+## 2024-06-15 - [Fix XSS in SSR Title Tag Interpolation]
+**Vulnerability:** XSS (Cross-Site Scripting) vulnerability during Server-Side Rendering (SSR). The `meta.title` value was interpolated directly into the `<title>` tag in the HTML `<head>` without being HTML-escaped.
+**Learning:** In Server-Side Rendering (SSR) environments, directly interpolating dynamic inputs into HTML tags creates an injection point. Without escaping, malicious strings can break out of the tag and execute scripts.
+**Prevention:** Always ensure that dynamic inputs interpolated directly into HTML tags (such as `<title>${meta.title}</title>`) are HTML-escaped (e.g., using `escapeAttr()`) to prevent XSS breakout vulnerabilities.
