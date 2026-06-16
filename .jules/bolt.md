@@ -49,3 +49,6 @@
 ## 2025-05-19 - GitHub API Overfetching and UI Dependencies
 **Learning:** Fetching full arrays of data (e.g., `per_page=30` for PRs) only to use the length of the array (`len(mergedPRs)`) for a UI count metric is extremely inefficient. It causes unnecessary network transfer overhead, heavy JSON payload parsing, and allocates memory for structs that are never used.
 **Action:** When the frontend UI only requires the total count of items from an API endpoint, update the Go backend to fetch `per_page=1` and directly read the `total_count` property from the JSON response object, completely eliminating the need to allocate or iterate over unused slice elements.
+## 2025-05-19 - Intl.DateTimeFormat with Invalid Numeric Timestamps
+**Learning:** While replacing repeated `Date.parse()` string parsing with pre-calculated numeric timestamps is a great optimization for passing to `Intl.DateTimeFormat.format()`, an invalid original string will cause `Date.parse()` to return `NaN`. Passing `NaN` directly to `format()` throws a fatal `RangeError: Invalid time value`, crashing the entire React render cycle.
+**Action:** Always wrap numeric timestamps calculated from external string data with a `Number.isNaN()` guard before passing them to `Intl.DateTimeFormat.format()`.

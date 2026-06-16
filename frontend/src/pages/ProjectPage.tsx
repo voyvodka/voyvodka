@@ -24,9 +24,8 @@ const exactDateFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "numeric",
 });
 
-function fmtDate(iso: string) {
-  if (!iso) return "-";
-  const time = Date.parse(iso);
+// ⚡ Bolt: fmtDate now accepts pre-parsed numeric timestamps to eliminate redundant Date.parse() overhead
+function fmtDate(time: number) {
   if (Number.isNaN(time)) return "-";
   return dateFormatter.format(time);
 }
@@ -84,12 +83,15 @@ function ChangelogFallback({ repoUrl, defaultBranch }: { repoUrl: string; defaul
 function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: string; defaultBranch: string; pushedAt: string }) {
   const branch = defaultBranch || "main";
   const branchUrl = `${repoUrl.replace(/\/$/, "")}/tree/${branch}`;
-  const pushed = pushedAt ? fmtDate(pushedAt) : null;
+
+  // ⚡ Bolt: Pre-calculate Date.parse() once to reuse for both exact and relative formatters
+  const pushedTime = pushedAt ? Date.parse(pushedAt) : NaN;
+  const pushed = !Number.isNaN(pushedTime) ? fmtDate(pushedTime) : null;
   return (
     <div className="readme-block">
       <p>
         No tagged releases yet. The current state of the project lives on the
-        <code> {branch} </code> branch{pushed ? <>, last pushed <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{pushed}</time></> : ""}.
+        <code> {branch} </code> branch{pushed ? <>, last pushed <time dateTime={pushedAt} title={exactDateFormatter.format(pushedTime)}>{pushed}</time></> : ""}.
       </p>
       <p>
         <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub <span aria-hidden="true">↗</span></a>
@@ -104,7 +106,8 @@ function buildReleaseChangelog(releases: { name: string; tagName: string; publis
   return releases
     .map((release) => {
       const title = release.name || release.tagName;
-      const date = fmtDate(release.publishedAt);
+      const publishedTime = release.publishedAt ? Date.parse(release.publishedAt) : NaN;
+      const date = fmtDate(publishedTime);
       const notes = (release.body || "No release notes").trim();
       return `## ${title}\n${date}\n\n${notes}`;
     })
@@ -185,6 +188,10 @@ export function ProjectPage() {
   const parentRepoUrl = data.parentRepoUrl || "";
   const parentRepo = data.parentRepo || "";
 
+  // ⚡ Bolt: Extract Date.parse() to shared variables, eliminating redundant parsing overhead in render loops
+  const updatedTime = updatedAt ? Date.parse(updatedAt) : NaN;
+  const pushedTime = pushedAt ? Date.parse(pushedAt) : NaN;
+
   return (
     <main id="main-content" className="console project-page" tabIndex={-1}>
       <div className="panel">
@@ -233,8 +240,8 @@ export function ProjectPage() {
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
           <span className="mono">license: {license || "No license"}</span>
-          <span className="mono">updated: {updatedAt ? <time dateTime={updatedAt} title={exactDateFormatter.format(Date.parse(updatedAt))}>{fmtDate(updatedAt)}</time> : "-"}</span>
-          <span className="mono">last push: {pushedAt ? <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{fmtDate(pushedAt)}</time> : "-"}</span>
+          <span className="mono">updated: {!Number.isNaN(updatedTime) ? <time dateTime={updatedAt} title={exactDateFormatter.format(updatedTime)}>{fmtDate(updatedTime)}</time> : "-"}</span>
+          <span className="mono">last push: {!Number.isNaN(pushedTime) ? <time dateTime={pushedAt} title={exactDateFormatter.format(pushedTime)}>{fmtDate(pushedTime)}</time> : "-"}</span>
         </div>
         {topics.length > 0 ? (
           <div className="chips">
@@ -291,12 +298,14 @@ export function ProjectPage() {
           <ReleasesFallback repoUrl={data.repoUrl} defaultBranch={defaultBranch} pushedAt={pushedAt} />
         ) : (
           <ul className="release-list">
-            {data.releases.map((release) => (
+            {data.releases.map((release) => {
+              const releaseTime = release.publishedAt ? Date.parse(release.publishedAt) : NaN;
+              return (
               <li key={`${release.tagName}-${release.publishedAt}`}>
                 <strong>{release.name || release.tagName}</strong>
                 {release.publishedAt ? (
                   <small>
-                    <time dateTime={release.publishedAt}>{fmtDate(release.publishedAt)}</time>
+                    <time dateTime={release.publishedAt}>{fmtDate(releaseTime)}</time>
                   </small>
                 ) : null}
                 {release.bodyHtml ? (
@@ -308,7 +317,7 @@ export function ProjectPage() {
                   Open on GitHub <span aria-hidden="true">↗</span>
                 </a>
               </li>
-            ))}
+            )})}
           </ul>
         )}
       </section>
