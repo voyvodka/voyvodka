@@ -24,9 +24,8 @@ const exactDateFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "numeric",
 });
 
-function fmtDate(iso: string) {
-  if (!iso) return "-";
-  const time = Date.parse(iso);
+// ⚡ Bolt: Accept numeric timestamp directly to eliminate redundant Date.parse overhead
+function fmtDate(time: number) {
   if (Number.isNaN(time)) return "-";
   return dateFormatter.format(time);
 }
@@ -81,15 +80,15 @@ function ChangelogFallback({ repoUrl, defaultBranch }: { repoUrl: string; defaul
   );
 }
 
-function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: string; defaultBranch: string; pushedAt: string }) {
+// ⚡ Bolt: Pass pre-parsed timestamp and formatted string to avoid parsing inside the fallback component
+function ReleasesFallback({ repoUrl, defaultBranch, pushedAtMs, pushedFormatted, pushedAtIso }: { repoUrl: string; defaultBranch: string; pushedAtMs: number | null; pushedFormatted: string | null; pushedAtIso: string }) {
   const branch = defaultBranch || "main";
   const branchUrl = `${repoUrl.replace(/\/$/, "")}/tree/${branch}`;
-  const pushed = pushedAt ? fmtDate(pushedAt) : null;
   return (
     <div className="readme-block">
       <p>
         No tagged releases yet. The current state of the project lives on the
-        <code> {branch} </code> branch{pushed ? <>, last pushed <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{pushed}</time></> : ""}.
+        <code> {branch} </code> branch{pushedFormatted && pushedAtMs ? <>, last pushed <time dateTime={pushedAtIso} title={exactDateFormatter.format(pushedAtMs)}>{pushedFormatted}</time></> : ""}.
       </p>
       <p>
         <a href={branchUrl} target="_blank" rel="noreferrer">Open the {branch} branch on GitHub <span aria-hidden="true">↗</span></a>
@@ -98,13 +97,14 @@ function ReleasesFallback({ repoUrl, defaultBranch, pushedAt }: { repoUrl: strin
   );
 }
 
-function buildReleaseChangelog(releases: { name: string; tagName: string; publishedAt: string; body: string }[]) {
+// ⚡ Bolt: Utilize pre-parsed releases timestamp to eliminate Date.parse in loop
+function buildReleaseChangelog(releases: { name: string; tagName: string; publishedAtMs: number; body: string }[]) {
   if (releases.length === 0) return "";
 
   return releases
     .map((release) => {
       const title = release.name || release.tagName;
-      const date = fmtDate(release.publishedAt);
+      const date = fmtDate(release.publishedAtMs);
       const notes = (release.body || "No release notes").trim();
       return `## ${title}\n${date}\n\n${notes}`;
     })
@@ -174,11 +174,24 @@ export function ProjectPage() {
   const openIssues = data.openIssues ?? 0;
   const defaultBranch = data.defaultBranch ?? "";
   const license = data.license ?? "";
-  const pushedAt = data.pushedAt ?? "";
-  const updatedAt = data.updatedAt ?? "";
+  const pushedAtIso = data.pushedAt ?? "";
+  const updatedAtIso = data.updatedAt ?? "";
   const readme = data.readme ?? "";
   const changelog = data.changelog ?? "";
-  const releaseChangelog = buildReleaseChangelog(data.releases);
+
+  // ⚡ Bolt: Extract Date.parse() into shared numeric variables to eliminate redundant parsing
+  const pushedAtMs = pushedAtIso ? Date.parse(pushedAtIso) : null;
+  const updatedAtMs = updatedAtIso ? Date.parse(updatedAtIso) : null;
+
+  const pushedFormatted = pushedAtMs ? fmtDate(pushedAtMs) : null;
+  const updatedFormatted = updatedAtMs ? fmtDate(updatedAtMs) : null;
+
+  const parsedReleases = data.releases.map((r) => ({
+    ...r,
+    publishedAtMs: r.publishedAt ? Date.parse(r.publishedAt) : NaN,
+  }));
+
+  const releaseChangelog = buildReleaseChangelog(parsedReleases);
   const latestRelease = data.releases.find((r) => r.tagName);
   const hasDistinctLiveURL = Boolean(data.liveUrl) && data.liveUrl !== data.repoUrl;
 
@@ -233,8 +246,8 @@ export function ProjectPage() {
           <span className="mono">language: {data.language || "Unknown"}</span>
           <span className="mono">branch: {defaultBranch || "-"}</span>
           <span className="mono">license: {license || "No license"}</span>
-          <span className="mono">updated: {updatedAt ? <time dateTime={updatedAt} title={exactDateFormatter.format(Date.parse(updatedAt))}>{fmtDate(updatedAt)}</time> : "-"}</span>
-          <span className="mono">last push: {pushedAt ? <time dateTime={pushedAt} title={exactDateFormatter.format(Date.parse(pushedAt))}>{fmtDate(pushedAt)}</time> : "-"}</span>
+          <span className="mono">updated: {updatedAtIso && updatedAtMs ? <time dateTime={updatedAtIso} title={exactDateFormatter.format(updatedAtMs)}>{updatedFormatted}</time> : "-"}</span>
+          <span className="mono">last push: {pushedAtIso && pushedAtMs ? <time dateTime={pushedAtIso} title={exactDateFormatter.format(pushedAtMs)}>{pushedFormatted}</time> : "-"}</span>
         </div>
         {topics.length > 0 ? (
           <div className="chips">
@@ -287,16 +300,16 @@ export function ProjectPage() {
         <div className="panel-title">
           <h3>Releases</h3>
         </div>
-        {data.releases.length === 0 ? (
-          <ReleasesFallback repoUrl={data.repoUrl} defaultBranch={defaultBranch} pushedAt={pushedAt} />
+        {parsedReleases.length === 0 ? (
+          <ReleasesFallback repoUrl={data.repoUrl} defaultBranch={defaultBranch} pushedAtMs={pushedAtMs} pushedFormatted={pushedFormatted} pushedAtIso={pushedAtIso} />
         ) : (
           <ul className="release-list">
-            {data.releases.map((release) => (
+            {parsedReleases.map((release) => (
               <li key={`${release.tagName}-${release.publishedAt}`}>
                 <strong>{release.name || release.tagName}</strong>
-                {release.publishedAt ? (
+                {release.publishedAtMs && !Number.isNaN(release.publishedAtMs) ? (
                   <small>
-                    <time dateTime={release.publishedAt}>{fmtDate(release.publishedAt)}</time>
+                    <time dateTime={release.publishedAt}>{fmtDate(release.publishedAtMs)}</time>
                   </small>
                 ) : null}
                 {release.bodyHtml ? (
