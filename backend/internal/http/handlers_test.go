@@ -18,6 +18,7 @@ func TestIsValidGitHubName(t *testing.T) {
 		{"invalid empty", "", false},
 		{"invalid dot", ".", false},
 		{"invalid dot dot", "..", false},
+		{"invalid length", "a1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890", false},
 		{"invalid path traversal", "../owner", false},
 		{"invalid encoded slash", "foo%2fbar", false}, // % is invalid
 		{"invalid slash", "foo/bar", false},

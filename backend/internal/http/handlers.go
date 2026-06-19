@@ -58,7 +58,8 @@ func (h *Handler) getPortfolioData(w http.ResponseWriter, r *http.Request) {
 }
 
 func isValidGitHubName(name string) bool {
-	if name == "" || name == "." || name == ".." {
+	// Enforce input length limits to prevent DoS and excessive memory allocation
+	if name == "" || len(name) > 100 || name == "." || name == ".." {
 		return false
 	}
 	for _, c := range name {
