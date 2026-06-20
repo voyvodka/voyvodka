@@ -21,6 +21,7 @@ func TestIsValidGitHubName(t *testing.T) {
 		{"invalid path traversal", "../owner", false},
 		{"invalid encoded slash", "foo%2fbar", false}, // % is invalid
 		{"invalid slash", "foo/bar", false},
+		{"invalid over 100 characters", "this-is-a-very-long-github-name-that-exceeds-the-maximum-allowed-length-of-one-hundred-characters-which-is-used-to-prevent-dos", false},
 	}
 
 	for _, c := range cases {
