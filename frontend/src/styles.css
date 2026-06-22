@@ -1036,6 +1036,7 @@ button:focus-visible,
   outline-offset: 2px;
 }
 
+[tabindex="-1"]:focus,
 #main-content:focus {
   outline: none;
 }
