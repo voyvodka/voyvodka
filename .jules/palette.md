@@ -67,3 +67,7 @@
 ## 2025-06-01 - Fix WCAG 2.5.3 Label in Name sync for status badges and links
 **Learning:** Adding a descriptive `aria-label` like "View details for [repo]" to a status badge that visually reads "CORE" or "CONTRIB" breaks WCAG 2.5.3 ('Label in Name'). Voice control users trying to click the badge by saying "Click CORE" will fail because the accessible name doesn't contain the visible string. The same issue occurs for generic text like "Open on GitHub" if the `aria-label` is "Open release v1 on GitHub" instead of "Open on GitHub: release v1".
 **Action:** Always ensure the exact visible text of a link is a continuous substring within its `aria-label` to keep screen readers and voice navigation in sync.
+
+## 2025-06-03 - Programmatic focus for in-page anchors
+**Learning:** In-page anchor links (e.g., `<a href="#projects">`) visually scroll to the target section, but they don't automatically shift programmatic focus for screen readers unless the target element is focusable. If the target is a non-interactive element like a `<section>`, screen readers might lose context or start reading from the top of the page again.
+**Action:** Always add `tabIndex={-1}` to the target elements of in-page anchor links to ensure programmatic focus is reliably shifted. Additionally, apply `[tabindex="-1"]:focus { outline: none; }` in the global CSS so mouse users don't see an unwanted focus ring when clicking these links.

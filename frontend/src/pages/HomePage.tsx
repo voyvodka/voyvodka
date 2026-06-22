@@ -380,7 +380,7 @@ export function HomePage() {
         )}
       </section>
 
-      <section className="projects" id="projects">
+      <section className="projects" id="projects" tabIndex={-1}>
         <div className="projects-header">
           <div>#</div>
           <div>Project</div>
@@ -426,7 +426,7 @@ export function HomePage() {
         )}
       </section>
 
-      <section className="panel" id="cases">
+      <section className="panel" id="cases" tabIndex={-1}>
         <div className="section-head">
           <h2>Case Files</h2>
           <span className="mono">Stack / Context / Outcome</span>
@@ -462,7 +462,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid-2" id="timeline">
+      <section className="grid-2" id="timeline" tabIndex={-1}>
         <article className="timeline">
           <div className="section-head">
             <h2>Build Timeline</h2>
@@ -519,7 +519,7 @@ export function HomePage() {
         </article>
       </section>
 
-      <section className="contact" id="contact">
+      <section className="contact" id="contact" tabIndex={-1}>
         <div>
           <strong>Ready for next mission.</strong>
           <div className="mono">Open to .NET backend and MVC full-stack roles. Interested in product teams that value practical engineering and AI-accelerated delivery.</div>
