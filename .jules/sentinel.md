@@ -40,3 +40,8 @@
 **Vulnerability:** Unescaped variables injected directly into the HTML `<title>` tag during Server-Side Rendering (SSR). While other attributes were escaped with `escapeAttr`, the inner text of the `<title>` tag used raw string interpolation (`<title>${meta.title}</title>`).
 **Learning:** In HTML generation, any dynamic input interpolated into elements (like `<title>`) must be safely HTML encoded. If an attacker controls `meta.title`, they can input `</title><script>alert(1)</script>` to break out and execute scripts.
 **Prevention:** Always use a utility function like `escapeAttr` to HTML-encode variables before interpolating them into HTML tags.
+
+## 2024-06-25 - [Missing Input Length Limits (DoS Risk)]
+**Vulnerability:** Denial of Service (DoS) vulnerability. Dynamic URL path variables (e.g., GitHub repo and owner names) were validated for valid characters but lacked an explicit length limit.
+**Learning:** Even if basic character validation is present, processing arbitrarily long external strings without bounds can lead to excessive memory allocation or processing exhaustion.
+**Prevention:** Always enforce an explicit input length limit (e.g., `len(name) > 100`) on dynamic URL path variables or external string inputs, even when basic character validation is already present.
