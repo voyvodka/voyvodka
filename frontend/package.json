@@ -16,11 +16,11 @@
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
     "express": "^5.2.1",
-    "isomorphic-dompurify": "^3.17.0",
+    "isomorphic-dompurify": "^3.18.0",
     "marked": "^18.0.5",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-router-dom": "^7.17.0",
+    "react-router-dom": "^7.18.0",
     "satori": "^0.26.0",
     "tsx": "^4.22.4"
   },
