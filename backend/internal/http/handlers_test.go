@@ -3,6 +3,7 @@ package httpx
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -21,6 +22,7 @@ func TestIsValidGitHubName(t *testing.T) {
 		{"invalid path traversal", "../owner", false},
 		{"invalid encoded slash", "foo%2fbar", false}, // % is invalid
 		{"invalid slash", "foo/bar", false},
+		{"invalid length over 100", strings.Repeat("a", 101), false},
 	}
 
 	for _, c := range cases {
