@@ -34,9 +34,11 @@ func main() {
 	server := &http.Server{
 		Addr:         ":" + application.Config.Port,
 		Handler:      application.Router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		// Security enhancement: Prevent Slowloris DoS attacks by enforcing a strict timeout on reading headers.
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	errCh := make(chan error, 1)
