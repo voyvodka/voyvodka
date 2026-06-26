@@ -45,3 +45,8 @@
 **Vulnerability:** Denial of Service (DoS) vulnerability. Dynamic URL path variables (e.g., GitHub repo and owner names) were validated for valid characters but lacked an explicit length limit.
 **Learning:** Even if basic character validation is present, processing arbitrarily long external strings without bounds can lead to excessive memory allocation or processing exhaustion.
 **Prevention:** Always enforce an explicit input length limit (e.g., `len(name) > 100`) on dynamic URL path variables or external string inputs, even when basic character validation is already present.
+
+## 2025-05-18 - [Prevent Slowloris DoS Attacks via ReadHeaderTimeout]
+**Vulnerability:** Missing `ReadHeaderTimeout` in `http.Server` configuration.
+**Learning:** Go's `http.Server` relies on the operating system's default TCP connection timeout if timeouts are not explicitly configured. A malicious client could open a connection and send HTTP headers extremely slowly (one byte at a time), exhausting server resources and preventing legitimate connections (a Slowloris attack).
+**Prevention:** Always explicitly configure a `ReadHeaderTimeout` (e.g., `5 * time.Second`) in the `http.Server` struct to ensure slow connection headers are quickly terminated.
