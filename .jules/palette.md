@@ -71,3 +71,7 @@
 ## 2025-06-03 - Programmatic focus for in-page anchors
 **Learning:** In-page anchor links (e.g., `<a href="#projects">`) visually scroll to the target section, but they don't automatically shift programmatic focus for screen readers unless the target element is focusable. If the target is a non-interactive element like a `<section>`, screen readers might lose context or start reading from the top of the page again.
 **Action:** Always add `tabIndex={-1}` to the target elements of in-page anchor links to ensure programmatic focus is reliably shifted. Additionally, apply `[tabindex="-1"]:focus { outline: none; }` in the global CSS so mouse users don't see an unwanted focus ring when clicking these links.
+
+## 2025-06-05 - Accessible metric gauges and grid lists
+**Learning:** Custom metric gauges built with fragmented text nodes and visual-only column headers above CSS grid-based lists create a confusing, noisy experience for screen reader users, announcing meaningless disjointed text.
+**Action:** Always wrap custom gauges in `role="meter"` with appropriate `aria-value*` attributes, and apply `aria-hidden="true"` to internal fragmented text and visual-only column headers to provide clean, semantic context for assistive technologies.
