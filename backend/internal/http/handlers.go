@@ -104,6 +104,12 @@ func (h *Handler) getProject(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) forceRefresh(w http.ResponseWriter, r *http.Request) {
 	providedKey := r.Header.Get("X-API-Key")
 
+	// Enforce input length limit to prevent DoS via excessive CPU consumption during hashing
+	if len(providedKey) > 256 {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "api key too long"})
+		return
+	}
+
 	// Hash provided key to prevent leaking secret length via timing attack.
 	// Expected hash is pre-computed to save CPU cycles.
 	providedHash := sha256.Sum256([]byte(providedKey))

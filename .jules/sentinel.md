@@ -50,3 +50,8 @@
 **Vulnerability:** The Go backend's `http.Server` was configured with `ReadTimeout` and `WriteTimeout`, but `ReadHeaderTimeout` was omitted. This leaves the server vulnerable to Slowloris Denial of Service (DoS) attacks, where attackers send HTTP headers very slowly to exhaust server connections.
 **Learning:** `ReadTimeout` covers the entire request reading process, but an explicit `ReadHeaderTimeout` is required to ensure clients cannot hold connections open indefinitely during the initial header transmission phase.
 **Prevention:** Always explicitly configure `ReadHeaderTimeout` (e.g., `5 * time.Second`) on `http.Server` structs in Go applications to defend against Slowloris DoS attacks.
+
+## 2026-06-29 - [Missing Input Length Limit on Hashed Secrets (DoS Risk)]
+**Vulnerability:** Denial of Service (DoS) vulnerability via CPU exhaustion. The `forceRefresh` endpoint hashed the `X-API-Key` header without any length limit before comparing it. An attacker could send an extremely long string, causing the server to consume excessive CPU cycles to hash the input.
+**Learning:** While hashing user input prevents timing attacks on secret lengths, doing so without bounds exposes the server to resource exhaustion. Any operation whose execution time scales with input size (like cryptographic hashing) must have strict input boundaries.
+**Prevention:** Always enforce an explicit input length limit (e.g., `len(key) > 256`) on secrets, passwords, or tokens BEFORE passing them to cryptographic hashing functions.
