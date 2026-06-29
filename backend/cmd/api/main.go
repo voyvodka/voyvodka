@@ -32,11 +32,12 @@ func main() {
 	defer application.Close()
 
 	server := &http.Server{
-		Addr:         ":" + application.Config.Port,
-		Handler:      application.Router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
+		Addr:              ":" + application.Config.Port,
+		Handler:           application.Router,
+		ReadHeaderTimeout: 5 * time.Second, // Prevents Slowloris DoS attacks
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	errCh := make(chan error, 1)
