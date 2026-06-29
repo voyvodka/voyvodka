@@ -307,25 +307,25 @@ export function HomePage() {
           ) : (
             <>
               <div className="gauges">
-                <div className="gauge">
-                  <div className="gauge-label">Active this quarter</div>
-                  <div className="gauge-val">{activeThisQuarter}<span>/{totalProjects}</span></div>
-                  <div className="bar"><div className="fill" style={{ width: `${activePct}%` }} /></div>
+                <div className="gauge" role="meter" aria-label="Active this quarter" aria-valuenow={activeThisQuarter} aria-valuemin={0} aria-valuemax={totalProjects} aria-valuetext={`${activeThisQuarter} out of ${totalProjects}`}>
+                  <div className="gauge-label" aria-hidden="true">Active this quarter</div>
+                  <div className="gauge-val" aria-hidden="true">{activeThisQuarter}<span>/{totalProjects}</span></div>
+                  <div className="bar" aria-hidden="true"><div className="fill" style={{ width: `${activePct}%` }} /></div>
                 </div>
-                <div className="gauge">
-                  <div className="gauge-label">Owned ratio</div>
-                  <div className="gauge-val">{ownedCount}<span>/{totalProjects}</span></div>
-                  <div className="bar"><div className="fill fill-owned" style={{ width: `${ownedPct}%` }} /></div>
+                <div className="gauge" role="meter" aria-label="Owned ratio" aria-valuenow={ownedCount} aria-valuemin={0} aria-valuemax={totalProjects} aria-valuetext={`${ownedCount} out of ${totalProjects}`}>
+                  <div className="gauge-label" aria-hidden="true">Owned ratio</div>
+                  <div className="gauge-val" aria-hidden="true">{ownedCount}<span>/{totalProjects}</span></div>
+                  <div className="bar" aria-hidden="true"><div className="fill fill-owned" style={{ width: `${ownedPct}%` }} /></div>
                 </div>
-                <div className="gauge">
-                  <div className="gauge-label">Core focus</div>
-                  <div className="gauge-val">{coreCount}<span>/{ownedCount}</span></div>
-                  <div className="bar"><div className="fill fill-core" style={{ width: `${corePct}%` }} /></div>
+                <div className="gauge" role="meter" aria-label="Core focus" aria-valuenow={coreCount} aria-valuemin={0} aria-valuemax={ownedCount} aria-valuetext={`${coreCount} out of ${ownedCount}`}>
+                  <div className="gauge-label" aria-hidden="true">Core focus</div>
+                  <div className="gauge-val" aria-hidden="true">{coreCount}<span>/{ownedCount}</span></div>
+                  <div className="bar" aria-hidden="true"><div className="fill fill-core" style={{ width: `${corePct}%` }} /></div>
                 </div>
-                <div className="gauge">
-                  <div className="gauge-label">Top lang — {topLangName}</div>
-                  <div className="gauge-val">{topLangCount}<span>/{totalProjects}</span></div>
-                  <div className="bar"><div className="fill fill-lang" style={{ width: `${topLangPct}%` }} /></div>
+                <div className="gauge" role="meter" aria-label={`Top lang — ${topLangName}`} aria-valuenow={topLangCount} aria-valuemin={0} aria-valuemax={totalProjects} aria-valuetext={`${topLangCount} out of ${totalProjects}`}>
+                  <div className="gauge-label" aria-hidden="true">Top lang — {topLangName}</div>
+                  <div className="gauge-val" aria-hidden="true">{topLangCount}<span>/{totalProjects}</span></div>
+                  <div className="bar" aria-hidden="true"><div className="fill fill-lang" style={{ width: `${topLangPct}%` }} /></div>
                 </div>
               </div>
               {(data?.contributionCalendar?.length ?? 0) > 0 && (
@@ -381,7 +381,7 @@ export function HomePage() {
       </section>
 
       <section className="projects" id="projects" tabIndex={-1}>
-        <div className="projects-header">
+        <div className="projects-header" aria-hidden="true">
           <div>#</div>
           <div>Project</div>
           <div>Purpose</div>

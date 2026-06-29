@@ -122,7 +122,7 @@ export function ProjectsPage() {
       </section>
 
       <section className="projects" id="all-projects">
-        <div className="projects-header projects-header--full">
+        <div className="projects-header projects-header--full" aria-hidden="true">
           <div>#</div>
           <div>Repository</div>
           <div>Description</div>
