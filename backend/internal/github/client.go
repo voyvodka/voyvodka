@@ -249,7 +249,8 @@ func (c *Client) GetContributionCalendar(ctx context.Context, login string) ([]d
 	}
 
 	var gqlResp graphQLResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gqlResp); err != nil {
+	// Enforce 1MB limit to prevent DoS via unbounded memory allocation
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&gqlResp); err != nil {
 		return nil, err
 	}
 
@@ -300,7 +301,8 @@ func (c *Client) getRaw(ctx context.Context, path string) (string, error) {
 		return "", fmt.Errorf("github api responded with status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	// Enforce 1MB limit to prevent DoS via unbounded memory allocation
+	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
 		return "", err
 	}
@@ -338,7 +340,8 @@ func (c *Client) getJSON(ctx context.Context, path string, out any) error {
 		return fmt.Errorf("github api responded with status %d", resp.StatusCode)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+	// Enforce 5MB limit to prevent DoS via unbounded memory allocation
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 5<<20)).Decode(out); err != nil {
 		return err
 	}
 

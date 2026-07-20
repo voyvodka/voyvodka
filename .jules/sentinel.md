@@ -55,3 +55,8 @@
 **Vulnerability:** Denial of Service (DoS) vulnerability via CPU exhaustion. The `forceRefresh` endpoint hashed the `X-API-Key` header without any length limit before comparing it. An attacker could send an extremely long string, causing the server to consume excessive CPU cycles to hash the input.
 **Learning:** While hashing user input prevents timing attacks on secret lengths, doing so without bounds exposes the server to resource exhaustion. Any operation whose execution time scales with input size (like cryptographic hashing) must have strict input boundaries.
 **Prevention:** Always enforce an explicit input length limit (e.g., `len(key) > 256`) on secrets, passwords, or tokens BEFORE passing them to cryptographic hashing functions.
+
+## 2025-05-10 - [Missing Bounded Read on External HTTP Responses (DoS Risk)]
+**Vulnerability:** Denial of Service (DoS) vulnerability via memory exhaustion. The backend HTTP client read responses from the GitHub API using `io.ReadAll` and `json.NewDecoder(resp.Body)` without any size limits.
+**Learning:** Even when consuming trusted or seemingly benign external APIs, failing to enforce read limits on the response body allows a compromised upstream or an unexpected massive payload to allocate unbounded memory, potentially crashing the application.
+**Prevention:** Always wrap external HTTP response bodies with `io.LimitReader` (e.g., `io.LimitReader(resp.Body, 1<<20)` for 1MB) before reading or decoding to enforce a strict memory boundary.
