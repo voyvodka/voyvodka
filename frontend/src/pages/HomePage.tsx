@@ -231,7 +231,7 @@ export function HomePage() {
         <li className="live-item" key={`${event.repository}-${event.createdAt}-${idx}`}>
           <strong>
             {isOwnProject ? (
-              <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))}>
+              <Link className="repo-link" to={toProjectPath(extractRepositoryName(event.repository))} aria-label={`View details for ${event.repository}`}>
                 {event.repository}
               </Link>
             ) : (
