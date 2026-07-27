@@ -14,6 +14,7 @@ import (
 )
 
 const baseURL = "https://api.github.com"
+const maxBodySize = 5 * 1024 * 1024 // 5 MB
 
 type Client struct {
 	httpClient *http.Client
@@ -249,7 +250,8 @@ func (c *Client) GetContributionCalendar(ctx context.Context, login string) ([]d
 	}
 
 	var gqlResp graphQLResponse
-	if err := json.NewDecoder(resp.Body).Decode(&gqlResp); err != nil {
+	limitReader := io.LimitReader(resp.Body, maxBodySize)
+	if err := json.NewDecoder(limitReader).Decode(&gqlResp); err != nil {
 		return nil, err
 	}
 
@@ -300,7 +302,8 @@ func (c *Client) getRaw(ctx context.Context, path string) (string, error) {
 		return "", fmt.Errorf("github api responded with status %d", resp.StatusCode)
 	}
 
-	body, err := io.ReadAll(resp.Body)
+	limitReader := io.LimitReader(resp.Body, maxBodySize)
+	body, err := io.ReadAll(limitReader)
 	if err != nil {
 		return "", err
 	}
@@ -338,7 +341,8 @@ func (c *Client) getJSON(ctx context.Context, path string, out any) error {
 		return fmt.Errorf("github api responded with status %d", resp.StatusCode)
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
+	limitReader := io.LimitReader(resp.Body, maxBodySize)
+	if err := json.NewDecoder(limitReader).Decode(out); err != nil {
 		return err
 	}
 

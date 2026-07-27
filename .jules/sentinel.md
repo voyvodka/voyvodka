@@ -55,3 +55,8 @@
 **Vulnerability:** Denial of Service (DoS) vulnerability via CPU exhaustion. The `forceRefresh` endpoint hashed the `X-API-Key` header without any length limit before comparing it. An attacker could send an extremely long string, causing the server to consume excessive CPU cycles to hash the input.
 **Learning:** While hashing user input prevents timing attacks on secret lengths, doing so without bounds exposes the server to resource exhaustion. Any operation whose execution time scales with input size (like cryptographic hashing) must have strict input boundaries.
 **Prevention:** Always enforce an explicit input length limit (e.g., `len(key) > 256`) on secrets, passwords, or tokens BEFORE passing them to cryptographic hashing functions.
+
+## 2026-06-30 - [Missing io.LimitReader on External HTTP Responses (DoS Risk)]
+**Vulnerability:** Denial of Service (DoS) vulnerability via memory exhaustion. The Go backend's GitHub client directly read external HTTP response bodies (`resp.Body`) without limits using `io.ReadAll` and `json.NewDecoder`. A malicious or compromised upstream could send an excessively large response, causing the server to allocate unbounded memory and crash.
+**Learning:** External API responses cannot be fully trusted. Reading them into memory without bounds exposes the application to DoS attacks.
+**Prevention:** Always wrap external HTTP response bodies (e.g., `resp.Body`) with `io.LimitReader` in Go before reading or JSON decoding to enforce a maximum payload size.
