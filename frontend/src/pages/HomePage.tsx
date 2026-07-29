@@ -357,17 +357,19 @@ export function HomePage() {
                 {topLanguages.map(([lang, count]) => {
                   const pct = Math.round((count / maxLangCount) * 100);
                   return (
-                    <li
-                      key={lang}
-                      role="meter"
-                      aria-label={`${lang} repository count`}
-                      aria-valuenow={count}
-                      aria-valuemin={0}
-                      aria-valuemax={maxLangCount}
-                      aria-valuetext={`${count} repositories`}
-                    >
+                    <li key={lang}>
                       <span aria-hidden="true">{lang}</span>
-                      <div className="lang-track" aria-hidden="true"><div className="lang-fill" style={{ width: `${pct}%` }} /></div>
+                      <div
+                        className="lang-track"
+                        role="meter"
+                        aria-label={`${lang} repository count`}
+                        aria-valuenow={count}
+                        aria-valuemin={0}
+                        aria-valuemax={maxLangCount}
+                        aria-valuetext={`${count} repositories`}
+                      >
+                        <div className="lang-fill" style={{ width: `${pct}%` }} />
+                      </div>
                       <span aria-hidden="true">{count} repo</span>
                     </li>
                   );
