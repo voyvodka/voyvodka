@@ -221,7 +221,7 @@ export function ProjectPage() {
           <p className="fork-origin mono">
             forked from{" "}
             {parentRepoUrl ? (
-              <a href={parentRepoUrl} target="_blank" rel="noreferrer">
+              <a href={parentRepoUrl} target="_blank" rel="noreferrer" aria-label={`View ${parentRepo} on GitHub`}>
                 {parentRepo} <span aria-hidden="true">↗</span>
               </a>
             ) : (
