@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"portfolio/backend/internal/config"
-	httpx "portfolio/backend/internal/http"
 	"portfolio/backend/internal/github"
+	httpx "portfolio/backend/internal/http"
 	"portfolio/backend/internal/service"
 	"portfolio/backend/internal/storage"
 )
