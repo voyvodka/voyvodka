@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 
 import { Logo } from "@/components/Logo";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
