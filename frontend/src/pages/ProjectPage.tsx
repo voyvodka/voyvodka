@@ -143,7 +143,7 @@ export function ProjectPage() {
         <p className="mono" role="alert">Project not found.</p>
         <div className="hero-actions" style={{ marginTop: 16 }}>
           <Link to="/" className="btn"><span aria-hidden="true">&larr;</span> Return Home</Link>
-          <Link to="/projects" className="btn"><span aria-hidden="true">&larr;</span> All Repositories</Link>
+          <Link to="/projects" className="btn" aria-label="View All Repositories"><span aria-hidden="true">&larr;</span> All Repositories</Link>
         </div>
       </div>
     </main>
@@ -201,7 +201,7 @@ export function ProjectPage() {
           <Link to="/" className="back-link" aria-label="Return Home">
             <span aria-hidden="true">&larr;</span> Home
           </Link>
-          <Link to="/projects" className="back-link">
+          <Link to="/projects" className="back-link" aria-label="View All Repositories">
             <span aria-hidden="true">&larr;</span> All Repositories
           </Link>
         </div>
