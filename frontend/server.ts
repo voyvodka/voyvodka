@@ -268,36 +268,6 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       });
     }
 
-    schemas.push({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What is your primary programming language and stack?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "C# is my production language. I build reliable backends with .NET Core — layered service architecture, clean API contracts, EF Core data flows, and predictable release cycles.",
-          },
-        },
-        {
-          "@type": "Question",
-          "name": "How do you use AI in your development workflow?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "For React, Go, Rust, and desktop work I ship with AI acceleration. The decisions and trade-offs are mine — the speed is not. I mark the distinction clearly in every project.",
-          },
-        },
-        {
-          "@type": "Question",
-          "name": "How do you handle deployment and infrastructure?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Every project goes from commit to production on self-hosted infrastructure I manage myself. Docker, Coolify, Linux — no magic between me and what runs in production.",
-          },
-        },
-      ],
-    });
   } else if (pathname === "/projects") {
     schemas.push(person);
     schemas.push(organization);
@@ -347,36 +317,6 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       });
     }
 
-    schemas.push({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "What kinds of projects has Samet Özkan built?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Samet Özkan builds backend systems with .NET Core and C#, API services, CLI tools in Go and Rust, and full-stack products. All repositories are publicly listed on this page.",
-          },
-        },
-        {
-          "@type": "Question",
-          "name": "Does Samet Özkan contribute to open source?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Yes. Both owned projects and fork-based contributions appear in this list, each labeled CORE, EXPLORE, or CONTRIB to indicate the nature of involvement.",
-          },
-        },
-        {
-          "@type": "Question",
-          "name": "What is Samet Özkan's primary programming language?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "C# is his production language. He builds reliable backends with .NET Core — layered service architecture, clean API contracts, EF Core data flows, and predictable release cycles.",
-          },
-        },
-      ],
-    });
   } else if (pathname.startsWith("/projects/") && ssrData.projectDetail) {
     const detail = ssrData.projectDetail;
     const detailUrl = `${SITE_URL}${pathname}`;
@@ -458,28 +398,6 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       });
     }
 
-    schemas.push({
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      "mainEntity": [
-        {
-          "@type": "Question",
-          "name": `What is ${detail.repository}?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": detail.description || fallbackDesc,
-          },
-        },
-        {
-          "@type": "Question",
-          "name": `Who built ${detail.repository}?`,
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": `${detail.repository} was built by Samet Özkan, a .NET backend engineer. The repository is available at ${detail.repoUrl || `https://github.com/${detail.owner}/${detail.repository}`}.`,
-          },
-        },
-      ],
-    });
   }
 
   if (schemas.length === 0) return "";
