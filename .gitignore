@@ -24,3 +24,6 @@ backend/api
 *.db
 *.db-shm
 *.db-wal
+
+# Design experiments (local only)
+temalar/
