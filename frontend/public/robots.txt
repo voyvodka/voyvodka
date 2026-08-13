@@ -6,19 +6,28 @@ Allow: /
 Content-Signal: search=yes, ai-train=yes, ai-input=yes
 Content-Usage: search=y, train-ai=y
 
-# AI / LLM crawlers — explicit acknowledgement (allow for training-neutral indexing)
+# AI / LLM crawlers — explicit acknowledgement. Only tokens the operator
+# currently publishes: a retired token reads as coverage it does not give.
+
+# OpenAI — https://developers.openai.com/api/docs/bots
 User-agent: GPTBot
 Allow: /
 User-agent: ChatGPT-User
 Allow: /
 User-agent: OAI-SearchBot
 Allow: /
+User-agent: OAI-AdsBot
+Allow: /
+
+# Anthropic — https://support.claude.com/en/articles/8896518
 User-agent: ClaudeBot
 Allow: /
-User-agent: Claude-Web
+User-agent: Claude-User
 Allow: /
-User-agent: anthropic-ai
+User-agent: Claude-SearchBot
 Allow: /
+
+# Others
 User-agent: Google-Extended
 Allow: /
 User-agent: Applebot-Extended
@@ -28,10 +37,6 @@ Allow: /
 User-agent: CCBot
 Allow: /
 User-agent: Amazonbot
-Allow: /
-User-agent: Bytespider
-Allow: /
-User-agent: cohere-ai
 Allow: /
 User-agent: DuckAssistBot
 Allow: /
