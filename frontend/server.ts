@@ -691,6 +691,93 @@ function send410(res: express.Response): void {
   );
 }
 
+const CATEGORY_LABEL: Record<ProjectSummary["category"], string> = {
+  core: "CORE — owned & maintained",
+  explore: "EXPLORE — personal R&D",
+  contrib: "CONTRIB — fork-based contributions",
+};
+
+const CATEGORY_ORDER: ProjectSummary["category"][] = ["core", "explore", "contrib"];
+
+// Browsers always send text/html in Accept, so its absence is what separates a
+// content-consuming agent from a human's tab.
+function wantsMarkdown(req: express.Request): boolean {
+  const accept = req.headers.accept ?? "";
+  return accept.includes("text/markdown") && !accept.includes("text/html");
+}
+
+function readLlmsTxt(): string {
+  for (const dir of ["dist/client", "public"]) {
+    const candidate = path.join(__dirname, dir, "llms.txt");
+    if (fs.existsSync(candidate)) return fs.readFileSync(candidate, "utf-8");
+  }
+  return "";
+}
+
+function markdownForProjectList(portfolio: PortfolioData): string {
+  const out: string[] = [`# All Repositories — ${portfolio.profile.name}`, ""];
+  out.push(
+    `${portfolio.projects.length} repositories. Each has a detail page at ${SITE_URL}/projects/<slug>, also available as markdown.`,
+    "",
+  );
+
+  for (const category of CATEGORY_ORDER) {
+    const items = portfolio.projects.filter((p) => p.category === category);
+    if (items.length === 0) continue;
+    out.push(`## ${CATEGORY_LABEL[category]}`, "");
+    for (const project of items) {
+      out.push(`### ${project.owner}/${project.repository}`, "");
+      if (project.description) out.push(project.description, "");
+      const facts = [`Language: ${project.language || "n/a"}`, `Stars: ${project.stars}`];
+      if (project.latestRelease) facts.push(`Latest release: ${project.latestRelease}`);
+      if (project.updatedAt) facts.push(`Updated: ${project.updatedAt.slice(0, 10)}`);
+      out.push(facts.join(" · "), "");
+      out.push(`- Detail: ${SITE_URL}/projects/${toSlug(project.repository)}`);
+      out.push(`- Source: ${project.repoUrl}`);
+      if (project.liveUrl) out.push(`- Live: ${project.liveUrl}`);
+      out.push("");
+    }
+  }
+  return out.join("\n");
+}
+
+function markdownForProject(detail: ProjectDetail): string {
+  const out: string[] = [`# ${detail.owner}/${detail.repository}`, ""];
+  if (detail.description) out.push(detail.description, "");
+
+  out.push(`- Category: ${CATEGORY_LABEL[detail.category]}`);
+  out.push(`- Source: ${detail.repoUrl}`);
+  if (detail.liveUrl) out.push(`- Live: ${detail.liveUrl}`);
+  if (detail.language) out.push(`- Primary language: ${detail.language}`);
+  out.push(`- Stars: ${detail.stars} · Forks: ${detail.forks} · Open issues: ${detail.openIssues}`);
+  if (detail.license) out.push(`- License: ${detail.license}`);
+  if (detail.topics?.length) out.push(`- Topics: ${detail.topics.join(", ")}`);
+  if (detail.isFork && detail.parentRepo) {
+    out.push(`- Fork of: ${detail.parentRepo} (${detail.parentRepoUrl})`);
+  }
+  if (detail.updatedAt) out.push(`- Last updated: ${detail.updatedAt.slice(0, 10)}`);
+  out.push("");
+
+  const published = (detail.releases ?? []).filter((r) => r.publishedAt);
+  if (published.length > 0) {
+    out.push("## Releases", "");
+    for (const release of published.slice(0, 10)) {
+      out.push(`- [${release.name || release.tagName}](${release.url}) — ${release.publishedAt.slice(0, 10)}`);
+    }
+    out.push("");
+  }
+
+  if (detail.readme) out.push("## README", "", detail.readme.trim(), "");
+  if (detail.changelog) out.push("## Changelog", "", detail.changelog.trim(), "");
+  return out.join("\n");
+}
+
+function sendMarkdown(res: express.Response, body: string): void {
+  res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.send(body);
+}
+
 async function createServer() {
   const app = express();
   app.disable("x-powered-by");
@@ -955,6 +1042,69 @@ ${projectUrls}
       console.error("API proxy error:", err);
       res.status(502).json({ error: "upstream unavailable" });
     }
+  });
+
+  // Markdown for Agents — an agent asking for text/markdown gets the source it
+  // would otherwise have to strip out of SSR HTML. `Vary: Accept` is set for
+  // every candidate path, markdown or not, so caches keep the two apart.
+  app.use(async (req, res, next) => {
+    const pathname = req.path;
+    const isCandidate =
+      pathname === "/" || pathname === "/projects" || pathname.startsWith("/projects/");
+    if (!isCandidate) {
+      next();
+      return;
+    }
+    res.setHeader("Vary", "Accept");
+    if (req.method !== "GET" || !wantsMarkdown(req)) {
+      next();
+      return;
+    }
+
+    if (pathname === "/") {
+      const llms = readLlmsTxt();
+      if (!llms) {
+        next();
+        return;
+      }
+      sendMarkdown(res, llms);
+      return;
+    }
+
+    const portfolio = await fetchJSON<PortfolioData>(`${API_BASE_URL}/api/portfolio-data`);
+    if (!portfolio) {
+      next();
+      return;
+    }
+
+    if (pathname === "/projects") {
+      sendMarkdown(res, markdownForProjectList(portfolio));
+      return;
+    }
+
+    const rest = pathname.replace(/^\/projects\//, "");
+    const rawSlug = rest.split("/")[0] ?? "";
+    if (rest.includes("/") || !toSlug(rawSlug)) {
+      next();
+      return;
+    }
+    if (toSlug(rawSlug) !== rawSlug) {
+      res.redirect(301, `/projects/${toSlug(rawSlug)}`);
+      return;
+    }
+    const matched = portfolio.projects.find((p) => toSlug(p.repository) === rawSlug);
+    if (!matched) {
+      next();
+      return;
+    }
+    const detail = await fetchJSON<ProjectDetail>(
+      `${API_BASE_URL}/api/project/${matched.owner}/${matched.repository}`,
+    );
+    if (!detail) {
+      next();
+      return;
+    }
+    sendMarkdown(res, markdownForProject(detail));
   });
 
   app.use("*url", async (req, res) => {

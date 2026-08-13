@@ -12,6 +12,14 @@ Samet Özkan builds production backends with .NET Core and C# (layered service a
 - LinkedIn: https://www.linkedin.com/in/samet-ozkan
 - X: https://x.com/voyvodka
 
+## Markdown for agents
+
+Every page on this site serves markdown instead of HTML when the request carries `Accept: text/markdown`:
+
+- `/` — this file
+- `/projects` — all repositories, grouped by category
+- `/projects/<slug>` — repository metadata, releases, README, and changelog
+
 ## Profile facts
 
 - Name: Samet Özkan
