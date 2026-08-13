@@ -769,6 +769,12 @@ async function createServer() {
     next();
   });
 
+  // `index: false` only stops directory-index resolution; a direct GET still
+  // serves the bare Vite shell. Must precede express.static to win.
+  app.get("/index.html", (_req, res) => {
+    res.redirect(308, "/");
+  });
+
   let vite: ViteDevServer | null = null;
   let cssLinks = "";
   let clientScriptTag = `<script type="module" src="/src/entry-client.tsx"></script>`;
@@ -1006,13 +1012,14 @@ ${projectUrls}
       next();
       return;
     }
-    if (toSlug(rawSlug) !== rawSlug) {
-      res.redirect(301, `/projects/${toSlug(rawSlug)}`);
-      return;
-    }
-    const matched = portfolio.projects.find((p) => toSlug(p.repository) === rawSlug);
+    const canonicalSlug = toSlug(rawSlug);
+    const matched = portfolio.projects.find((p) => toSlug(p.repository) === canonicalSlug);
     if (!matched) {
       next();
+      return;
+    }
+    if (canonicalSlug !== rawSlug) {
+      res.redirect(301, `/projects/${canonicalSlug}`);
       return;
     }
     const detail = await fetchJSON<ProjectDetail>(
@@ -1074,14 +1081,17 @@ ${projectUrls}
           return;
         }
 
-        if (canonicalSlug !== rawSlug) {
-          res.redirect(301, `/projects/${canonicalSlug}`);
-          return;
-        }
-
+        // Resolve before redirecting. Slugifying first would send
+        // /projects/foo.html to /projects/foo-html, which then 404s — a
+        // redirect→404 chain Search Console reports twice.
         const matched = ssrData.portfolioData.projects.find(
           (p) => toSlug(p.repository) === canonicalSlug,
         );
+
+        if (matched && canonicalSlug !== rawSlug) {
+          res.redirect(301, `/projects/${canonicalSlug}`);
+          return;
+        }
         if (!matched) {
           send404(res);
           return;
