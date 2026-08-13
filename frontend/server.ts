@@ -748,8 +748,10 @@ async function createServer() {
           "img-src 'self' data: https:",
           "style-src 'self' 'unsafe-inline'",
           "font-src 'self' data:",
-          "script-src 'self' 'unsafe-inline'",
-          "connect-src 'self'",
+          // Cloudflare Web Analytics is injected at the edge; without these two
+          // hosts the beacon is CSP-blocked and collects nothing.
+          "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+          "connect-src 'self' https://cloudflareinsights.com",
           "object-src 'none'",
         ].join("; "),
       );

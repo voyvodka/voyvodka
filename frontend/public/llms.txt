@@ -6,11 +6,11 @@ Samet Özkan builds production backends with .NET Core and C# (layered service a
 
 ## Primary links
 
-- Portfolio: https://www.sametozkan.com.tr
-- All repositories: https://www.sametozkan.com.tr/projects
-- GitHub: https://github.com/voyvodka
-- LinkedIn: https://www.linkedin.com/in/samet-ozkan
-- X: https://x.com/voyvodka
+- [Portfolio](https://www.sametozkan.com.tr): profile, KPIs, and recent build activity
+- [All repositories](https://www.sametozkan.com.tr/projects): every project and contribution, grouped by category
+- [GitHub](https://github.com/voyvodka): source for everything listed here
+- [LinkedIn](https://www.linkedin.com/in/samet-ozkan): professional profile
+- [X](https://x.com/voyvodka): short-form updates
 
 ## Markdown for agents
 
@@ -46,5 +46,6 @@ Every page on this site serves markdown instead of HTML when the request carries
 
 ## Related
 
-- Site source: https://github.com/voyvodka/voyvodka
+- [Site source](https://github.com/voyvodka/voyvodka): the monorepo behind this site
+- [Security contact](https://www.sametozkan.com.tr/.well-known/security.txt): RFC 9116 disclosure policy
 - Tech stack: React 19 + Vite + TypeScript (frontend, SSR via Express), Go 1.25 + SQLite (backend)
