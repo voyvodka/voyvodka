@@ -90,10 +90,12 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - name: Install
         run: pnpm install --frozen-lockfile
+      # license-checker's last release is 25.0.1 (2019); rseidelsohn is the
+      # maintained drop-in fork.
       - name: Block copyleft licenses
-        run: pnpm dlx license-checker --production --failOn 'GPL-3.0;AGPL-3.0;SSPL-1.0'
+        run: pnpm dlx license-checker-rseidelsohn --production --failOn 'GPL-3.0;AGPL-3.0;SSPL-1.0'
       - name: License summary (informational)
-        run: pnpm dlx license-checker --production --summary || true
+        run: pnpm dlx license-checker-rseidelsohn --production --summary || true
 
   sbom:
     name: SBOM (CycloneDX)
