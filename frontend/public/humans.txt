@@ -8,7 +8,7 @@ LinkedIn: https://www.linkedin.com/in/samet-ozkan
 X: https://x.com/voyvodka
 
 /* SITE */
-Last updated: 2026-05-06
+Last updated: 2026-08-14
 Language: English
 Doctype: HTML5
 
@@ -17,4 +17,4 @@ Frontend: React 19, Vite, TypeScript, React Router 7, SSR (Express)
 Backend: Go 1.25, SQLite (modernc.org/sqlite)
 Typography: Rajdhani, Space Mono
 Hosting: Self-hosted on Coolify (Hetzner)
-Source: https://github.com/voyvodka/portfolio
+Source: https://github.com/voyvodka/voyvodka

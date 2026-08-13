@@ -1,5 +1,10 @@
+# Both directives must sit inside this group — trailing them after the last
+# User-agent block would scope them to that one crawler. AIPREF has no
+# ai-input equivalent yet, so that axis stays on Content-Signal alone.
 User-agent: *
 Allow: /
+Content-Signal: search=yes, ai-train=yes, ai-input=yes
+Content-Usage: search=y, train-ai=y
 
 # AI / LLM crawlers — explicit acknowledgement (allow for training-neutral indexing)
 User-agent: GPTBot
@@ -34,10 +39,5 @@ User-agent: MistralAI-User
 Allow: /
 User-agent: YouBot
 Allow: /
-
-# Content-Signal — Cloudflare 2025 robots.txt extension. Policy signal for how
-# AI systems may use this site's content (separate from Allow/Disallow gates).
-# Open portfolio: classic indexing + training datasets + real-time AI retrieval.
-Content-Signal: search=yes, ai-train=yes, ai-input=yes
 
 Sitemap: https://www.sametozkan.com.tr/sitemap.xml

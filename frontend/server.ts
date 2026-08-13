@@ -723,11 +723,8 @@ async function createServer() {
     next();
   });
 
-  // Security headers — applied to every response before any route handler.
-  // HSTS is shipped without `preload` until the user explicitly opts in via the
-  // hstspreload.org directory; once submitted, add `; preload`.
-  // CSP is production-only; dev skips it so Vite HMR and the React refresh
-  // runtime keep working without needing nonces in every inline script.
+  // HSTS `preload` is inert until the apex is submitted at hstspreload.org.
+  // CSP is production-only so Vite HMR keeps working without per-script nonces.
   app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
@@ -735,7 +732,7 @@ async function createServer() {
     res.setHeader("Permissions-Policy", "interest-cohort=(), browsing-topics=()");
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
     if (isProd) {
-      res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains");
+      res.setHeader("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload");
       res.setHeader(
         "Content-Security-Policy",
         [
@@ -762,6 +759,8 @@ async function createServer() {
         `</.well-known/security.txt>; rel="security-txt"`,
       ].join(", "),
     );
+    // IETF AIPREF counterpart to the robots.txt Content-Signal directive.
+    res.setHeader("Content-Usage", "search=y, train-ai=y");
     next();
   });
 
