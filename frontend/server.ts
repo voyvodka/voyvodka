@@ -766,8 +766,6 @@ async function createServer() {
         `</.well-known/security.txt>; rel="security-txt"`,
       ].join(", "),
     );
-    // IETF AIPREF counterpart to the robots.txt Content-Signal directive.
-    res.setHeader("Content-Usage", "search=y, train-ai=y");
     next();
   });
 

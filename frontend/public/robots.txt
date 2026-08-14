@@ -1,10 +1,8 @@
-# Both directives must sit inside this group — trailing them after the last
-# User-agent block would scope them to that one crawler. AIPREF has no
-# ai-input equivalent yet, so that axis stays on Content-Signal alone.
+# Content-Signal must sit inside this group — trailing it after the last
+# User-agent block would scope it to that one crawler.
 User-agent: *
 Allow: /
 Content-Signal: search=yes, ai-train=yes, ai-input=yes
-Content-Usage: search=y, train-ai=y
 
 # AI / LLM crawlers — explicit acknowledgement. Only tokens the operator
 # currently publishes: a retired token reads as coverage it does not give.
