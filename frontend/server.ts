@@ -143,6 +143,10 @@ const SITE_URL =
 const INDEXNOW_KEY =
   process.env["INDEXNOW_KEY"] ||
   "500d876fc5ccdb101ee8b881cfbec1d8e13ec187618e8693684beef7a4f229fc";
+
+// Site launch date. Fixed on purpose: the landing and /projects schemas are
+// evergreen pages, so datePublished must not follow the cache-refresh clock.
+const SITE_PUBLISHED_AT = "2026-03-23T00:00:00Z";
 const INDEXNOW_MIN_INTERVAL_MS = 10 * 60 * 1000;
 let lastIndexNowPingAt = 0;
 let lastIndexNowSignature = "";
@@ -233,9 +237,10 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     schemas.push(organization);
     schemas.push(website);
 
-    const articleDates = portfolioUpdatedAt
-      ? { "datePublished": portfolioUpdatedAt, "dateModified": portfolioUpdatedAt }
-      : {};
+    const articleDates = {
+      "datePublished": SITE_PUBLISHED_AT,
+      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
+    };
 
     schemas.push({
       "@context": "https://schema.org",
@@ -282,9 +287,10 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       ],
     });
 
-    const projectsArticleDates = portfolioUpdatedAt
-      ? { "datePublished": portfolioUpdatedAt, "dateModified": portfolioUpdatedAt }
-      : {};
+    const projectsArticleDates = {
+      "datePublished": SITE_PUBLISHED_AT,
+      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
+    };
 
     schemas.push({
       "@context": "https://schema.org",
