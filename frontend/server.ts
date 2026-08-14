@@ -728,7 +728,8 @@ async function createServer() {
     next();
   });
 
-  // HSTS `preload` is inert until the apex is submitted at hstspreload.org.
+  // HSTS `preload` is inert: hstspreload.org needs the apex to serve it, but apex→www
+  // is a Cloudflare edge 301 — enable HSTS in CF Edge Certificates, not here.
   // CSP is production-only so Vite HMR keeps working without per-script nonces.
   app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
