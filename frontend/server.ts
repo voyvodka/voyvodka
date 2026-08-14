@@ -177,6 +177,40 @@ async function pingIndexNow(hostname: string, urls: string[], signature: string)
   }
 }
 
+// A bare "Go" or "Rust" in a schema is ambiguous. Pairing each name with a
+// canonical URL is what lets a consumer resolve it to the right entity — all
+// targets verified 200 on 2026-08-14.
+const TECH_ENTITY_URLS: Record<string, string> = {
+  ".NET Core": "https://en.wikipedia.org/wiki/.NET",
+  "C#": "https://en.wikipedia.org/wiki/C_Sharp_(programming_language)",
+  "ASP.NET": "https://en.wikipedia.org/wiki/ASP.NET",
+  "REST APIs": "https://en.wikipedia.org/wiki/REST",
+  "EF Core": "https://en.wikipedia.org/wiki/Entity_Framework",
+  "Go": "https://en.wikipedia.org/wiki/Go_(programming_language)",
+  "Rust": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+  "TypeScript": "https://en.wikipedia.org/wiki/TypeScript",
+  "JavaScript": "https://en.wikipedia.org/wiki/JavaScript",
+  "Python": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+  "Java": "https://en.wikipedia.org/wiki/Java_(programming_language)",
+  "C++": "https://en.wikipedia.org/wiki/C%2B%2B",
+  "HTML": "https://en.wikipedia.org/wiki/HTML",
+  "CSS": "https://en.wikipedia.org/wiki/CSS",
+  "Shell": "https://en.wikipedia.org/wiki/Shell_script",
+  "Docker": "https://en.wikipedia.org/wiki/Docker_(software)",
+  "SQLite": "https://en.wikipedia.org/wiki/SQLite",
+};
+
+// Unknown names still get an entity, just without a sameAs — a guessed URL is
+// worse than none, since a wrong sameAs asserts the wrong identity.
+function techEntity(name: string) {
+  const sameAs = TECH_ENTITY_URLS[name];
+  return {
+    "@type": "Thing",
+    "name": name,
+    ...(sameAs ? { "sameAs": sameAs } : {}),
+  };
+}
+
 function generateJsonLd(pathname: string, ssrData: SSRData): string {
   const schemas: object[] = [];
   const portfolioUpdatedAt = ssrData.portfolioData?.updatedAt;
@@ -230,6 +264,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "description": "Portfolio of Samet Özkan — Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
     "inLanguage": "en",
     "publisher": { "@id": `${SITE_URL}/#person` },
+    "about": { "@id": `${SITE_URL}/#person` },
   };
 
   if (pathname === "/") {
@@ -252,6 +287,8 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "image": homeOgImage,
       "url": SITE_URL,
       "mainEntityOfPage": SITE_URL,
+      "about": { "@id": `${SITE_URL}/#person` },
+      "mentions": person.knowsAbout.map(techEntity),
       ...articleDates,
     });
 
@@ -292,6 +329,12 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
     };
 
+    // Repos with no detected language come back as "", which must not become
+    // an empty-named entity.
+    const projectLanguages = [
+      ...new Set((ssrData.portfolioData?.projects ?? []).map((p) => p.language).filter(Boolean)),
+    ].sort();
+
     schemas.push({
       "@context": "https://schema.org",
       "@type": "Article",
@@ -302,6 +345,8 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "image": projectsOgImage,
       "url": `${SITE_URL}/projects`,
       "mainEntityOfPage": `${SITE_URL}/projects`,
+      "about": { "@id": `${SITE_URL}/#person` },
+      ...(projectLanguages.length > 0 ? { "mentions": projectLanguages.map(techEntity) } : {}),
       ...projectsArticleDates,
     });
 
@@ -378,6 +423,10 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "image": detailOgImage,
       "url": detailUrl,
       "mainEntityOfPage": detailUrl,
+      // The page is about the code, not about its author — point `about` at the
+      // SoftwareSourceCode emitted just above rather than at the Person.
+      "about": { "@id": `${detailUrl}#code` },
+      ...(detail.language ? { "mentions": [techEntity(detail.language)] } : {}),
       ...(datePublished ? { "datePublished": datePublished } : {}),
       ...(dateModified ? { "dateModified": dateModified } : {}),
     });
