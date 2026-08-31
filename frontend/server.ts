@@ -775,7 +775,8 @@ async function createServer() {
   // different pages with two different canonicals (duplicate-content risk).
   app.use((req, res, next) => {
     if (req.path.length > 1 && req.path.endsWith("/")) {
-      const query = req.url.slice(req.path.length);
+      const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const query = parsedUrl.search;
       const safePath = req.path.slice(0, -1).replace(/^\/+/, '/');
       res.redirect(301, safePath + query);
       return;
