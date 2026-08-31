@@ -60,3 +60,8 @@
 **Vulnerability:** Denial of Service (DoS) vulnerability via memory exhaustion. The Go backend's GitHub client directly read external HTTP response bodies (`resp.Body`) without limits using `io.ReadAll` and `json.NewDecoder`. A malicious or compromised upstream could send an excessively large response, causing the server to allocate unbounded memory and crash.
 **Learning:** External API responses cannot be fully trusted. Reading them into memory without bounds exposes the application to DoS attacks.
 **Prevention:** Always wrap external HTTP response bodies (e.g., `resp.Body`) with `io.LimitReader` in Go before reading or JSON decoding to enforce a maximum payload size.
+
+## 2026-07-02 - [Fix Query String Extraction Vulnerability in Middleware]
+**Vulnerability:** The trailing slash normalization middleware in Express incorrectly extracted the query string using `req.url.slice(req.path.length)`. `req.url` retains URL-encoded characters and can be an absolute URI, while `req.path` is decoded. Length mismatches lead to corrupted query string extraction or potential vulnerabilities like Open Redirect or cache poisoning.
+**Learning:** URL-encoded characters cause length mismatches between the raw `req.url` and decoded `req.path`. String slicing based on length is fragile and unsafe for URL processing.
+**Prevention:** Always use the WHATWG `URL` constructor (e.g., `new URL(req.url, 'http://localhost')`) to parse and extract URL components like `.search` safely, rather than relying on manual string slicing.
