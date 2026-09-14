@@ -92,19 +92,9 @@ type Tag struct {
 }
 
 type PRSearchResult struct {
-	TotalCount int               `json:"total_count"`
-	Items      []PullRequestItem `json:"items"`
-}
-
-type PullRequestItem struct {
-	Title       string      `json:"title"`
-	HTMLURL     string      `json:"html_url"`
-	CreatedAt   string      `json:"created_at"`
-	PullRequest PRMergeInfo `json:"pull_request"`
-}
-
-type PRMergeInfo struct {
-	MergedAt string `json:"merged_at"`
+	TotalCount int `json:"total_count"`
+	// ⚡ Bolt: Items field intentionally omitted to save memory/CPU during JSON unmarshaling,
+	// as we only need the TotalCount.
 }
 
 func (c *Client) GetUser(ctx context.Context, username string) (User, error) {
