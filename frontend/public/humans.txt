@@ -14,7 +14,7 @@ Doctype: HTML5
 
 /* TECHNOLOGY COLOPHON */
 Frontend: React 19, Vite, TypeScript, React Router 7, SSR (Express)
-Backend: Go 1.25, SQLite (modernc.org/sqlite)
+Backend: Go 1.27, SQLite (modernc.org/sqlite)
 Typography: Rajdhani, Space Mono
 Hosting: Self-hosted on Coolify (Hetzner)
 Source: https://github.com/voyvodka/voyvodka

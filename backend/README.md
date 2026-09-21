@@ -7,7 +7,7 @@ Minimal Go API service for portfolio data.
 - Go
 - SQLite
 
-Go version target: `1.25`
+Go version target: `1.27`
 
 ## Responsibilities
 
