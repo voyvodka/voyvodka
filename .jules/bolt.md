@@ -52,3 +52,6 @@
 ## 2025-05-19 - Redundant Date Parsing across Formatters
 **Learning:** In React components (like `ProjectPage`), the same ISO 8601 date string (e.g., `updatedAt`, `pushedAt`) is often passed independently to multiple formatting functions (e.g., an exact formatter for `title` and a relative formatter for display text). If each formatting utility calls `Date.parse(iso)` internally, the application incurs redundant parsing overhead for every field during every render cycle.
 **Action:** Always hoist `Date.parse()` out of formatting helper functions when multiple formatters act on the same date. Pre-calculate the numeric timestamp once per render block (`const updatedTime = Date.parse(updatedAt)`) and pass the resulting number directly to all required formatters.
+## 2025-05-19 - Omit Unused Fields in JSON Decoding
+**Learning:** In Go, including unused fields like large arrays (`Items`) or complex nested objects (`PullRequestItem`, `PRMergeInfo`) in struct definitions used for unmarshaling JSON payloads (`PRSearchResult`) causes the `encoding/json` decoder to allocate memory and utilize reflection for data that is never used.
+**Action:** To optimize JSON parsing performance and reduce memory allocation overhead, omit unused fields from struct definitions used for unmarshaling. The decoder will efficiently skip these unmapped fields in the payload.
