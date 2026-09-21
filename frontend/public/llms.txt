@@ -48,4 +48,4 @@ Every page on this site serves markdown instead of HTML when the request carries
 
 - [Site source](https://github.com/voyvodka/voyvodka): the monorepo behind this site
 - [Security contact](https://www.sametozkan.com.tr/.well-known/security.txt): RFC 9116 disclosure policy
-- Tech stack: React 19 + Vite + TypeScript (frontend, SSR via Express), Go 1.25 + SQLite (backend)
+- Tech stack: React 19 + Vite + TypeScript (frontend, SSR via Express), Go 1.27 + SQLite (backend)
