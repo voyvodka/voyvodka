@@ -87,24 +87,11 @@ type Release struct {
 }
 
 type Tag struct {
-	Name   string `json:"name"`
-	ZipURL string `json:"zipball_url"`
+	Name string `json:"name"`
 }
 
 type PRSearchResult struct {
-	TotalCount int               `json:"total_count"`
-	Items      []PullRequestItem `json:"items"`
-}
-
-type PullRequestItem struct {
-	Title       string      `json:"title"`
-	HTMLURL     string      `json:"html_url"`
-	CreatedAt   string      `json:"created_at"`
-	PullRequest PRMergeInfo `json:"pull_request"`
-}
-
-type PRMergeInfo struct {
-	MergedAt string `json:"merged_at"`
+	TotalCount int `json:"total_count"`
 }
 
 func (c *Client) GetUser(ctx context.Context, username string) (User, error) {
