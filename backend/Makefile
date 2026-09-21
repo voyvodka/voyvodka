@@ -7,7 +7,7 @@ DATA_VOLUME ?= portfolio_data
 .PHONY: tidy build run dev
 
 tidy:
-	docker run --rm -v "$(CURDIR):/src" -w /src golang:1.25 go mod tidy
+	docker run --rm -v "$(CURDIR):/src" -w /src golang:1.27 go mod tidy
 
 build:
 	docker build -t $(IMAGE_NAME) .
@@ -17,4 +17,4 @@ run:
 
 dev:
 	@docker ps -q --filter "publish=$(HOST_PORT)" | xargs -r docker rm -f 2>/dev/null || true
-	docker run --rm --name $(IMAGE_NAME)-dev -p $(HOST_PORT):$(CONTAINER_PORT) -v "$(CURDIR):/src" -w /src --env-file $(ENV_FILE) golang:1.25 go run ./cmd/api
+	docker run --rm --name $(IMAGE_NAME)-dev -p $(HOST_PORT):$(CONTAINER_PORT) -v "$(CURDIR):/src" -w /src --env-file $(ENV_FILE) golang:1.27 go run ./cmd/api
