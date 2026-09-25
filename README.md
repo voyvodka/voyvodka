@@ -24,7 +24,14 @@ Backend-focused software engineer building reliable products with .NET and pract
 
 - **[LumaSync](https://github.com/voyvodka/LumaSync)** — tray-first desktop Ambilight app for WS2812B strips and Philips Hue (Tauri 2 + Rust + React)
 - **[webhook-engine](https://github.com/voyvodka/webhook-engine)** — self-hosted webhook delivery with retry, HMAC signing, and a live dashboard (.NET 10 + PostgreSQL)
-- **[back-on-screen](https://github.com/voyvodka/back-on-screen)** — bring off-screen windows back when a monitor disconnects
+- **[back-on-screen](https://github.com/voyvodka/back-on-screen)** — Stremio addon that surfaces movie rereleases and IMAX returns as catalog rows
+
+### Claude Code plugins
+
+- **[claude-project-flow](https://github.com/voyvodka/claude-project-flow)** — carries a project from a rough idea to shipped code through six approval-gated phases
+- **[web-launcher](https://github.com/voyvodka/web-launcher)** — finds why a live site is not indexed, traces each reason to the file that causes it, fixes it and verifies the fix
+
+Both install from one marketplace, **[claude-plugins](https://github.com/voyvodka/claude-plugins)**: `/plugin marketplace add voyvodka/claude-plugins`
 
 ## Working Style
 
