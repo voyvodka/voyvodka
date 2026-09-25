@@ -121,7 +121,4 @@ The owner's actual checks, per commit history — don't invent others:
   (Content-Signal, RFC 8288 Link headers,
   `.well-known/http-message-signatures-directory`).
 
-Note: `frontend/nginx.conf` is a leftover from before the SSR migration
-(commit "switch runtime image from nginx to node") and is not wired into the
-Dockerfile — it does not reflect the actual security headers in production;
-`frontend/server.ts` is the only authoritative source for headers.
+`frontend/server.ts` is the only source of production security headers.
