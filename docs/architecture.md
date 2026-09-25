@@ -15,8 +15,8 @@
 
 ## Classification Rules
 
-- Owned repositories: treated as primary projects.
-- Forked repositories: treated as contribution entries.
+- Every repository the GitHub sync returns is a project; forks stay in the same list flagged `isFork` and are not
+  counted in `kpi.ownedRepositories`.
 
 ## Deployment
 
