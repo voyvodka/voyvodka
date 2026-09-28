@@ -257,7 +257,7 @@ func (s *PortfolioService) fetchProjectDetail(ctx context.Context, owner, repo s
 		IsFork:        repository.Fork,
 		ParentRepo:    repository.Parent.FullName,
 		ParentRepoURL: repository.Parent.HTMLURL,
-		Category:      categoryForRepository(repository),
+		Category:      categoryForRepository(repository.Name, repository.Fork),
 		Readme:        normalizeReadme(readme),
 		Changelog:     normalizeReadme(changelog),
 		Releases:      make([]domain.Release, 0, len(releases)),
@@ -433,7 +433,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 
 	var (
 		user                 github.User
-		repos                []github.Repository
+		repos                []github.RepositorySummary
 		events               []github.Event
 		mergedPRsCount       int
 		contributionCalendar []domain.ContributionDay
@@ -521,7 +521,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 			RepoURL:       repo.HTMLURL,
 			LiveURL:       s.resolveLiveURLFast(repo),
 			IsFork:        repo.Fork,
-			Category:      categoryForRepository(repo),
+			Category:      categoryForRepository(repo.Name, repo.Fork),
 			LatestRelease: latestReleases[repo.Owner.Login+"/"+repo.Name],
 		})
 	}
@@ -590,7 +590,7 @@ func (s *PortfolioService) refresh(ctx context.Context) (domain.PortfolioData, e
 // fetchLatestReleases fan-outs /releases?per_page=1 calls for non-fork repos
 // in parallel. Best-effort: any per-repo failure just leaves that entry blank.
 // Concurrency is bounded so we don't burst the GitHub rate limit on refresh.
-func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []github.Repository) map[string]string {
+func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []github.RepositorySummary) map[string]string {
 	const releaseFetchConcurrency = 5
 	out := make(map[string]string, len(repos))
 	if len(repos) == 0 {
@@ -635,7 +635,7 @@ func (s *PortfolioService) fetchLatestReleases(ctx context.Context, repos []gith
 	return out
 }
 
-func (s *PortfolioService) resolveLiveURLFast(repo github.Repository) string {
+func (s *PortfolioService) resolveLiveURLFast(repo github.RepositorySummary) string {
 	if repo.Fork {
 		return repo.HTMLURL
 	}
@@ -751,12 +751,12 @@ func parsePROwnerRepo(htmlURL string) (owner, repo string) {
 	return "", ""
 }
 
-func categoryForRepository(repo github.Repository) string {
-	if repo.Fork {
+func categoryForRepository(name string, fork bool) string {
+	if fork {
 		return "contrib"
 	}
 
-	name := strings.ToLower(repo.Name)
+	name = strings.ToLower(name)
 	if strings.Contains(name, "experiment") || strings.Contains(name, "demo") {
 		return "explore"
 	}

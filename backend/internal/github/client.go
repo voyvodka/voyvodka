@@ -55,6 +55,18 @@ type Repository struct {
 	Parent          Parent   `json:"parent"`
 }
 
+type RepositorySummary struct {
+	Name            string `json:"name"`
+	Owner           Owner  `json:"owner"`
+	Description     string `json:"description"`
+	Language        string `json:"language"`
+	StargazersCount int    `json:"stargazers_count"`
+	UpdatedAt       string `json:"updated_at"`
+	HTMLURL         string `json:"html_url"`
+	Homepage        string `json:"homepage"`
+	Fork            bool   `json:"fork"`
+}
+
 type Owner struct {
 	Login string `json:"login"`
 }
@@ -100,8 +112,8 @@ func (c *Client) GetUser(ctx context.Context, username string) (User, error) {
 	return data, err
 }
 
-func (c *Client) GetRepositories(ctx context.Context, username string) ([]Repository, error) {
-	var data []Repository
+func (c *Client) GetRepositories(ctx context.Context, username string) ([]RepositorySummary, error) {
+	var data []RepositorySummary
 	err := c.getJSON(ctx, fmt.Sprintf("/users/%s/repos?sort=updated&per_page=100", username), &data)
 	return data, err
 }
