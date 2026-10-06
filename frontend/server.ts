@@ -994,8 +994,15 @@ ${projectUrls}
     }
 
     const normalizedPath = checkUrl.pathname.replace(/^\/api/, "");
-    const target = `${API_BASE_URL}/api${normalizedPath}${checkUrl.search}`;
     const isProjectDetail = /^\/project\/[^/]+\/[^/]+$/.test(normalizedPath);
+    // Only the public read endpoints are proxied. Anything else is answered here, so scanner
+    // probes (/api/.env, /api/config, ...) never cost a second request to the API.
+    const isPublicRead = normalizedPath === "/portfolio-data" || isProjectDetail;
+    if (!isPublicRead || (req.method !== "GET" && req.method !== "HEAD")) {
+      res.status(404).json({ error: "not found" });
+      return;
+    }
+    const target = `${API_BASE_URL}/api${normalizedPath}${checkUrl.search}`;
     try {
       const upstream = await fetch(target, {
         method: req.method,
