@@ -13,6 +13,9 @@
 3. If stale, first requester triggers refresh with lock.
 4. Other requests receive stale data until refresh completes.
 
+The SSR server proxies only `GET`/`HEAD` on `/api/portfolio-data` and `/api/project/{owner}/{repo}`
+to the backend; every other `/api/*` request gets a local 404 and never reaches the API.
+
 ## Classification Rules
 
 - Every repository the GitHub sync returns is a project; forks stay in the same list flagged `isFork` and are not
