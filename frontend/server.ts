@@ -489,8 +489,9 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = 
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     ${canonicalUrl ? `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />` : ""}
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="mask-icon" href="/favicon.svg" color="#75a8ff" />
     <link rel="author" href="/humans.txt" />
     <meta property="og:type" content="${escapeAttr(ogType)}" />
