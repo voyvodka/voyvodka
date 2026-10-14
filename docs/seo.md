@@ -96,7 +96,9 @@ regress a rule that was already earned once.
   from GitHub answer 410 the same way (`RETIRED_PROJECT_SLUGS`, checked only
   when the slug matches no live project). Search Console listed
   `/projects/vueproject` and `/projects/webapplication` as 404s after those
-  repositories were deleted.
+  repositories were deleted. Renamed repositories are the other case: their old
+  slug answers 301 to the new one (`RENAMED_PROJECT_SLUGS`), but only while the
+  new slug is a live project, so the redirect never ends on a 404.
 - **README links and images that are repo-relative point at GitHub.** A
   README's `LICENSE` or `docs/API.md` link would otherwise resolve under
   `/projects/` and 404 (Search Console listed `/projects/LICENSE`,

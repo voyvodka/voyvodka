@@ -689,6 +689,14 @@ const RETIRED_PROJECT_SLUGS = new Set([
   "webapplication",
 ]);
 
+// Repositories renamed on GitHub. GitHub redirects the old repository URL, but
+// the sync only knows the new name, so the old /projects/<slug> would 404.
+// Old slug → new slug; answered with a 301 only while the new slug is a live
+// project, so a redirect never lands on a 404.
+const RENAMED_PROJECT_SLUGS = new Map<string, string>([
+  ["web-launcher", "site-triage"],
+]);
+
 function send410(res: express.Response): void {
   sendStatusPage(
     res,
@@ -1191,7 +1199,13 @@ ${projectUrls}
           return;
         }
         if (!matched) {
-          if (RETIRED_PROJECT_SLUGS.has(canonicalSlug)) send410(res);
+          const renamedTo = RENAMED_PROJECT_SLUGS.get(canonicalSlug);
+          if (
+            renamedTo &&
+            ssrData.portfolioData.projects.some((p) => toSlug(p.repository) === renamedTo)
+          ) {
+            res.redirect(301, `/projects/${renamedTo}`);
+          } else if (RETIRED_PROJECT_SLUGS.has(canonicalSlug)) send410(res);
           else send404(res);
           return;
         }
