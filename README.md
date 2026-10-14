@@ -29,7 +29,7 @@ Backend-focused software engineer building reliable products with .NET and pract
 ### Claude Code plugins
 
 - **[claude-project-flow](https://github.com/voyvodka/claude-project-flow)** — carries a project from a rough idea to shipped code through six approval-gated phases
-- **[web-launcher](https://github.com/voyvodka/web-launcher)** — finds why a live site is not indexed, traces each reason to the file that causes it, fixes it and verifies the fix
+- **[site-triage](https://github.com/voyvodka/site-triage)** — finds why a live site is not indexed, traces each reason to the file that causes it, fixes it and verifies the fix
 
 Both install from one marketplace, **[claude-plugins](https://github.com/voyvodka/claude-plugins)**: `/plugin marketplace add voyvodka/claude-plugins`
 
