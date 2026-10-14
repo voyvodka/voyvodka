@@ -164,6 +164,15 @@ h2 {
   font-size: 12px;
 }
 
+.hero-name {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--amber);
+  font-size: clamp(20px, 2.4vw, 28px);
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+
 .hero-text {
   max-width: 56ch;
   font-size: 19px;
