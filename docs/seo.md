@@ -92,7 +92,11 @@ regress a rule that was already earned once.
   `frontend/server.ts` (~line 776-785).
 - **`/projects/samples/README.md` returns 410, not 404** — Google indexed it
   from outside the sitemap at some point; 410 de-indexes faster.
-  `frontend/server.ts` (~line 980).
+  `frontend/server.ts` (~line 980). Project pages of repositories deleted
+  from GitHub answer 410 the same way (`RETIRED_PROJECT_SLUGS`, checked only
+  when the slug matches no live project). Search Console listed
+  `/projects/vueproject` and `/projects/webapplication` as 404s after those
+  repositories were deleted.
 - **README links and images that are repo-relative point at GitHub.** A
   README's `LICENSE` or `docs/API.md` link would otherwise resolve under
   `/projects/` and 404 (Search Console listed `/projects/LICENSE`,

@@ -668,6 +668,27 @@ function send404(res: express.Response): void {
   );
 }
 
+// Repositories deleted from GitHub. Their /projects/<slug> pages answer 410
+// so Google drops the URLs it still remembers sooner than a 404 would.
+// Checked only after the live project list, so a repo recreated under the
+// same name serves its page again without editing this list.
+const RETIRED_PROJECT_SLUGS = new Set([
+  "application",
+  "backend",
+  "desktopapp",
+  "iframe-opener",
+  "livestreamapp",
+  "menuapp",
+  "mes-admin",
+  "nativevoicechat",
+  "react-frontend",
+  "repostat",
+  "restaurant",
+  "sabo-report",
+  "vueproject",
+  "webapplication",
+]);
+
 function send410(res: express.Response): void {
   sendStatusPage(
     res,
@@ -1170,7 +1191,8 @@ ${projectUrls}
           return;
         }
         if (!matched) {
-          send404(res);
+          if (RETIRED_PROJECT_SLUGS.has(canonicalSlug)) send410(res);
+          else send404(res);
           return;
         }
 
