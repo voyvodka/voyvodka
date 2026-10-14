@@ -65,36 +65,45 @@ function demoteRawHeadings(markdown: string): string {
 
 type RepoCtx = { owner: string; repo: string; branch: string };
 
-// READMEs reference screenshots with repo-relative paths like `./assets/x.png`
-// or `assets/x.png`. They render on github.com because GitHub resolves them
-// against the repo, but on this site they 404. Rewrite <img src> to absolute
-// raw.githubusercontent.com URLs after sanitization.
+// READMEs reference screenshots and files with repo-relative paths like
+// `./assets/x.png` or `LICENSE`. They work on github.com because GitHub
+// resolves them against the repo, but here they resolve under /projects/ and
+// 404 (Search Console listed /projects/LICENSE, /projects/CONTRIBUTING.md).
+// After sanitization, point <img src> at raw.githubusercontent.com and
+// <a href> at the github.com blob view, which redirects directories to /tree/.
 function resolveRepoRelativeUrl(src: string, base: string): string {
   const trimmed = src.trim();
   if (!trimmed) return src;
-  if (/^(https?:|data:|mailto:|#)/i.test(trimmed)) return src;
+  if (/^([a-z][a-z0-9+.-]*:|#)/i.test(trimmed)) return src;
   if (trimmed.startsWith("//")) return src;
   if (trimmed.startsWith("/")) return base + trimmed.slice(1);
   if (trimmed.startsWith("./")) return base + trimmed.slice(2);
   return base + trimmed;
 }
 
-function rewriteRelativeImageSrc(html: string, ctx: RepoCtx): string {
-  if (!ctx.owner || !ctx.repo) return html;
-  const base = `https://raw.githubusercontent.com/${ctx.owner}/${ctx.repo}/${ctx.branch || "HEAD"}/`;
-  return html.replace(/<img\b[^>]*>/gi, (tag) =>
-    tag.replace(/\bsrc=(["'])([^"']+)\1/i, (_full, quote: string, src: string) => {
-      const rewritten = resolveRepoRelativeUrl(src, base);
-      return `src=${quote}${rewritten}${quote}`;
-    }),
+function rewriteAttr(html: string, tagName: string, attr: string, base: string): string {
+  const tagPattern = new RegExp(`<${tagName}\\b[^>]*>`, "gi");
+  const attrPattern = new RegExp(`(\\s)${attr}=(["'])([^"']+)\\2`, "i");
+  return html.replace(tagPattern, (tag) =>
+    tag.replace(attrPattern, (_full, space: string, quote: string, value: string) =>
+      `${space}${attr}=${quote}${resolveRepoRelativeUrl(value, base)}${quote}`,
+    ),
   );
+}
+
+function rewriteRepoRelativeUrls(html: string, ctx: RepoCtx): string {
+  if (!ctx.owner || !ctx.repo) return html;
+  const branch = ctx.branch || "HEAD";
+  const rawBase = `https://raw.githubusercontent.com/${ctx.owner}/${ctx.repo}/${branch}/`;
+  const blobBase = `https://github.com/${ctx.owner}/${ctx.repo}/blob/${branch}/`;
+  return rewriteAttr(rewriteAttr(html, "img", "src", rawBase), "a", "href", blobBase);
 }
 
 function renderMarkdown(raw: string, ctx?: RepoCtx): string {
   if (!raw) return "";
   const html = marked.parse(demoteRawHeadings(raw)) as string;
   const sanitized = DOMPurify.sanitize(html);
-  return ctx ? rewriteRelativeImageSrc(sanitized, ctx) : sanitized;
+  return ctx ? rewriteRepoRelativeUrls(sanitized, ctx) : sanitized;
 }
 
 function enrichProjectDetail(detail: ProjectDetail): ProjectDetail {
@@ -222,6 +231,9 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "@type": "Person",
     "@id": `${SITE_URL}/#person`,
     "name": ssrData.portfolioData?.profile.name || "Samet Özkan",
+    // Searchers type the name without diacritics as often as with them.
+    "alternateName": ["Samet Ozkan", "voyvodka"],
+    "description": "Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
     "jobTitle": "Backend Engineer",
     "url": SITE_URL,
     "image": homeOgImage,
@@ -272,24 +284,24 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     schemas.push(organization);
     schemas.push(website);
 
-    const articleDates = {
-      "datePublished": SITE_PUBLISHED_AT,
-      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
-    };
-
+    // The landing is a profile of one person, which Google's ProfilePage type
+    // covers ("About Me" pages are a listed use case); an Article claimed it
+    // was a piece of writing. dateCreated stays pinned for the same reason
+    // datePublished was: only dateModified may follow the sync timestamp.
     schemas.push({
       "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": "Samet Özkan — Software Engineer Portfolio & Projects",
+      "@type": "ProfilePage",
+      "@id": `${SITE_URL}/#profile`,
+      "name": "Samet Özkan — Software Engineer Portfolio & Projects",
       "description": "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.",
-      "author": { "@id": `${SITE_URL}/#person` },
-      "publisher": { "@id": `${SITE_URL}/#organization` },
-      "image": homeOgImage,
       "url": SITE_URL,
-      "mainEntityOfPage": SITE_URL,
-      "about": { "@id": `${SITE_URL}/#person` },
+      "image": homeOgImage,
+      "inLanguage": "en",
+      "isPartOf": { "@id": `${SITE_URL}/#website` },
+      "mainEntity": { "@id": `${SITE_URL}/#person` },
       "mentions": person.knowsAbout.map(techEntity),
-      ...articleDates,
+      "dateCreated": SITE_PUBLISHED_AT,
+      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
     });
 
     if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {
@@ -655,6 +667,27 @@ function send404(res: express.Response): void {
     "The page you're looking for doesn't exist or has been moved. Try one of the links below.",
   );
 }
+
+// Repositories deleted from GitHub. Their /projects/<slug> pages answer 410
+// so Google drops the URLs it still remembers sooner than a 404 would.
+// Checked only after the live project list, so a repo recreated under the
+// same name serves its page again without editing this list.
+const RETIRED_PROJECT_SLUGS = new Set([
+  "application",
+  "backend",
+  "desktopapp",
+  "iframe-opener",
+  "livestreamapp",
+  "menuapp",
+  "mes-admin",
+  "nativevoicechat",
+  "react-frontend",
+  "repostat",
+  "restaurant",
+  "sabo-report",
+  "vueproject",
+  "webapplication",
+]);
 
 function send410(res: express.Response): void {
   sendStatusPage(
@@ -1158,7 +1191,8 @@ ${projectUrls}
           return;
         }
         if (!matched) {
-          send404(res);
+          if (RETIRED_PROJECT_SLUGS.has(canonicalSlug)) send410(res);
+          else send404(res);
           return;
         }
 

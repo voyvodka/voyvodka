@@ -279,7 +279,10 @@ export function HomePage() {
       <section className="layout">
         <article className="panel">
           <div className="mono">MODE: DATA-PHYSICAL</div>
-          <h1>Build systems like a control room.</h1>
+          <h1>
+            <span className="hero-name">Samet Özkan</span>{" "}
+            Build systems like a control room.
+          </h1>
           <p className="hero-text">
             Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.
             This console reflects active projects, contributions, and build history.
