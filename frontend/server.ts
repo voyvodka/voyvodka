@@ -65,36 +65,45 @@ function demoteRawHeadings(markdown: string): string {
 
 type RepoCtx = { owner: string; repo: string; branch: string };
 
-// READMEs reference screenshots with repo-relative paths like `./assets/x.png`
-// or `assets/x.png`. They render on github.com because GitHub resolves them
-// against the repo, but on this site they 404. Rewrite <img src> to absolute
-// raw.githubusercontent.com URLs after sanitization.
+// READMEs reference screenshots and files with repo-relative paths like
+// `./assets/x.png` or `LICENSE`. They work on github.com because GitHub
+// resolves them against the repo, but here they resolve under /projects/ and
+// 404 (Search Console listed /projects/LICENSE, /projects/CONTRIBUTING.md).
+// After sanitization, point <img src> at raw.githubusercontent.com and
+// <a href> at the github.com blob view, which redirects directories to /tree/.
 function resolveRepoRelativeUrl(src: string, base: string): string {
   const trimmed = src.trim();
   if (!trimmed) return src;
-  if (/^(https?:|data:|mailto:|#)/i.test(trimmed)) return src;
+  if (/^([a-z][a-z0-9+.-]*:|#)/i.test(trimmed)) return src;
   if (trimmed.startsWith("//")) return src;
   if (trimmed.startsWith("/")) return base + trimmed.slice(1);
   if (trimmed.startsWith("./")) return base + trimmed.slice(2);
   return base + trimmed;
 }
 
-function rewriteRelativeImageSrc(html: string, ctx: RepoCtx): string {
-  if (!ctx.owner || !ctx.repo) return html;
-  const base = `https://raw.githubusercontent.com/${ctx.owner}/${ctx.repo}/${ctx.branch || "HEAD"}/`;
-  return html.replace(/<img\b[^>]*>/gi, (tag) =>
-    tag.replace(/\bsrc=(["'])([^"']+)\1/i, (_full, quote: string, src: string) => {
-      const rewritten = resolveRepoRelativeUrl(src, base);
-      return `src=${quote}${rewritten}${quote}`;
-    }),
+function rewriteAttr(html: string, tagName: string, attr: string, base: string): string {
+  const tagPattern = new RegExp(`<${tagName}\\b[^>]*>`, "gi");
+  const attrPattern = new RegExp(`(\\s)${attr}=(["'])([^"']+)\\2`, "i");
+  return html.replace(tagPattern, (tag) =>
+    tag.replace(attrPattern, (_full, space: string, quote: string, value: string) =>
+      `${space}${attr}=${quote}${resolveRepoRelativeUrl(value, base)}${quote}`,
+    ),
   );
+}
+
+function rewriteRepoRelativeUrls(html: string, ctx: RepoCtx): string {
+  if (!ctx.owner || !ctx.repo) return html;
+  const branch = ctx.branch || "HEAD";
+  const rawBase = `https://raw.githubusercontent.com/${ctx.owner}/${ctx.repo}/${branch}/`;
+  const blobBase = `https://github.com/${ctx.owner}/${ctx.repo}/blob/${branch}/`;
+  return rewriteAttr(rewriteAttr(html, "img", "src", rawBase), "a", "href", blobBase);
 }
 
 function renderMarkdown(raw: string, ctx?: RepoCtx): string {
   if (!raw) return "";
   const html = marked.parse(demoteRawHeadings(raw)) as string;
   const sanitized = DOMPurify.sanitize(html);
-  return ctx ? rewriteRelativeImageSrc(sanitized, ctx) : sanitized;
+  return ctx ? rewriteRepoRelativeUrls(sanitized, ctx) : sanitized;
 }
 
 function enrichProjectDetail(detail: ProjectDetail): ProjectDetail {
