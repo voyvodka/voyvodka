@@ -86,6 +86,12 @@ regress a rule that was already earned once.
 - **`/projects/samples/README.md` returns 410, not 404** — Google indexed it
   from outside the sitemap at some point; 410 de-indexes faster.
   `frontend/server.ts` (~line 980).
+- **README links and images that are repo-relative point at GitHub.** A
+  README's `LICENSE` or `docs/API.md` link would otherwise resolve under
+  `/projects/` and 404 (Search Console listed `/projects/LICENSE`,
+  `/projects/CONTRIBUTING.md`). `<a href>` goes to the github.com blob view,
+  `<img src>` to raw.githubusercontent.com. `frontend/server.ts`
+  (`rewriteRepoRelativeUrls`).
 - **Thin/templated fallback content is avoided.** README/Changelog/Releases
   panels synthesize a paragraph from real repo metadata (language, owner,
   topics, license, branch) instead of one generic sentence repeated across
