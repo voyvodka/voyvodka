@@ -231,6 +231,9 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "@type": "Person",
     "@id": `${SITE_URL}/#person`,
     "name": ssrData.portfolioData?.profile.name || "Samet Özkan",
+    // Searchers type the name without diacritics as often as with them.
+    "alternateName": ["Samet Ozkan", "voyvodka"],
+    "description": "Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
     "jobTitle": "Backend Engineer",
     "url": SITE_URL,
     "image": homeOgImage,
@@ -281,24 +284,24 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     schemas.push(organization);
     schemas.push(website);
 
-    const articleDates = {
-      "datePublished": SITE_PUBLISHED_AT,
-      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
-    };
-
+    // The landing is a profile of one person, which Google's ProfilePage type
+    // covers ("About Me" pages are a listed use case); an Article claimed it
+    // was a piece of writing. dateCreated stays pinned for the same reason
+    // datePublished was: only dateModified may follow the sync timestamp.
     schemas.push({
       "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": "Samet Özkan — Software Engineer Portfolio & Projects",
+      "@type": "ProfilePage",
+      "@id": `${SITE_URL}/#profile`,
+      "name": "Samet Özkan — Software Engineer Portfolio & Projects",
       "description": "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.",
-      "author": { "@id": `${SITE_URL}/#person` },
-      "publisher": { "@id": `${SITE_URL}/#organization` },
-      "image": homeOgImage,
       "url": SITE_URL,
-      "mainEntityOfPage": SITE_URL,
-      "about": { "@id": `${SITE_URL}/#person` },
+      "image": homeOgImage,
+      "inLanguage": "en",
+      "isPartOf": { "@id": `${SITE_URL}/#website` },
+      "mainEntity": { "@id": `${SITE_URL}/#person` },
       "mentions": person.knowsAbout.map(techEntity),
-      ...articleDates,
+      "dateCreated": SITE_PUBLISHED_AT,
+      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
     });
 
     if ((ssrData.portfolioData?.projects?.length ?? 0) > 0) {

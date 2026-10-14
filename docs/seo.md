@@ -8,12 +8,19 @@ regress a rule that was already earned once.
 
 ## Invariants
 
-- **`datePublished` must not rotate on the landing and `/projects` schemas.**
-  Both Article schemas pin `datePublished` to `SITE_PUBLISHED_AT` (a fixed
-  constant, `frontend/server.ts` line ~149) and let only `dateModified` track
-  the backend cache-refresh timestamp (`portfolioUpdatedAt`). Using the sync
-  timestamp for `datePublished` told crawlers the page was republished on
-  every GitHub sync. Enforced in `generateJsonLd()`, `frontend/server.ts`.
+- **The creation date must not rotate on the landing and `/projects` schemas.**
+  The landing `ProfilePage` pins `dateCreated` and the `/projects` Article pins
+  `datePublished` to `SITE_PUBLISHED_AT` (a fixed constant, `frontend/server.ts`
+  line ~149); only `dateModified` tracks the backend cache-refresh timestamp
+  (`portfolioUpdatedAt`). Using the sync timestamp told crawlers the page was
+  republished on every GitHub sync. Enforced in `generateJsonLd()`,
+  `frontend/server.ts`.
+- **The landing is a `ProfilePage` whose `mainEntity` is the Person**, not an
+  Article. Google's ProfilePage documentation lists "About Me" pages as a valid
+  use (checked 2026-10-14, page last updated 2026-09-08). The Person carries
+  `alternateName` for the diacritic-free spelling and the handle, and the
+  homepage `<h1>` opens with the name, because brand queries for the name were
+  ranking on page one but not first.
 - **Project-detail schema dates never fall back to `portfolioUpdatedAt`.**
   `SoftwareSourceCode`/`Article` dates for a project page use
   `firstRelease?.publishedAt || detail.pushedAt || detail.updatedAt`, and are
@@ -103,13 +110,14 @@ regress a rule that was already earned once.
 
 ## Known external blockers
 
-- **HSTS `preload` cannot be fully enabled from this codebase.** The header
-  sets `preload` (`frontend/server.ts` ~line 797), but `hstspreload.org`
-  requires the *apex* domain to serve the header — and the apex→www redirect
-  is generated as a 301 at the Cloudflare edge, never reaching this
-  middleware, so the apex currently serves no `Strict-Transport-Security`
-  header at all. The only fix is enabling HSTS in Cloudflare's Edge
-  Certificates dashboard; it is out of reach of this repo.
+- **HSTS on the apex comes from Cloudflare, not from this codebase.** The
+  apex→www redirect is a 301 at the Cloudflare edge and never reaches the
+  middleware that sets the header (`frontend/server.ts` ~line 807). HSTS is
+  enabled in the zone's Edge Certificates settings with the same value the
+  middleware sends (`max-age=63072000; includeSubDomains; preload`), and
+  Cloudflare's header replaces the origin's — so a change to one must be made
+  in both, or the edge silently wins. Submitting to `hstspreload.org` is a
+  separate, owner-only decision.
 
 ## Before changing SEO code
 
