@@ -218,7 +218,7 @@ export const homeCopy: Record<Locale, Copy> = {
     openProjectLogs: "Proje Kayıtlarını Aç",
     openGithub: "GitHub profilini aç",
     openLinkedin: "LinkedIn profilini aç",
-    kpi: { owned: "kendi repoları", mergedPrs: "birleşen pr", followers: "github takipçisi", lastPush: "son push" },
+    kpi: { owned: "kendi repoları", mergedPrs: "birleştirilen pr", followers: "github takipçisi", lastPush: "son push" },
     activity: { title: "Aktivite Sinyalleri", sub: "GitHub verisinden hesaplanır", unavailable: "Aktivite verisi şu an alınamıyor." },
     gauge: {
       active: "Bu çeyrekte aktif",
@@ -288,7 +288,7 @@ export const homeCopy: Record<Locale, Copy> = {
       backendOps: "Backend Operasyon",
       systems: "Sistem",
       fullStack: "Full-stack",
-      frontend: "Ön yüz",
+      frontend: "Frontend",
       deployOps: "Yayın ve Operasyon",
     },
     notes: {

@@ -11,7 +11,8 @@ regress a rule that was already earned once.
 - **The creation date must not rotate on the landing and `/projects` schemas.**
   The landing `ProfilePage` pins `dateCreated` and the `/projects` Article pins
   `datePublished` to `SITE_PUBLISHED_AT` (a fixed constant, `frontend/server.ts`
-  line ~149); only `dateModified` tracks the backend cache-refresh timestamp
+  line ~149), and the Turkish `/tr` ProfilePage pins `dateCreated` to its own
+  `TR_HOME_PUBLISHED_AT` — the day `/tr` launched, not the English launch date; only `dateModified` tracks the backend cache-refresh timestamp
   (`portfolioUpdatedAt`). Using the sync timestamp told crawlers the page was
   republished on every GitHub sync. Enforced in `generateJsonLd()`,
   `frontend/server.ts`.
