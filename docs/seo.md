@@ -11,7 +11,8 @@ regress a rule that was already earned once.
 - **The creation date must not rotate on the landing and `/projects` schemas.**
   The landing `ProfilePage` pins `dateCreated` and the `/projects` Article pins
   `datePublished` to `SITE_PUBLISHED_AT` (a fixed constant, `frontend/server.ts`
-  line ~149); only `dateModified` tracks the backend cache-refresh timestamp
+  line ~149), and the Turkish `/tr` ProfilePage pins `dateCreated` to its own
+  `TR_HOME_PUBLISHED_AT` — the day `/tr` launched, not the English launch date; only `dateModified` tracks the backend cache-refresh timestamp
   (`portfolioUpdatedAt`). Using the sync timestamp told crawlers the page was
   republished on every GitHub sync. Enforced in `generateJsonLd()`,
   `frontend/server.ts`.
@@ -79,9 +80,24 @@ regress a rule that was already earned once.
   robots.txt anyway) and read as coverage without providing any. `FAQPage`
   JSON-LD was removed site-wide since Google withdrew FAQ rich results;
   confirmed no `FAQPage` reference remains in `frontend/`.
+- **The homepage exists in English (`/`) and Turkish (`/tr`), and nothing else
+  is translated.** Brand searches for the name come from Turkey in Turkish,
+  and an English-only page was losing on language match. Both pages carry
+  the same `hreflang` set (`en` → `/`, `tr` → `/tr`, `x-default` → `/`),
+  each listing itself, and the sitemap repeats it as `xhtml:link`; Google
+  ignores pairs that don't point at each other. `<html lang>`, `og:locale`
+  and the `ProfilePage` (`/tr#profile`, `inLanguage: "tr"`) follow the page.
+  Project pages stay English-only: their main content is GitHub text, and
+  translating only the chrome around it is what Google's multilingual
+  guidance warns against. No redirect on `Accept-Language`; the switch is a
+  plain link. GitHub, LinkedIn, language and repository names carry
+  `lang="en"` so `text-transform: uppercase` under `lang="tr"` doesn't turn
+  their `i` into `İ`. `HOME_TRANSLATIONS`, `frontend/server.ts`;
+  `frontend/src/i18n/home.ts`.
 - **Known routes are whitelisted in the SSR catch-all; everything else is a
   real 404 with `noindex`.** Serving 200 + `index,follow` for unknown paths
-  reads as a soft-404 against the apex. `isKnownRoute` check,
+  reads as a soft-404 against the apex. `/tr` is the only translated route;
+  `/tr/<anything>` is a 404. `isKnownRoute` check,
   `frontend/server.ts` (~line 1117).
 - **An unreachable portfolio API is a 503, never a 200 shell.** Pages and the
   sitemap are built from `/api/portfolio-data`; when it fails, the SSR

@@ -156,6 +156,23 @@ const INDEXNOW_KEY =
 // Site launch date. Fixed on purpose: the landing and /projects schemas are
 // evergreen pages, so datePublished must not follow the cache-refresh clock.
 const SITE_PUBLISHED_AT = "2026-03-23T00:00:00Z";
+const TR_HOME_PUBLISHED_AT = "2026-10-16T00:00:00Z";
+
+// Pages that exist in both languages. Only the homepage is translated: every
+// other page's main content is GitHub text in English, and translating just the
+// chrome around it is what Google's multilingual guidance warns against.
+const HOME_TRANSLATIONS = [
+  { hreflang: "en", path: "/" },
+  { hreflang: "tr", path: "/tr" },
+] as const;
+
+function hreflangAlternates(pathname: string): { hreflang: string; href: string }[] {
+  if (!HOME_TRANSLATIONS.some((t) => t.path === pathname)) return [];
+  return [
+    ...HOME_TRANSLATIONS.map((t) => ({ hreflang: t.hreflang, href: `${SITE_URL}${t.path}` })),
+    { hreflang: "x-default", href: `${SITE_URL}/` },
+  ];
+}
 const INDEXNOW_MIN_INTERVAL_MS = 10 * 60 * 1000;
 let lastIndexNowPingAt = 0;
 let lastIndexNowSignature = "";
@@ -274,7 +291,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "url": SITE_URL,
     "name": "Samet Özkan — Portfolio",
     "description": "Portfolio of Samet Özkan — Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
-    "inLanguage": "en",
+    "inLanguage": ["en", "tr"],
     "publisher": { "@id": `${SITE_URL}/#person` },
     "about": { "@id": `${SITE_URL}/#person` },
   };
@@ -321,6 +338,27 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
         })),
       });
     }
+
+  } else if (pathname === "/tr") {
+    schemas.push(person);
+    schemas.push(organization);
+    schemas.push(website);
+
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      "@id": `${SITE_URL}/tr#profile`,
+      "name": "Samet Özkan — Backend Yazılım Mühendisi | Portfolyo ve Projeler",
+      "description": "Samet Özkan, .NET Core, Go ve Rust ile çalışan bir backend yazılım mühendisi. Temiz servis mimarisi, REST API'ler, açık kaynak projeler ve geliştirme geçmişi.",
+      "url": `${SITE_URL}/tr`,
+      "image": homeOgImage,
+      "inLanguage": "tr",
+      "isPartOf": { "@id": `${SITE_URL}/#website` },
+      "mainEntity": { "@id": `${SITE_URL}/#person` },
+      "mentions": person.knowsAbout.map(techEntity),
+      "dateCreated": TR_HOME_PUBLISHED_AT,
+      ...(portfolioUpdatedAt ? { "dateModified": portfolioUpdatedAt } : {}),
+    });
 
   } else if (pathname === "/projects") {
     schemas.push(person);
@@ -477,15 +515,17 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = "", canonicalUrl = ""): string {
+function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = "", canonicalUrl = "", pathname = ""): string {
   const ogTitle = escapeAttr(meta.ogTitle ?? meta.title);
   const ogDescription = escapeAttr(meta.ogDescription ?? meta.description);
   const ogImage = meta.ogImage ?? `${SITE_URL}/og/home.png`;
   const ogType = meta.ogType ?? "website";
   const ogUrl = canonicalUrl || SITE_URL;
   const siteName = "Samet Özkan";
+  const isTurkish = pathname === "/tr";
+  const alternates = hreflangAlternates(pathname);
   return `<!doctype html>
-<html lang="en">
+<html lang="${isTurkish ? "tr" : "en"}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -501,6 +541,7 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = 
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     ${canonicalUrl ? `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />` : ""}
+    ${alternates.map((a) => `<link rel="alternate" hreflang="${a.hreflang}" href="${escapeAttr(a.href)}" />`).join("\n    ")}
     <link rel="me" href="https://github.com/voyvodka" />
     <link rel="me" href="https://www.linkedin.com/in/samet-ozkan" />
     <link rel="me" href="https://x.com/voyvodka" />
@@ -514,7 +555,8 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = 
     <meta property="og:title" content="${ogTitle}" />
     <meta property="og:description" content="${ogDescription}" />
     <meta property="og:url" content="${escapeAttr(ogUrl)}" />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale" content="${isTurkish ? "tr_TR" : "en_US"}" />
+    ${alternates.length > 0 ? `<meta property="og:locale:alternate" content="${isTurkish ? "en_US" : "tr_TR"}" />` : ""}
     <meta property="og:image" content="${escapeAttr(ogImage)}" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
@@ -950,7 +992,10 @@ async function createServer() {
     }
     const today = new Date().toISOString().slice(0, 10);
     const rootLastmod = portfolio.updatedAt ? portfolio.updatedAt.slice(0, 10) : today;
-    const allUrls: string[] = [`${SITE_URL}/`, `${SITE_URL}/projects`];
+    const allUrls: string[] = [`${SITE_URL}/`, `${SITE_URL}/tr`, `${SITE_URL}/projects`];
+    const homeAlternates = hreflangAlternates("/")
+      .map((a) => `<xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${a.href}"/>`)
+      .join("");
     const projectUrls = (portfolio?.projects ?? [])
       .map((p) => {
         const url = `${SITE_URL}/projects/${toSlug(p.repository)}`;
@@ -960,8 +1005,9 @@ async function createServer() {
       })
       .join("\n");
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>${SITE_URL}/</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>${SITE_URL}/</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>1.0</priority>${homeAlternates}</url>
+  <url><loc>${SITE_URL}/tr</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>1.0</priority>${homeAlternates}</url>
   <url><loc>${SITE_URL}/projects</loc><lastmod>${rootLastmod}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
 ${projectUrls}
 </urlset>`;
@@ -1200,6 +1246,7 @@ ${projectUrls}
       // a soft-404 against the apex domain.
       const isKnownRoute =
         pathname === "/" ||
+        pathname === "/tr" ||
         pathname === "/projects" ||
         pathname.startsWith("/projects/");
 
@@ -1275,7 +1322,7 @@ ${projectUrls}
           res.status(didError ? 500 : 200);
           res.setHeader("Content-Type", "text/html; charset=utf-8");
           res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-          res.write(buildHead(meta, cssLinks, !isProd, jsonLd, `${SITE_URL}${pathname}`));
+          res.write(buildHead(meta, cssLinks, !isProd, jsonLd, `${SITE_URL}${pathname}`, pathname));
           stream.pipe(tailInject).pipe(res);
         },
         onShellError(err: unknown) {
