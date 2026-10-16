@@ -566,15 +566,25 @@ function toSlug(s: string): string {
 
 function sendStatusPage(
   res: express.Response,
-  status: 404 | 410,
+  status: 404 | 410 | 503,
   heading: string,
   body: string,
 ): void {
-  const title = status === 410 ? "Gone — Samet Özkan" : "Not Found — Samet Özkan";
+  const title =
+    status === 410
+      ? "Gone — Samet Özkan"
+      : status === 503
+        ? "Temporarily Unavailable — Samet Özkan"
+        : "Not Found — Samet Özkan";
   res.status(status);
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
-  res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  if (status === 503) {
+    res.setHeader("Retry-After", String(RETRY_AFTER_SECONDS));
+    res.setHeader("Cache-Control", "no-store");
+  } else {
+    res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  }
   res.end(`<!doctype html>
 <html lang="en">
   <head>
@@ -703,6 +713,20 @@ function send410(res: express.Response): void {
     410,
     "Page permanently removed",
     "This page used to exist but has been permanently removed.",
+  );
+}
+
+// Every page and the sitemap are built from the portfolio API. Without it the
+// shell rendered empty with 200 + index — a soft-404 for any /projects/<slug>,
+// retired ones included. 503 tells crawlers to retry and keep what they have.
+const RETRY_AFTER_SECONDS = 120;
+
+function send503(res: express.Response): void {
+  sendStatusPage(
+    res,
+    503,
+    "Temporarily unavailable",
+    "The project data could not be loaded right now. Please try again in a few minutes.",
   );
 }
 
@@ -913,8 +937,16 @@ async function createServer() {
 
   app.get("/sitemap.xml", async (_req, res) => {
     const portfolio = await fetchJSON<PortfolioData>(`${API_BASE_URL}/api/portfolio-data`);
+    if (!portfolio) {
+      res.status(503);
+      res.setHeader("Retry-After", String(RETRY_AFTER_SECONDS));
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.end("sitemap temporarily unavailable");
+      return;
+    }
     const today = new Date().toISOString().slice(0, 10);
-    const rootLastmod = portfolio?.updatedAt ? portfolio.updatedAt.slice(0, 10) : today;
+    const rootLastmod = portfolio.updatedAt ? portfolio.updatedAt.slice(0, 10) : today;
     const allUrls: string[] = [`${SITE_URL}/`, `${SITE_URL}/projects`];
     const projectUrls = (portfolio?.projects ?? [])
       .map((p) => {
@@ -1176,7 +1208,12 @@ ${projectUrls}
       const ssrData: SSRData = {};
       ssrData.portfolioData = await fetchJSON(`${API_BASE_URL}/api/portfolio-data`) ?? undefined;
 
-      if (pathname.startsWith("/projects/") && ssrData.portfolioData) {
+      if (!ssrData.portfolioData) {
+        send503(res);
+        return;
+      }
+
+      if (pathname.startsWith("/projects/")) {
         const rest = pathname.replace(/^\/projects\//, "");
         const rawSlug = rest.split("/")[0] ?? "";
         const hasExtraSegments = rest.includes("/");

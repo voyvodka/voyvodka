@@ -83,6 +83,14 @@ regress a rule that was already earned once.
   real 404 with `noindex`.** Serving 200 + `index,follow` for unknown paths
   reads as a soft-404 against the apex. `isKnownRoute` check,
   `frontend/server.ts` (~line 1117).
+- **An unreachable portfolio API is a 503, never a 200 shell.** Pages and the
+  sitemap are built from `/api/portfolio-data`; when it fails, the SSR
+  catch-all and `/sitemap.xml` answer `503` + `Retry-After` + `no-store`
+  (pages also `noindex`). The old fallback rendered an empty shell with
+  200 + `index,follow` for every `/projects/<slug>` — retired and nonexistent
+  slugs included — and a sitemap listing only `/` and `/projects`. A short 503
+  makes Google retry and keep what it has indexed. `send503()` and the
+  sitemap guard, `frontend/server.ts`.
 - **Unsafe HTTP methods are rejected before the SSR catch-all.** Only `GET`,
   `HEAD`, `POST` pass; others get `405` + `Allow` instead of falling through
   to 200 HTML (cache-poisoning / log-pollution risk). `frontend/server.ts`
