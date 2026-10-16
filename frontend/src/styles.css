@@ -83,6 +83,7 @@ a {
 }
 
 .header {
+  min-width: 0;
   border: 1px solid var(--line);
   background: linear-gradient(to bottom, var(--panel-2), var(--panel));
   padding: 14px 18px;

@@ -45,6 +45,18 @@ export function getPageMeta(
     };
   }
 
+  if (pathname === "/tr") {
+    return {
+      title: "Samet Özkan — Backend Yazılım Mühendisi | Portfolyo ve Projeler",
+      description:
+        "Samet Özkan, .NET Core, Go ve Rust ile çalışan bir backend yazılım mühendisi. Temiz servis mimarisi, REST API'ler, açık kaynak projeler ve geliştirme geçmişi.",
+      ogTitle: "Samet Özkan — Backend Yazılım Mühendisi",
+      ogDescription: "Backend yazılım mühendisi — .NET Core, Go, Rust. Self-hosted teslimat. Portfolyo, projeler ve geliştirme geçmişi.",
+      ogImage: `${SITE_URL}/og/home.png`,
+      ogType: "profile",
+    };
+  }
+
   if (pathname === "/projects") {
     const count = portfolioData?.projects?.length ?? 0;
     const description = count > 0
