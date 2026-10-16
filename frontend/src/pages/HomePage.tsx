@@ -106,7 +106,7 @@ function caseApproach(p: ProjectSummary, locale: Locale) {
   if (p.language === "Go") return t.approach.go;
   if (p.language === "Swift") return t.approach.swift;
   if (p.language === "TypeScript" || p.language === "JavaScript") return t.approach.typescript;
-  return t.approach.other(p.language ?? t.cases.multiLanguage);
+  return t.approach.other(p.language || t.cases.multiLanguage);
 }
 
 export function HomePage() {
