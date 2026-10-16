@@ -51,7 +51,7 @@ export function getPageMeta(
       description:
         "Samet Özkan, .NET Core, Go ve Rust ile çalışan bir backend yazılım mühendisi. Temiz servis mimarisi, REST API'ler, açık kaynak projeler ve geliştirme geçmişi.",
       ogTitle: "Samet Özkan — Backend Yazılım Mühendisi",
-      ogDescription: "Backend yazılım mühendisi — .NET Core, Go, Rust. Self-hosted teslimat. Portfolyo, projeler ve geliştirme geçmişi.",
+      ogDescription: "Backend yazılım mühendisi — .NET Core, Go, Rust. Projeler, katkılar ve geliştirme geçmişi.",
       ogImage: `${SITE_URL}/og/home.png`,
       ogType: "profile",
     };
