@@ -133,6 +133,9 @@ regress a rule that was already earned once.
   panels synthesize a paragraph from real repo metadata (language, owner,
   topics, license, branch) instead of one generic sentence repeated across
   many pages, which reads as thin content to Google's quality model.
+- **The Person's `homeLocation` is the country only (`TR`), on purpose.**
+  It backs up the LinkedIn profile Google pairs with this site; the owner
+  chose not to publish a city.
 - **Every profile in the Person `sameAs` is also a `rel="me"` link.** The
   head carries `<link rel="me">` for GitHub, LinkedIn and X, and the visible
   GitHub/LinkedIn buttons use `rel="me noreferrer"`, so the identity claim in
