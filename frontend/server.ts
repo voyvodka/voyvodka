@@ -252,6 +252,11 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "alternateName": ["Samet Ozkan", "voyvodka"],
     "description": "Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
     "jobTitle": "Backend Engineer",
+    "homeLocation": {
+      "@type": "Place",
+      "name": "Türkiye",
+      "address": { "@type": "PostalAddress", "addressCountry": "TR" },
+    },
     "url": SITE_URL,
     "image": homeOgImage,
     "sameAs": [
