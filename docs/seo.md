@@ -117,6 +117,12 @@ regress a rule that was already earned once.
   panels synthesize a paragraph from real repo metadata (language, owner,
   topics, license, branch) instead of one generic sentence repeated across
   many pages, which reads as thin content to Google's quality model.
+- **Every profile in the Person `sameAs` is also a `rel="me"` link.** The
+  head carries `<link rel="me">` for GitHub, LinkedIn and X, and the visible
+  GitHub/LinkedIn buttons use `rel="me noreferrer"`, so the identity claim in
+  the schema is matched by the page's own links. Add or remove a profile in
+  both places together. `buildHead()`, `frontend/server.ts`;
+  `frontend/src/pages/HomePage.tsx`.
 - **Project H1 is the repo name only, not `owner/repo`.** All owned projects
   share one owner, so the prefix made every H1 start identically — a
   duplicate-content signal. Owner still appears in the meta row, breadcrumb

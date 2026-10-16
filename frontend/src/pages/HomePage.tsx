@@ -289,8 +289,8 @@ export function HomePage() {
           </p>
           <div className="hero-actions">
             <a className="btn" href="#projects">Open Project Logs <span aria-hidden="true">↓</span></a>
-            <a className="btn" href={githubUrl} target="_blank" rel="noreferrer" aria-label="Open GitHub profile">GitHub <span aria-hidden="true">↗</span></a>
-            <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer" aria-label="Open LinkedIn profile">LinkedIn <span aria-hidden="true">↗</span></a>
+            <a className="btn" href={githubUrl} target="_blank" rel="me noreferrer" aria-label="Open GitHub profile">GitHub <span aria-hidden="true">↗</span></a>
+            <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="me noreferrer" aria-label="Open LinkedIn profile">LinkedIn <span aria-hidden="true">↗</span></a>
           </div>
           <div className="kpis">
             <div className="kpi"><b>{data?.kpi.ownedRepositories ?? "--"}</b><span className="mono">owned repositories</span></div>
@@ -538,8 +538,8 @@ export function HomePage() {
           <div className="mono">Open to .NET backend and MVC full-stack roles. Interested in product teams that value practical engineering and AI-accelerated delivery.</div>
         </div>
         <div className="hero-actions">
-          <a className="btn" href={githubUrl} target="_blank" rel="noreferrer" aria-label="Open GitHub profile">GitHub <span aria-hidden="true">↗</span></a>
-          <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="noreferrer" aria-label="Open LinkedIn profile">LinkedIn <span aria-hidden="true">↗</span></a>
+          <a className="btn" href={githubUrl} target="_blank" rel="me noreferrer" aria-label="Open GitHub profile">GitHub <span aria-hidden="true">↗</span></a>
+          <a className="btn" href="https://www.linkedin.com/in/samet-ozkan" target="_blank" rel="me noreferrer" aria-label="Open LinkedIn profile">LinkedIn <span aria-hidden="true">↗</span></a>
         </div>
       </section>
     </main>

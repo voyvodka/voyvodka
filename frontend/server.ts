@@ -501,6 +501,9 @@ function buildHead(meta: PageMeta, cssLinks: string, devMode: boolean, jsonLd = 
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
     ${canonicalUrl ? `<link rel="canonical" href="${escapeAttr(canonicalUrl)}" />` : ""}
+    <link rel="me" href="https://github.com/voyvodka" />
+    <link rel="me" href="https://www.linkedin.com/in/samet-ozkan" />
+    <link rel="me" href="https://x.com/voyvodka" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
