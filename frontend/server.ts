@@ -205,9 +205,11 @@ async function pingIndexNow(hostname: string, urls: string[], signature: string)
 
 // A bare "Go" or "Rust" in a schema is ambiguous. Pairing each name with a
 // canonical URL is what lets a consumer resolve it to the right entity — all
-// targets verified 200 on 2026-08-14.
+// targets verified 200 on 2026-11-22.
 const TECH_ENTITY_URLS: Record<string, string> = {
-  ".NET Core": "https://en.wikipedia.org/wiki/.NET",
+  ".NET": "https://en.wikipedia.org/wiki/.NET",
+  "SQL Server": "https://en.wikipedia.org/wiki/Microsoft_SQL_Server",
+  "PostgreSQL": "https://en.wikipedia.org/wiki/PostgreSQL",
   "C#": "https://en.wikipedia.org/wiki/C_Sharp_(programming_language)",
   "ASP.NET": "https://en.wikipedia.org/wiki/ASP.NET",
   "REST APIs": "https://en.wikipedia.org/wiki/REST",
@@ -250,8 +252,8 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "name": ssrData.portfolioData?.profile.name || "Samet Özkan",
     // Searchers type the name without diacritics as often as with them.
     "alternateName": ["Samet Ozkan", "voyvodka"],
-    "description": "Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
-    "jobTitle": "Backend Engineer",
+    "description": "Software developer from Turkey. Builds backends with .NET and ships products with AI coding agents.",
+    "jobTitle": "Software Developer",
     "homeLocation": {
       "@type": "Place",
       "name": "Türkiye",
@@ -264,7 +266,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "https://www.linkedin.com/in/samet-ozkan",
       "https://x.com/voyvodka",
     ],
-    "knowsAbout": [".NET Core", "C#", "ASP.NET", "REST APIs", "EF Core", "Go", "Rust", "TypeScript", "Docker", "SQLite"],
+    "knowsAbout": [".NET", "C#", "ASP.NET", "REST APIs", "EF Core", "SQL Server", "PostgreSQL", "Go", "Rust", "TypeScript", "Docker", "SQLite"],
   };
 
   const organization = {
@@ -295,7 +297,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
     "@id": `${SITE_URL}/#website`,
     "url": SITE_URL,
     "name": "Samet Özkan — Portfolio",
-    "description": "Portfolio of Samet Özkan — Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence.",
+    "description": "Portfolio of Samet Özkan — software developer. .NET backends, shipped with AI coding agents.",
     "inLanguage": ["en", "tr"],
     "publisher": { "@id": `${SITE_URL}/#person` },
     "about": { "@id": `${SITE_URL}/#person` },
@@ -315,7 +317,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "@type": "ProfilePage",
       "@id": `${SITE_URL}/#profile`,
       "name": "Samet Özkan — Software Engineer Portfolio & Projects",
-      "description": "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.",
+      "description": "Samet Özkan — software developer. .NET backends, shipped with AI coding agents. Portfolio of projects, contributions, and build history.",
       "url": SITE_URL,
       "image": homeOgImage,
       "inLanguage": "en",
@@ -331,7 +333,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
         "@context": "https://schema.org",
         "@type": "ItemList",
         "name": "Projects by Samet Özkan",
-        "description": "Open source projects and contributions by Samet Özkan, .NET backend engineer.",
+        "description": "Open source projects and contributions by Samet Özkan, software developer.",
         "url": `${SITE_URL}/projects`,
         "itemListElement": ssrData.portfolioData!.projects.slice(0, 10).map((project, idx) => ({
           "@type": "ListItem",
@@ -353,8 +355,8 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "@context": "https://schema.org",
       "@type": "ProfilePage",
       "@id": `${SITE_URL}/tr#profile`,
-      "name": "Samet Özkan — Backend Yazılım Mühendisi | Portfolyo ve Projeler",
-      "description": "Samet Özkan, .NET Core, Go ve Rust ile çalışan bir backend yazılım mühendisi. Temiz servis mimarisi, REST API'ler, açık kaynak projeler ve geliştirme geçmişi.",
+      "name": "Samet Özkan — Yazılım Geliştirici | Portfolyo ve Projeler",
+      "description": "Samet Özkan, .NET ile backend geliştiren ve ürünleri yapay zekâ kodlama ajanlarıyla çıkaran bir yazılım geliştirici. Açık kaynak projeler, katkılar ve geliştirme geçmişi.",
       "url": `${SITE_URL}/tr`,
       "image": homeOgImage,
       "inLanguage": "tr",
@@ -394,7 +396,7 @@ function generateJsonLd(pathname: string, ssrData: SSRData): string {
       "@context": "https://schema.org",
       "@type": "Article",
       "headline": "All Repositories — Samet Özkan | Projects & Contributions",
-      "description": "Complete list of open source projects and contributions by Samet Özkan, .NET backend engineer.",
+      "description": "Complete list of open source projects and contributions by Samet Özkan, software developer.",
       "author": { "@id": `${SITE_URL}/#person` },
       "publisher": { "@id": `${SITE_URL}/#organization` },
       "image": projectsOgImage,
@@ -1046,7 +1048,7 @@ ${projectUrls}
         input = {
           kind: "home",
           title: "Samet Özkan",
-          subtitle: "Backend engineer · .NET Core · Go · Rust · Self-hosted delivery",
+          subtitle: "Software developer · .NET · AI coding agents",
           metaChips: chips,
         };
       } else if (slug === "projects") {

@@ -505,12 +505,12 @@ export function HomePage() {
             <h2>{t.stack.title}</h2>
             <span className="mono">{t.stack.sub}</span>
           </div>
-          <div className="stack-row"><span className="mono">{t.stack.primary}</span><div className="chips"><span className="chip">.NET Core</span><span className="chip">ASP.NET MVC</span><span className="chip">C#</span><span className="chip">REST APIs</span><span className="chip">EF Core</span></div></div>
-          <div className="stack-row"><span className="mono">{t.stack.backendOps}</span><div className="chips"><span className="chip">SQL Server</span><span className="chip">SQLite</span><span className="chip">Redis</span><span className="chip">Caching</span><span className="chip">Service Layers</span></div></div>
-          <div className="stack-row"><span className="mono">{t.stack.systems}</span><div className="chips"><span className="chip">Go</span><span className="chip">Rust</span><span className="chip">Tauri</span></div></div>
-          <div className="stack-row"><span className="mono">{t.stack.fullStack}</span><div className="chips"><span className="chip">Razor</span><span className="chip">MVC Views</span><span className="chip">JavaScript</span><span className="chip">jQuery</span></div></div>
-          <div className="stack-row"><span className="mono">{t.stack.frontend}</span><div className="chips"><span className="chip">React</span><span className="chip">TypeScript</span><span className="chip">Vite</span></div></div>
-          <div className="stack-row"><span className="mono">{t.stack.deployOps}</span><div className="chips"><span className="chip">Docker</span><span className="chip">Linux</span><span className="chip">Coolify</span><span className="chip">Git</span><span className="chip">Self-hosted</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.primary}</span><div className="chips"><span className="chip">C#</span><span className="chip">.NET</span><span className="chip">ASP.NET Core (MVC, Web API)</span><span className="chip">EF Core</span><span className="chip">REST APIs</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.data}</span><div className="chips"><span className="chip">SQL Server</span><span className="chip">MySQL</span><span className="chip">PostgreSQL</span><span className="chip">RabbitMQ</span><span className="chip">Elasticsearch</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.web}</span><div className="chips"><span className="chip">Razor</span><span className="chip">JavaScript</span><span className="chip">jQuery</span><span className="chip">React</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.shipped}</span><div className="chips"><span className="chip">Go</span><span className="chip">TypeScript</span><span className="chip">Next.js</span><span className="chip">Swift</span><span className="chip">Kotlin</span><span className="chip">Rust</span><span className="chip">Redis</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.agents}</span><div className="chips"><span className="chip">Claude Code</span><span className="chip">Codex</span><span className="chip">Cursor</span><span className="chip">GitHub Copilot</span></div></div>
+          <div className="stack-row"><span className="mono">{t.stack.deployOps}</span><div className="chips"><span className="chip">Docker</span><span className="chip">GitHub Actions</span><span className="chip">AWS (S3)</span><span className="chip">Cloudflare</span><span className="chip">Coolify</span><span className="chip">Linux</span></div></div>
         </article>
       </section>
 

@@ -23,5 +23,12 @@ to the backend; every other `/api/*` request gets a local 404 and never reaches 
 
 ## Deployment
 
-- Self-hosted: separate frontend/backend services.
-- Backend uses persistent volume for SQLite.
+- Self-hosted on Coolify (Hetzner), behind Cloudflare. Two services, each built from its own Dockerfile:
+  `backend/` (Go API, port 8081) and `frontend/` (SSR server, port 3000).
+- The backend keeps SQLite on a persistent volume (`SQLITE_PATH`, `/app/data/portfolio.db` in production).
+- Runtime settings are environment variables set in Coolify; `backend/.env.example` and
+  `frontend/.env.example` list the names. `GITHUB_TOKEN` and `INTERNAL_REFRESH_API_KEY` exist only there.
+- A repository webhook (push events) calls Coolify, which rebuilds and redeploys. Its secret lives in
+  Coolify and cannot be read back from GitHub: if the webhook is recreated, generate a new secret and
+  enter it on both sides.
+- `main` requires the CI checks "Frontend — typecheck + build" and "Backend — build + test".
