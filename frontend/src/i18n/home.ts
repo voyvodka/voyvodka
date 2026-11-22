@@ -69,7 +69,7 @@ type Copy = {
     other: (language: string) => string;
   };
   timeline: { title: string; sub: string; unavailable: string; fallback: string };
-  stack: { title: string; sub: string; primary: string; backendOps: string; systems: string; fullStack: string; frontend: string; deployOps: string };
+  stack: { title: string; sub: string; primary: string; data: string; web: string; shipped: string; agents: string; deployOps: string };
   notes: { title: string; sub: string; items: { title: string; body: string }[] };
   contact: { title: string; body: string };
   ago: (hours: number, days: number) => string;
@@ -103,7 +103,7 @@ export const homeCopy: Record<Locale, Copy> = {
     switchLang: { href: "/tr", label: "TR", aria: "Türkçe sürüm", hrefLang: "tr" },
     heroTagline: "Build systems like a control room.",
     heroText:
-      "Backend engineer focused on .NET Core, clean service architecture, and reliable shipping cadence. This console reflects active projects, contributions, and build history.",
+      "Software developer from Turkey. I build backends with .NET and ship products with AI coding agents. This console reflects active projects, contributions, and build history.",
     openProjectLogs: "Open Project Logs",
     openGithub: "Open GitHub profile",
     openLinkedin: "Open LinkedIn profile",
@@ -174,10 +174,10 @@ export const homeCopy: Record<Locale, Copy> = {
       title: "Stack Matrix",
       sub: "Grouped by role",
       primary: "Primary",
-      backendOps: "Backend Ops",
-      systems: "Systems",
-      fullStack: "Full-stack",
-      frontend: "Frontend",
+      data: "Data & Messaging",
+      web: "Web",
+      shipped: "Shipped with Agents",
+      agents: "Coding Agents",
       deployOps: "Deploy & Ops",
     },
     notes: {
@@ -185,22 +185,22 @@ export const homeCopy: Record<Locale, Copy> = {
       sub: "How I work",
       items: [
         {
-          title: "01 / C# is my production language",
-          body: "I build reliable backends with .NET Core — layered service architecture, clean API contracts, EF Core data flows, and predictable release cycles. This is where I operate without guardrails.",
+          title: "01 / .NET is home",
+          body: "Four years of .NET backends for logistics, ERP and e-commerce: APIs, marketplace and ERP integrations, background jobs.",
         },
         {
-          title: "02 / AI multiplies output, not replaces judgment",
-          body: "For React, Go, Rust, and desktop work I ship with AI acceleration. The decisions and trade-offs are mine — the speed is not. I mark the distinction clearly in every project.",
+          title: "02 / Agents write, I decide",
+          body: "Since August 2025 I build with AI coding agents. I set the task and the project rules; no change ships without tests and review.",
         },
         {
-          title: "03 / Code, deploy, own it",
-          body: "Every project here goes from commit to production on self-hosted infrastructure I manage myself. Docker, Coolify, Linux — no magic between me and what runs in production.",
+          title: "03 / Risky steps wait for a human",
+          body: "Deploys, store releases and secrets sit behind automated guards and an explicit human approval.",
         },
       ],
     },
     contact: {
       title: "Ready for next mission.",
-      body: "Open to .NET backend and MVC full-stack roles. Interested in product teams that value practical engineering and AI-accelerated delivery.",
+      body: "Open to .NET backend and agentic coding roles. Co-founder at Palmye LLC, building a travel eSIM app.",
     },
     ago: (hours, days) => (days < 1 ? `${Math.max(1, hours)}h ago` : `${days}d ago`),
     event: EN_EVENT,
@@ -212,9 +212,9 @@ export const homeCopy: Record<Locale, Copy> = {
     portfolio: "Portfolyo",
     nav: { projects: "Projeler", cases: "Öne Çıkanlar", timeline: "Son Çalışmalar", contact: "İletişim", navLabel: "Ana menü" },
     switchLang: { href: "/", label: "EN", aria: "English version", hrefLang: "en" },
-    heroTagline: "Backend yazılım mühendisi.",
+    heroTagline: "Yazılım geliştirici.",
     heroText:
-      ".NET Core ile servis mimarisi, REST API'ler ve düzenli yayın süreçleri üzerine çalışıyorum. Bu sayfa GitHub'daki projelerimi, katkılarımı ve geliştirme geçmişimi gösteriyor.",
+      ".NET ile backend geliştiriyorum, ürünleri yapay zekâ kodlama ajanlarıyla çıkarıyorum. Bu sayfa GitHub'daki projelerimi, katkılarımı ve geliştirme geçmişimi gösteriyor.",
     openProjectLogs: "Projeleri gör",
     openGithub: "GitHub profilini aç",
     openLinkedin: "LinkedIn profilini aç",
@@ -285,10 +285,10 @@ export const homeCopy: Record<Locale, Copy> = {
       title: "Teknolojiler",
       sub: "Kullanım alanına göre",
       primary: "Ana",
-      backendOps: "Veri ve önbellek",
-      systems: "Sistem",
-      fullStack: "Full-stack",
-      frontend: "Frontend",
+      data: "Veri ve mesajlaşma",
+      web: "Web",
+      shipped: "Ajanlarla yayına çıkardıklarım",
+      agents: "Kodlama ajanları",
       deployOps: "Deploy ve sunucu",
     },
     notes: {
@@ -296,22 +296,22 @@ export const homeCopy: Record<Locale, Copy> = {
       sub: "Kısa notlar",
       items: [
         {
-          title: "01 / Asıl işim C# ve .NET",
-          body: "Production'daki backend'leri .NET Core ile geliştiriyorum: katmanlı servis mimarisi, net API sözleşmeleri, EF Core ile veri erişimi ve düzenli sürümler. En çok deneyimim olan alan bu.",
+          title: "01 / Asıl işim .NET",
+          body: "Dört yıldır lojistik, ERP ve e-ticaret için .NET ile backend geliştiriyorum: API'ler, pazaryeri ve ERP entegrasyonları, arka plan işleri.",
         },
         {
-          title: "02 / Yapay zekâyı hız için kullanıyorum",
-          body: "React, Go, Rust ve masaüstü projelerinde yapay zekâ araçlarıyla daha hızlı ilerliyorum. Mimari kararlar ve ödünleşimler bana ait; hangi projede bu araçları kullandığımı açıkça yazıyorum.",
+          title: "02 / Ajanlar yazar, karar benim",
+          body: "Ağustos 2025'ten beri yapay zekâ kodlama ajanlarıyla geliştiriyorum. İşi ve proje kurallarını ben belirliyorum; test ve review'dan geçmeyen değişiklik yayına çıkmaz.",
         },
         {
-          title: "03 / Yayına alma ve bakım da bende",
-          body: "Buradaki projeleri commit'ten production'a kendi yönettiğim sunucularda çıkarıyorum. Docker, Coolify ve Linux ile kurulumu, yayına almayı ve bakımı kendim yapıyorum.",
+          title: "03 / Riskli adımlar insan onayı bekler",
+          body: "Yayına alma, mağaza sürümü ve gizli anahtarlar gibi adımlar otomatik korumalara ve açık bir insan onayına bağlı.",
         },
       ],
     },
     contact: {
       title: "Yeni fırsatlara açığım.",
-      body: ".NET backend ve MVC full-stack pozisyonlarıyla ilgileniyorum. Pratik mühendisliğe ve yapay zekâ destekli geliştirmeye önem veren ekiplerle çalışmak istiyorum.",
+      body: ".NET backend ve ajanlarla yazılım geliştirme (agentic coding) rollerine açığım. Palmye LLC'nin kurucu ortağıyım; bir seyahat eSIM uygulaması geliştiriyoruz.",
     },
     ago: (hours, days) => (days < 1 ? `${Math.max(1, hours)} saat önce` : `${days} gün önce`),
     event: (type) => TR_EVENTS[type] ?? EN_EVENT(type),

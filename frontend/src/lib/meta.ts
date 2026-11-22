@@ -10,7 +10,7 @@ export type PageMeta = {
 };
 
 const DEFAULT_DESCRIPTION =
-  "Samet Özkan — .NET backend engineer. Clean service architecture, REST APIs, and reliable delivery. Portfolio of projects, contributions, and build history.";
+  "Samet Özkan — software developer. .NET backends, shipped with AI coding agents. Portfolio of projects, contributions, and build history.";
 
 const SITE_URL = "https://www.sametozkan.com.tr";
 
@@ -36,10 +36,10 @@ export function getPageMeta(
 ): PageMeta {
   if (pathname === "/") {
     return {
-      title: "Samet Özkan — Software Engineer Portfolio & Projects",
+      title: "Samet Özkan — Software Developer Portfolio & Projects",
       description: DEFAULT_DESCRIPTION,
-      ogTitle: "Samet Özkan — Backend Engineer",
-      ogDescription: "Backend engineer — .NET Core, Go, Rust. Self-hosted delivery. Portfolio, projects, and build history.",
+      ogTitle: "Samet Özkan — Software Developer",
+      ogDescription: "Software developer — .NET backends, shipped with AI coding agents. Projects, contributions, and build history.",
       ogImage: `${SITE_URL}/og/home.png`,
       ogType: "profile",
     };
@@ -47,11 +47,11 @@ export function getPageMeta(
 
   if (pathname === "/tr") {
     return {
-      title: "Samet Özkan — Backend Yazılım Mühendisi | Portfolyo ve Projeler",
+      title: "Samet Özkan — Yazılım Geliştirici | Portfolyo ve Projeler",
       description:
-        "Samet Özkan, .NET Core, Go ve Rust ile çalışan bir backend yazılım mühendisi. Temiz servis mimarisi, REST API'ler, açık kaynak projeler ve geliştirme geçmişi.",
-      ogTitle: "Samet Özkan — Backend Yazılım Mühendisi",
-      ogDescription: "Backend yazılım mühendisi — .NET Core, Go, Rust. Projeler, katkılar ve geliştirme geçmişi.",
+        "Samet Özkan, .NET ile backend geliştiren ve ürünleri yapay zekâ kodlama ajanlarıyla çıkaran bir yazılım geliştirici. Açık kaynak projeler, katkılar ve geliştirme geçmişi.",
+      ogTitle: "Samet Özkan — Yazılım Geliştirici",
+      ogDescription: "Yazılım geliştirici — .NET backend, yapay zekâ kodlama ajanları. Projeler, katkılar ve geliştirme geçmişi.",
       ogImage: `${SITE_URL}/og/home.png`,
       ogType: "profile",
     };
@@ -60,7 +60,7 @@ export function getPageMeta(
   if (pathname === "/projects") {
     const count = portfolioData?.projects?.length ?? 0;
     const description = count > 0
-      ? `${count} open source repositories — projects and contributions by Samet Özkan, .NET backend engineer.`
+      ? `${count} open source repositories — projects and contributions by Samet Özkan, software developer.`
       : DEFAULT_DESCRIPTION;
     return {
       title: "All Repositories — Samet Özkan | Projects & Contributions",
@@ -76,7 +76,7 @@ export function getPageMeta(
     const name = `${projectDetail.owner}/${projectDetail.repository}`;
     const langLabel = projectDetail.language ? `${projectDetail.language} ` : "";
     const rawDesc = projectDetail.description || `A ${langLabel}project — ${projectDetail.repository}`;
-    const BRAND_SUFFIX = " — by Samet Özkan, backend engineer.";
+    const BRAND_SUFFIX = " — by Samet Özkan, software developer.";
     const MAX_DESC = 160;
     const OG_MAX_DESC = 200;
     const projectDesc = rawDesc.replace(/[.!?]\s*$/, "");
@@ -96,9 +96,9 @@ export function getPageMeta(
   }
 
   return {
-    title: "Samet Özkan — Software Engineer Portfolio & Projects",
+    title: "Samet Özkan — Software Developer Portfolio & Projects",
     description: DEFAULT_DESCRIPTION,
-    ogTitle: "Samet Özkan — Backend Engineer",
+    ogTitle: "Samet Özkan — Software Developer",
     ogDescription: DEFAULT_DESCRIPTION,
     ogImage: `${SITE_URL}/og/home.png`,
     ogType: "website",
