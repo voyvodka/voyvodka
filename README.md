@@ -1,41 +1,19 @@
 # Samet Özkan
 
-Backend-focused software engineer building reliable products with .NET and practical full-stack delivery.
+Software developer from Turkey. I build backends with .NET and ship products with AI coding agents.
 
-- Website: https://www.sametozkan.com.tr
-- GitHub: https://github.com/voyvodka
-- X: https://x.com/voyvodka
+[Website](https://www.sametozkan.com.tr) · [LinkedIn](https://www.linkedin.com/in/samet-ozkan) · [X](https://x.com/voyvodka)
 
-## Focus
+## Now
 
-- .NET backend architecture and API design
-- MVC-first product development
-- Practical, low-overhead deployment and operations
-- AI-assisted exploration with clear ownership boundaries
+Co-founder at Palmye LLC, building a travel eSIM app, and writing Claude Code plugins along the way.
 
-## Current Stack
+## Tools
 
-- C#, .NET, ASP.NET Core MVC
-- SQL, Redis, cache-first API patterns
-- TypeScript, React, Vite
-- Go for lightweight service tooling
+<img src=".github/readme/stack.svg" alt="C#, .NET, SQL Server, MySQL, PostgreSQL, RabbitMQ, Elasticsearch, Redis, Docker, GitHub Actions, AWS, Go, Next.js, React, Swift, Kotlin, Cloudflare">
 
-## Featured
+<img src=".github/readme/ai-tools.svg" alt="Claude Code, Codex, Cursor, GitHub Copilot">
 
-- **[LumaSync](https://github.com/voyvodka/LumaSync)** — tray-first desktop Ambilight app for WS2812B strips and Philips Hue (Tauri 2 + Rust + React)
-- **[webhook-engine](https://github.com/voyvodka/webhook-engine)** — self-hosted webhook delivery with retry, HMAC signing, and a live dashboard (.NET 10 + PostgreSQL)
-- **[back-on-screen](https://github.com/voyvodka/back-on-screen)** — Stremio addon that surfaces movie rereleases and IMAX returns as catalog rows
+.NET is home, with SQL Server, MySQL and PostgreSQL. Go, Next.js, Swift and Kotlin I ship with coding agents (Claude Code, Codex, Cursor).
 
-### Claude Code plugins
-
-- **[claude-project-flow](https://github.com/voyvodka/claude-project-flow)** — carries a project from a rough idea to shipped code through six approval-gated phases
-- **[site-triage](https://github.com/voyvodka/site-triage)** — finds why a live site is not indexed, traces each reason to the file that causes it, fixes it and verifies the fix
-
-Both install from one marketplace, **[claude-plugins](https://github.com/voyvodka/claude-plugins)**: `/plugin marketplace add voyvodka/claude-plugins`
-
-## Working Style
-
-- Product-first decisions
-- Clear contracts between services and UI
-- Small, maintainable increments
-- Explicit distinction between owned projects and contributions
+Most of my earlier work lives in companies' private repositories.
